@@ -340,7 +340,7 @@ public sealed class ConnectionDialog : Window
         if (isPresetName) _name.Text = p.Title;
         _url.Text = p.BaseUrl;
         _modelHint.Text = p.ModelHint;
-        _keyHint.Text = p.NeedsKey ? S.KeyStored : S.KeyNotNeeded;
+        _keyHint.Text = p.Key == "GigaChat" ? S.HintGigachatKey : p.NeedsKey ? S.KeyStored : S.KeyNotNeeded;
         Validate();
     }
 

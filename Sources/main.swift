@@ -149,7 +149,7 @@ struct Connection: Codable, Identifiable, Equatable {
 
 /// Ready-made addresses for the add-connection form.
 enum ServicePreset: String, CaseIterable, Identifiable {
-    case openRouter, openAI, deepSeek, groq, mistral, ollama, lmStudio, other
+    case openRouter, openAI, deepSeek, groq, mistral, yandex, gigaChat, ollama, lmStudio, other
 
     var id: String { rawValue }
 
@@ -160,6 +160,8 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         case .deepSeek: return "DeepSeek"
         case .groq: return "Groq"
         case .mistral: return "Mistral"
+        case .yandex: return "YandexGPT"
+        case .gigaChat: return "GigaChat"
         case .ollama: return S.presetOllama
         case .lmStudio: return S.presetLmstudio
         case .other: return S.presetOther
@@ -173,6 +175,8 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         case .deepSeek: return "https://api.deepseek.com"
         case .groq: return "https://api.groq.com/openai/v1"
         case .mistral: return "https://api.mistral.ai/v1"
+        case .yandex: return "https://ai.api.cloud.yandex.net/v1"
+        case .gigaChat: return "https://api.giga.chat/v1"
         case .ollama: return "http://localhost:11434/v1"
         case .lmStudio: return "http://localhost:1234/v1"
         case .other: return ""
@@ -186,6 +190,8 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         case .deepSeek: return S.hintExample("deepseek-flash")
         case .groq: return S.hintExample("llama-3.3-70b-versatile")
         case .mistral: return S.hintExample("mistral-large-latest")
+        case .yandex: return S.hintExample("gpt://b1g…/yandexgpt")
+        case .gigaChat: return S.hintExample("GigaChat-2")
         case .ollama: return S.hintExample("llama3.2")
         case .lmStudio: return S.hintLoadedModel
         case .other: return S.hintModelName
@@ -438,8 +444,13 @@ final class APIRunner {
         request.httpMethod = "POST"
         request.timeoutInterval = 120
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let key = Keychain.get(c.id), !key.isEmpty {
+        let key = Keychain.get(c.id) ?? ""
+        if !key.isEmpty, !GigaChat.handles(url) {
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        }
+        // Yandex reads the folder from "gpt://<folder>/<model>"; the OpenAI SDK sends it as the project too.
+        if c.model.hasPrefix("gpt://"), let folder = c.model.dropFirst(6).split(separator: "/").first {
+            request.setValue(String(folder), forHTTPHeaderField: "OpenAI-Project")
         }
         request.httpBody = try? JSONSerialization.data(withJSONObject: [
             "model": c.model, "messages": messages, "stream": true,
@@ -448,6 +459,10 @@ final class APIRunner {
         task = Task { [weak self] in
             var reply = ""
             do {
+                var request = request
+                if GigaChat.handles(url) {
+                    request.setValue("Bearer \(try await GigaChat.token(for: c.id, key: key))", forHTTPHeaderField: "Authorization")
+                }
                 let (bytes, response) = try await URLSession.shared.bytes(for: request)
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                 if status != 200 {
@@ -489,10 +504,55 @@ final class APIRunner {
                 await MainActor.run { onDone(e.message(for: c)) }
             } catch {
                 if (error as? URLError)?.code == .cancelled { return }
+                if let code = (error as? URLError)?.code,
+                   [.serverCertificateUntrusted, .serverCertificateHasUnknownRoot, .serverCertificateHasBadDate,
+                    .serverCertificateNotYetValid, .secureConnectionFailed].contains(code) {
+                    await MainActor.run { onDone(S.errCert(c.name)) }
+                    return
+                }
                 let hint = c.baseURL.contains("localhost") ? S.errLocalHint : ""
                 await MainActor.run { onDone(S.errConnect(c.name, error.localizedDescription) + hint) }
             }
         }
+    }
+}
+
+/// GigaChat trades the authorization key for a 30-minute access token before each chat; tokens are reused until they expire.
+enum GigaChat {
+    private static let authURL = URL(string: "https://ngw.devices.sberbank.ru:9443/api/v2/oauth")!
+    private static var tokens: [UUID: (token: String, expires: Date)] = [:]
+    private static let lock = NSLock()
+
+    static func handles(_ url: URL) -> Bool {
+        let host = url.host ?? ""
+        return host.hasSuffix("giga.chat") || host.hasSuffix("sberbank.ru")
+    }
+
+    static func token(for id: UUID, key: String) async throws -> String {
+        let cached = lock.withLock { tokens[id] }
+        if let cached, cached.expires.timeIntervalSinceNow > 60 { return cached.token }
+
+        var request = URLRequest(url: authURL)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("Basic \(key)", forHTTPHeaderField: "Authorization")
+        request.setValue(UUID().uuidString.lowercased(), forHTTPHeaderField: "RqUID")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = Data("scope=GIGACHAT_API_PERS".utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let token = json["access_token"] as? String
+        else {
+            // A refused key shows as a key error, like any other service.
+            throw APIError(status: status == 200 ? 401 : status, body: String(data: data, encoding: .utf8) ?? "")
+        }
+        let expiresMs = (json["expires_at"] as? Double) ?? Date().addingTimeInterval(25 * 60).timeIntervalSince1970 * 1000
+        lock.withLock { tokens[id] = (token, Date(timeIntervalSince1970: expiresMs / 1000)) }
+        return token
     }
 }
 
@@ -1402,7 +1462,7 @@ struct ConnectionFormView: View {
                 TextField(S.name, text: $form.name)
                 TextField(S.address, text: $form.baseURL, prompt: Text("https://…/v1"))
                 TextField(S.model, text: $form.model, prompt: Text(form.preset.modelHint))
-                SecureField(S.apiKey, text: $form.key, prompt: Text(form.preset.needsKey ? S.keyStored : S.keyNotNeeded))
+                SecureField(S.apiKey, text: $form.key, prompt: Text(form.preset == .gigaChat ? S.hintGigachatKey : form.preset.needsKey ? S.keyStored : S.keyNotNeeded))
             }
             .formStyle(.columns)
             .font(.system(size: 13))

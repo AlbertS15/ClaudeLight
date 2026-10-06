@@ -95,6 +95,8 @@ public sealed record ServicePreset(string Key, string BaseUrl, string Example, b
         new("DeepSeek", "https://api.deepseek.com", "deepseek-flash", true),
         new("Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", true),
         new("Mistral", "https://api.mistral.ai/v1", "mistral-large-latest", true),
+        new("YandexGPT", "https://ai.api.cloud.yandex.net/v1", "gpt://b1g…/yandexgpt", true),
+        new("GigaChat", "https://api.giga.chat/v1", "GigaChat-2", true),
         new("ollama", "http://localhost:11434/v1", "llama3.2", false),
         new("lmstudio", "http://localhost:1234/v1", "", false),
         new("other", "", "", true),

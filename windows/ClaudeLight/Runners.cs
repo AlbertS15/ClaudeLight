@@ -188,8 +188,14 @@ public sealed class ApiRunner
                 {
                     Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
                 };
-                var key = c.Key;
-                if (!string.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+                var key = c.Key ?? "";
+                if (GigaChat.Handles(url))
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GigaChat.TokenAsync(c, key, cts.Token));
+                else if (key.Length > 0)
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+                // Yandex reads the folder from "gpt://<folder>/<model>"; the OpenAI SDK sends it as the project too.
+                if (c.Model.StartsWith("gpt://"))
+                    request.Headers.TryAddWithoutValidation("OpenAI-Project", c.Model.Substring(6).Split('/')[0]);
 
                 using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
                 if (!response.IsSuccessStatusCode)
@@ -239,6 +245,14 @@ public sealed class ApiRunner
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
             }
+            catch (GigaChat.KeyRefused refused)
+            {
+                post(() => onDone(ErrorMessage(c, refused.Status, refused.Body)));
+            }
+            catch (HttpRequestException e) when (e.InnerException is System.Security.Authentication.AuthenticationException)
+            {
+                post(() => onDone(S.ErrCert(c.Name)));
+            }
             catch (Exception e)
             {
                 var hint = c.BaseUrl.Contains("localhost") ? S.ErrLocalHint : "";
@@ -272,6 +286,61 @@ public sealed class ApiRunner
             429 => S.Err429(c.Name, detail),
             _ => S.ErrStatus(c.Name, status.ToString(), detail),
         };
+    }
+}
+
+/// GigaChat trades the authorization key for a 30-minute access token before each chat; tokens are reused until they expire.
+public static class GigaChat
+{
+    private const string AuthUrl = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth";
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
+    private static readonly Dictionary<Guid, (string Token, DateTimeOffset Expires)> Tokens = new();
+
+    public sealed class KeyRefused : Exception
+    {
+        public int Status { get; }
+        public string Body { get; }
+        public KeyRefused(int status, string body) { Status = status; Body = body; }
+    }
+
+    public static bool Handles(string url)
+    {
+        var host = Uri.TryCreate(url, UriKind.Absolute, out var u) ? u.Host : "";
+        return host.EndsWith("giga.chat") || host.EndsWith("sberbank.ru");
+    }
+
+    public static async Task<string> TokenAsync(Connection c, string key, CancellationToken token)
+    {
+        lock (Tokens)
+        {
+            if (Tokens.TryGetValue(c.Id, out var cached) && cached.Expires - DateTimeOffset.UtcNow > TimeSpan.FromMinutes(1))
+                return cached.Token;
+        }
+        using var request = new HttpRequestMessage(HttpMethod.Post, AuthUrl)
+        {
+            Content = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("scope", "GIGACHAT_API_PERS") }),
+        };
+        request.Headers.TryAddWithoutValidation("Authorization", "Basic " + key);
+        request.Headers.Add("RqUID", Guid.NewGuid().ToString());
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        using var response = await Http.SendAsync(request, token);
+        var body = await response.Content.ReadAsStringAsync(token);
+        string? access = null;
+        long expiresMs = 0;
+        try
+        {
+            var json = JsonNode.Parse(body);
+            access = (string?)json?["access_token"];
+            expiresMs = (long?)json?["expires_at"] ?? 0;
+        }
+        catch
+        {
+        }
+        if (!response.IsSuccessStatusCode || access == null)
+            throw new KeyRefused(response.IsSuccessStatusCode ? 401 : (int)response.StatusCode, body);
+        var expires = expiresMs > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(expiresMs) : DateTimeOffset.UtcNow.AddMinutes(25);
+        lock (Tokens) Tokens[c.Id] = (access, expires);
+        return access;
     }
 }
 
