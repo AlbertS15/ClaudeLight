@@ -447,7 +447,7 @@ public sealed class CodexRunner
                 try { obj = JsonNode.Parse(line); } catch { continue; }
                 switch ((string?)obj?["type"])
                 {
-                    case "item.completed" when (string?)obj?["item"]?["type"] == "agent_message":
+                    case "item.completed" when ((string?)obj?["item"]?["type"] == "agent_message"):
                         var text = (string?)obj?["item"]?["text"];
                         if (string.IsNullOrEmpty(text)) break;
                         var piece = reply.Length == 0 ? text : "\n\n" + text;
@@ -591,16 +591,16 @@ public sealed class GeminiRunner
                 try { obj = JsonNode.Parse(line); } catch { continue; }
                 switch ((string?)obj?["type"])
                 {
-                    case "message" when (string?)obj?["role"] == "assistant":
+                    case "message" when ((string?)obj?["role"] == "assistant"):
                         var piece = (string?)obj?["content"];
                         if (string.IsNullOrEmpty(piece)) break;
                         reply.Append(piece);
                         post(() => onText(piece));
                         break;
-                    case "error" when (string?)obj?["severity"] == "error":
+                    case "error" when ((string?)obj?["severity"] == "error"):
                         error = (string?)obj?["message"];
                         break;
-                    case "result" when (string?)obj?["status"] == "error":
+                    case "result" when ((string?)obj?["status"] == "error"):
                         error = (obj?["error"] is JsonObject e ? (string?)e["message"] : null) ?? error ?? "";
                         break;
                 }
