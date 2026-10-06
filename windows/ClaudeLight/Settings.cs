@@ -107,6 +107,8 @@ public sealed class Settings
     public string Choice { get; set; } = "claude:";
     public List<Connection> Connections { get; set; } = new();
     public bool ShowWelcomeOnLaunch { get; set; } = true;
+    /// Whether results offer "Ask in ChatGPT" (opens chatgpt.com on the person's own login).
+    public bool ShowChatGpt { get; set; } = true;
     /// Interface language code, "" for the system's.
     public string Language { get; set; } = "";
 

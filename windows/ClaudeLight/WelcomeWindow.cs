@@ -73,6 +73,11 @@ public sealed class WelcomeWindow : Window
         {
             Settings.Shared.ShowWelcomeOnLaunch = v;
             Settings.Shared.Save();
+        })));
+        card.Children.Add(Row(S.ShowChatgpt, Check(Settings.Shared.ShowChatGpt, v =>
+        {
+            Settings.Shared.ShowChatGpt = v;
+            Settings.Shared.Save();
         }), last: true));
         stack.Children.Add(new Border
         {

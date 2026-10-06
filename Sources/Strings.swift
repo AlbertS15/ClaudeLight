@@ -86,6 +86,9 @@ private let table: [String: [String]] = [
     "err_connect": ["Couldn't reach “{0}”: {1}.", "Не удалось связаться с «{0}»: {1}.", "„{0}“ nicht erreichbar: {1}.", "No se pudo conectar con «{0}»: {1}.", "Impossible de joindre « {0} » : {1}."],
     "err_local_hint": [" Is the model server running on this computer?", " Запущен ли сервер модели на этом компьютере?", " Läuft der Modellserver auf diesem Computer?", " ¿Está el servidor del modelo en marcha en este ordenador?", " Le serveur du modèle tourne-t-il sur cet ordinateur ?"],
     "login_done": ["Done — you can close this window.", "Готово — можно закрыть это окно.", "Fertig — Sie können dieses Fenster schließen.", "Listo — puedes cerrar esta ventana.", "Terminé — vous pouvez fermer cette fenêtre."],
+    "ask_chatgpt": ["Ask in ChatGPT", "Спросить в ChatGPT", "In ChatGPT fragen", "Preguntar en ChatGPT", "Demander dans ChatGPT"],
+    "chatgpt_note": ["opens chatgpt.com with your subscription", "откроется chatgpt.com с вашей подпиской", "öffnet chatgpt.com mit Ihrem Abo", "abre chatgpt.com con tu suscripción", "ouvre chatgpt.com avec votre abonnement"],
+    "show_chatgpt": ["Show “Ask in ChatGPT”", "Показывать «Спросить в ChatGPT»", "„In ChatGPT fragen“ zeigen", "Mostrar «Preguntar en ChatGPT»", "Afficher « Demander dans ChatGPT »"],
 ]
 
 private func format(_ key: String, _ args: [String]) -> String {
@@ -158,4 +161,7 @@ enum S {
     static func errConnect(_ a0: String, _ a1: String) -> String { format("err_connect", [a0, a1]) }
     static var errLocalHint: String { format("err_local_hint", []) }
     static var loginDone: String { format("login_done", []) }
+    static var askChatgpt: String { format("ask_chatgpt", []) }
+    static var chatgptNote: String { format("chatgpt_note", []) }
+    static var showChatgpt: String { format("show_chatgpt", []) }
 }

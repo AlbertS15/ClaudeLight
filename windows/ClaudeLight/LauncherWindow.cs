@@ -226,13 +226,13 @@ public sealed class LauncherWindow : Window
         _placeholder.Visibility = _input.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_hasAnswer) return;
         var text = _input.Text;
-        _selection = LooksLikeQuestion(text) ? 0 : 1;
+        _selection = LooksLikeQuestion(text) ? 0 : FirstHit;
         _search.Search(text, hits => Dispatcher.InvokeAsync(() =>
         {
             if (_input.Text != text) return;
             _hits = hits;
-            if (!LooksLikeQuestion(text) && _selection == 0 && hits.Count > 0) _selection = 1;
-            if (_selection > hits.Count) _selection = hits.Count;
+            if (!LooksLikeQuestion(text) && _selection == 0 && hits.Count > 0) _selection = FirstHit;
+            if (_selection >= RowCount) _selection = Math.Max(RowCount - 1, 0);
             RenderResults();
         }));
         RenderResults();
@@ -247,7 +247,20 @@ public sealed class LauncherWindow : Window
         return words.Length > 0 && Lang.QuestionWords.Contains(words[0]);
     }
 
-    private int RowCount => _input.Text.Trim().Length == 0 ? 0 : 1 + _hits.Count;
+    /// Rows: ask the model, then "Ask in ChatGPT" when shown, then the hits from FirstHit on.
+    private int FirstHit => Settings.Shared.ShowChatGpt ? 2 : 1;
+    private int RowCount => _input.Text.Trim().Length == 0 ? 0 : FirstHit + _hits.Count;
+    private bool IsChatGptRow(int i) => Settings.Shared.ShowChatGpt && i == 1;
+
+    /// Ctrl+Shift+Enter or the ChatGPT row: opens chatgpt.com with the typed text, else the question on screen.
+    private void AskChatGpt()
+    {
+        var text = _input.Text.Trim();
+        var question = text.Length > 0 ? text : _asked.Text;
+        if (question.Length == 0) return;
+        Process.Start(new ProcessStartInfo("https://chatgpt.com/?q=" + Uri.EscapeDataString(question)) { UseShellExecute = true });
+        HideBar();
+    }
 
     private void RenderResults()
     {
@@ -277,9 +290,18 @@ public sealed class LauncherWindow : Window
                 DockPanel.SetDock(hint, Dock.Right);
                 row.Children.Add(hint);
             }
+            else if (IsChatGptRow(i))
+            {
+                icon = Theme.Label("💬", 18, fg);
+                texts.Children.Add(Theme.Label(S.AskChatgpt, 14, fg, FontWeights.SemiBold));
+                texts.Children.Add(Theme.Label(S.ChatgptNote, 12, sub));
+                var hint = Theme.Label("Ctrl+Shift+↩", 12, sub);
+                DockPanel.SetDock(hint, Dock.Right);
+                row.Children.Add(hint);
+            }
             else
             {
-                var hit = _hits[i - 1];
+                var hit = _hits[i - FirstHit];
                 icon = new System.Windows.Controls.Image { Width = 28, Height = 28, Source = IconFor(hit.Path) };
                 texts.Children.Add(Theme.Label(hit.Name, 14, fg, FontWeights.Medium));
                 texts.Children.Add(Theme.Label(hit.Subtitle, 11, sub));
@@ -350,6 +372,10 @@ public sealed class LauncherWindow : Window
                 RenderResults();
                 e.Handled = true;
                 break;
+            case Key.Enter when ctrl && Keyboard.Modifiers.HasFlag(ModifierKeys.Shift):
+                AskChatGpt();
+                e.Handled = true;
+                break;
             case Key.Enter:
                 Run(ctrl, alt);
                 e.Handled = true;
@@ -373,12 +399,17 @@ public sealed class LauncherWindow : Window
             RetryAfterError();
             return;
         }
-        if (_hasAnswer || forceAsk || _selection == 0 || _selection > _hits.Count)
+        if (_hasAnswer || forceAsk || _selection == 0 || _selection >= RowCount)
         {
             Ask(text);
             return;
         }
-        var hit = _hits[_selection - 1];
+        if (IsChatGptRow(_selection))
+        {
+            AskChatGpt();
+            return;
+        }
+        var hit = _hits[_selection - FirstHit];
         try
         {
             if (reveal) Process.Start("explorer.exe", $"/select,\"{hit.Path}\"");

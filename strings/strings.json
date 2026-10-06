@@ -455,6 +455,27 @@
       "Fertig — Sie können dieses Fenster schließen.",
       "Listo — puedes cerrar esta ventana.",
       "Terminé — vous pouvez fermer cette fenêtre."
+    ],
+    "ask_chatgpt": [
+      "Ask in ChatGPT",
+      "Спросить в ChatGPT",
+      "In ChatGPT fragen",
+      "Preguntar en ChatGPT",
+      "Demander dans ChatGPT"
+    ],
+    "chatgpt_note": [
+      "opens chatgpt.com with your subscription",
+      "откроется chatgpt.com с вашей подпиской",
+      "öffnet chatgpt.com mit Ihrem Abo",
+      "abre chatgpt.com con tu suscripción",
+      "ouvre chatgpt.com avec votre abonnement"
+    ],
+    "show_chatgpt": [
+      "Show “Ask in ChatGPT”",
+      "Показывать «Спросить в ChatGPT»",
+      "„In ChatGPT fragen“ zeigen",
+      "Mostrar «Preguntar en ChatGPT»",
+      "Afficher « Demander dans ChatGPT »"
     ]
   },
   "question_words": {

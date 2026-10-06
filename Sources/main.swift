@@ -262,6 +262,10 @@ final class Settings: ObservableObject {
     @Published var choice: Choice {
         didSet { UserDefaults.standard.set(choice.stored, forKey: "model") }
     }
+    /// Whether results offer "Ask in ChatGPT" (opens chatgpt.com on the person's own login).
+    @Published var showsChatGPT: Bool {
+        didSet { UserDefaults.standard.set(showsChatGPT, forKey: "showsChatGPT") }
+    }
     /// Interface language code, "" for the system's. Strings read it through Lang.index.
     @Published var language: String {
         didSet { UserDefaults.standard.set(language, forKey: "language") }
@@ -273,6 +277,7 @@ final class Settings: ObservableObject {
     private init() {
         choice = Choice(stored: UserDefaults.standard.string(forKey: "model") ?? "")
         language = UserDefaults.standard.string(forKey: "language") ?? ""
+        showsChatGPT = UserDefaults.standard.object(forKey: "showsChatGPT") as? Bool ?? true
         let data = UserDefaults.standard.data(forKey: "connections")
         connections = data.flatMap { try? JSONDecoder().decode([Connection].self, from: $0) } ?? []
         if case let .custom(id) = choice, !connections.contains(where: { $0.id == id }) { choice = .claude(.auto) }
@@ -593,7 +598,16 @@ final class ClaudeRunner {
 
 enum Row: Equatable {
     case ask
+    case chatGPT
     case hit(Hit)
+}
+
+/// Opens chatgpt.com with the question filled in: it runs in the browser on the person's own ChatGPT login.
+func openInChatGPT(_ question: String) {
+    var allowed = CharacterSet.urlQueryAllowed
+    allowed.remove(charactersIn: "&+=?#")
+    let q = question.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+    if let url = URL(string: "https://chatgpt.com/?q=" + q) { NSWorkspace.shared.open(url) }
 }
 
 final class LauncherModel: ObservableObject {
@@ -606,7 +620,7 @@ final class LauncherModel: ObservableObject {
             }
             if answer == nil {
                 search.search(query)
-                selection = looksLikeQuestion(query) || hits.isEmpty ? 0 : 1
+                selection = looksLikeQuestion(query) || hits.isEmpty ? 0 : firstHit
             }
         }
     }
@@ -629,7 +643,7 @@ final class LauncherModel: ObservableObject {
             self.hits = hits
             let maxIndex = hits.count
             if self.selection > maxIndex { self.selection = maxIndex }
-            if !self.looksLikeQuestion(self.query), self.selection == 0, !hits.isEmpty { self.selection = 1 }
+            if !self.looksLikeQuestion(self.query), self.selection == 0, !hits.isEmpty { self.selection = self.firstHit }
         }
         // Published fires before the value is stored, so retry on the next turn of the run loop.
         choiceWatch = Settings.shared.$choice.dropFirst().sink { [weak self] _ in
@@ -649,7 +663,19 @@ final class LauncherModel: ObservableObject {
 
     var rows: [Row] {
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else { return [] }
-        return [.ask] + hits.map { .hit($0) }
+        return [.ask] + (Settings.shared.showsChatGPT ? [.chatGPT] : []) + hits.map { .hit($0) }
+    }
+
+    /// Where the file results start, after the ask rows.
+    var firstHit: Int { Settings.shared.showsChatGPT ? 2 : 1 }
+
+    /// ⇧⌘↩ or the ChatGPT row: the typed text, else the question on screen.
+    func askChatGPT() {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let question = text.isEmpty ? asked : text
+        guard !question.isEmpty else { return }
+        openInChatGPT(question)
+        hide()
     }
 
     func looksLikeQuestion(_ text: String) -> Bool {
@@ -674,6 +700,10 @@ final class LauncherModel: ObservableObject {
         }
         if answer != nil || forceAsk || selection == 0 || rows.count <= selection {
             ask(text)
+            return
+        }
+        if rows[selection] == .chatGPT {
+            askChatGPT()
             return
         }
         if case let .hit(hit) = rows[selection] {
@@ -833,6 +863,17 @@ struct RowView: View {
                 }
                 Spacer()
                 Text("⌘↩").font(.system(size: 12)).foregroundStyle(.tertiary)
+            case .chatGPT:
+                Image(systemName: "bubble.left.and.text.bubble.right.fill")
+                    .font(.system(size: 17))
+                    .foregroundStyle(isSelected ? Color.white : Color(red: 0.06, green: 0.64, blue: 0.5))
+                    .frame(width: 28, height: 28)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(S.askChatgpt).font(.system(size: 14, weight: .semibold))
+                    Text(S.chatgptNote).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer()
+                Text("⇧⌘↩").font(.system(size: 12)).foregroundStyle(.tertiary)
             case let .hit(hit):
                 Image(nsImage: NSWorkspace.shared.icon(forFile: hit.path))
                     .resizable()
@@ -1017,6 +1058,10 @@ final class LauncherPanel: NSPanel {
             model.move(-1)
             return true
         case kVK_Return, kVK_ANSI_KeypadEnter:
+            if cmd && event.modifierFlags.contains(.shift) {
+                model.askChatGPT()
+                return true
+            }
             if cmd {
                 model.activate(forceAsk: true)
                 return true
@@ -1261,6 +1306,9 @@ struct WelcomeView: View {
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 Divider().padding(.leading, 14)
                 Toggle(S.showOnLaunch, isOn: $model.showsOnLaunch)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                Divider().padding(.leading, 14)
+                Toggle(S.showChatgpt, isOn: $settings.showsChatGPT)
                     .padding(.horizontal, 14).padding(.vertical, 10)
             }
             .toggleStyle(.switch)

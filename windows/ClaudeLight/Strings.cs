@@ -97,6 +97,9 @@ public static class S
         ["err_connect"] = new[] { "Couldn't reach “{0}”: {1}.", "Не удалось связаться с «{0}»: {1}.", "„{0}“ nicht erreichbar: {1}.", "No se pudo conectar con «{0}»: {1}.", "Impossible de joindre « {0} » : {1}." },
         ["err_local_hint"] = new[] { " Is the model server running on this computer?", " Запущен ли сервер модели на этом компьютере?", " Läuft der Modellserver auf diesem Computer?", " ¿Está el servidor del modelo en marcha en este ordenador?", " Le serveur du modèle tourne-t-il sur cet ordinateur ?" },
         ["login_done"] = new[] { "Done — you can close this window.", "Готово — можно закрыть это окно.", "Fertig — Sie können dieses Fenster schließen.", "Listo — puedes cerrar esta ventana.", "Terminé — vous pouvez fermer cette fenêtre." },
+        ["ask_chatgpt"] = new[] { "Ask in ChatGPT", "Спросить в ChatGPT", "In ChatGPT fragen", "Preguntar en ChatGPT", "Demander dans ChatGPT" },
+        ["chatgpt_note"] = new[] { "opens chatgpt.com with your subscription", "откроется chatgpt.com с вашей подпиской", "öffnet chatgpt.com mit Ihrem Abo", "abre chatgpt.com con tu suscripción", "ouvre chatgpt.com avec votre abonnement" },
+        ["show_chatgpt"] = new[] { "Show “Ask in ChatGPT”", "Показывать «Спросить в ChatGPT»", "„In ChatGPT fragen“ zeigen", "Mostrar «Preguntar en ChatGPT»", "Afficher « Demander dans ChatGPT »" },
     };
 
     private static string F(string key, params string[] args)
@@ -168,4 +171,7 @@ public static class S
     public static string ErrConnect(string a0, string a1) => F("err_connect", a0, a1);
     public static string ErrLocalHint => F("err_local_hint");
     public static string LoginDone => F("login_done");
+    public static string AskChatgpt => F("ask_chatgpt");
+    public static string ChatgptNote => F("chatgpt_note");
+    public static string ShowChatgpt => F("show_chatgpt");
 }
