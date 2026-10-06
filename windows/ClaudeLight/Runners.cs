@@ -247,6 +247,10 @@ public sealed class ApiRunner
         });
     }
 
+    private static bool IsBlock(string text) =>
+        new[] { "security policy", "cloudflare", "blocked", "region", "country", "unsupported_country", "location is not supported" }
+            .Any(k => text.Contains(k, StringComparison.OrdinalIgnoreCase));
+
     private static string ErrorMessage(Connection c, int status, string body)
     {
         string detail;
@@ -261,6 +265,8 @@ public sealed class ApiRunner
         }
         return status switch
         {
+            // A 403 from a firewall (Cloudflare, a country block) arrives before any key check.
+            403 when IsBlock(detail + " " + body) => S.ErrBlocked(c.Name, detail.Contains('<') ? "Cloudflare" : detail),
             401 or 403 => S.ErrKey(c.Name, status.ToString(), detail),
             404 => S.Err404(c.Name, detail),
             429 => S.Err429(c.Name, detail),

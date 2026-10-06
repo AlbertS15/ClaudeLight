@@ -504,10 +504,18 @@ struct APIError: Error {
     let status: Int
     let body: String
 
+    static func isBlock(_ detail: String, _ body: String) -> Bool {
+        let text = (detail + " " + body).lowercased()
+        return ["security policy", "cloudflare", "blocked", "region", "country", "unsupported_country", "location is not supported"]
+            .contains { text.contains($0) }
+    }
+
     func message(for c: Connection) -> String {
         let json = try? JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any]
         let detail = (json?["error"] as? [String: Any])?["message"] as? String ?? (json?["error"] as? String) ?? String(body.prefix(300))
         switch status {
+        // A 403 from a firewall (Cloudflare, a country block) arrives before any key check.
+        case 403 where Self.isBlock(detail, body): return S.errBlocked(c.name, detail.contains("<") ? "Cloudflare" : detail)
         case 401, 403: return S.errKey(c.name, String(status), detail)
         case 404: return S.err404(c.name, detail)
         case 429: return S.err429(c.name, detail)
