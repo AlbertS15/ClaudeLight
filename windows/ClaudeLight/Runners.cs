@@ -117,10 +117,10 @@ public sealed class ClaudeRunner
                 }
                 else if (type == "stream_event"
                          && (string?)obj?["event"]?["delta"]?["type"] == "text_delta"
-                         && (string?)obj?["event"]?["delta"]?["text"] is string text)
+                         && (string?)obj?["event"]?["delta"]?["text"] is string piece)
                 {
                     streamed = true;
-                    post(() => onText(text));
+                    post(() => onText(piece));
                 }
                 else if (type == "assistant" && obj?["message"]?["content"] is JsonArray content)
                 {
