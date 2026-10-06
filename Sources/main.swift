@@ -268,12 +268,14 @@ enum GeminiModel: String, CaseIterable, Identifiable {
 enum Choice: Hashable {
     case claude(ClaudeModel)
     case gemini(GeminiModel)
+    case codex
     case custom(UUID)
 
     var stored: String {
         switch self {
         case let .claude(m): return "claude:" + m.rawValue
         case let .gemini(m): return "gemini:" + m.rawValue
+        case .codex: return "codex:"
         case let .custom(id): return "custom:" + id.uuidString
         }
     }
@@ -281,6 +283,8 @@ enum Choice: Hashable {
     init(stored: String) {
         if stored.hasPrefix("custom:"), let id = UUID(uuidString: String(stored.dropFirst(7))) {
             self = .custom(id)
+        } else if stored.hasPrefix("codex:") {
+            self = .codex
         } else if stored.hasPrefix("gemini:") {
             self = .gemini(GeminiModel(rawValue: String(stored.dropFirst(7))) ?? .auto)
         } else {
@@ -327,6 +331,7 @@ final class Settings: ObservableObject {
         switch c {
         case let .claude(m): return m.title
         case let .gemini(m): return m.title
+        case .codex: return S.codexTitle
         case let .custom(id): return connections.first { $0.id == id }?.name ?? "—"
         }
     }
@@ -378,6 +383,10 @@ struct ModelPicker: View {
                 ForEach(ClaudeModel.allCases) { m in
                     Text("\(m.title) — \(m.note)").tag(Choice.claude(m))
                 }
+            }
+            .pickerStyle(.inline)
+            Picker(S.codexSection, selection: $settings.choice) {
+                Text("\(S.codexTitle) — \(S.noteCodex)").tag(Choice.codex)
             }
             .pickerStyle(.inline)
             Picker(S.geminiSection, selection: $settings.choice) {
@@ -839,6 +848,130 @@ final class GeminiRunner {
     }
 }
 
+// MARK: - Codex
+
+/// Runs Codex CLI (`codex exec`) read-only on the person's own ChatGPT login and returns its answer.
+/// Codex sends the answer whole, not in pieces; follow-ups carry the conversation in the prompt.
+final class CodexRunner {
+    private var process: Process?
+    private var history: [(question: String, answer: String)] = []
+
+    static var binary: String? {
+        let home = NSHomeDirectory()
+        var candidates = ["/opt/homebrew/bin/codex", "/usr/local/bin/codex", home + "/.local/bin/codex", home + "/.npm-global/bin/codex"]
+        if let versions = try? FileManager.default.contentsOfDirectory(atPath: home + "/.nvm/versions/node") {
+            candidates += versions.sorted().reversed().map { home + "/.nvm/versions/node/\($0)/bin/codex" }
+        }
+        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+    }
+
+    /// An empty folder to run in, so Codex never reads the home folder.
+    private static var workFolder: URL {
+        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ClaudeLight/codex", isDirectory: true)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    func reset() {
+        cancel()
+        history = []
+    }
+
+    func cancel() {
+        process?.terminate()
+        process = nil
+    }
+
+    func ask(_ question: String, onText: @escaping (String) -> Void, onDone: @escaping (String?) -> Void) {
+        cancel()
+        guard let binary = Self.binary else {
+            onDone(S.errNoCodex)
+            return
+        }
+
+        var input = ClaudeRunner.systemPrompt + " Do not run commands or read files; just answer.\n\n"
+        for turn in history {
+            input += "User: \(turn.question)\n\nAssistant: \(turn.answer)\n\n"
+        }
+        input += history.isEmpty ? question : "User: \(question)"
+
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: binary)
+        p.arguments = ["exec", "--json", "--skip-git-repo-check", "--ephemeral",
+                       "--sandbox", "read-only", "--cd", Self.workFolder.path, "-"]
+        p.currentDirectoryURL = Self.workFolder
+        var env = ProcessInfo.processInfo.environment
+        env["PATH"] = "\((binary as NSString).deletingLastPathComponent):/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        p.environment = env
+
+        let out = Pipe()
+        let inPipe = Pipe()
+        p.standardOutput = out
+        p.standardError = Pipe()
+        p.standardInput = inPipe
+
+        var buffer = Data()
+        var reply = ""
+        var error: String?
+        out.fileHandleForReading.readabilityHandler = { h in
+            let chunk = h.availableData
+            guard !chunk.isEmpty else {
+                h.readabilityHandler = nil
+                return
+            }
+            buffer.append(chunk)
+            while let nl = buffer.firstIndex(of: 0x0A) {
+                let line = buffer.subdata(in: buffer.startIndex..<nl)
+                buffer.removeSubrange(buffer.startIndex...nl)
+                guard let obj = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { continue }
+                switch obj["type"] as? String {
+                case "item.completed":
+                    let item = obj["item"] as? [String: Any]
+                    if item?["type"] as? String == "agent_message", let text = item?["text"] as? String, !text.isEmpty {
+                        let piece = reply.isEmpty ? text : "\n\n" + text
+                        reply += piece
+                        DispatchQueue.main.async { onText(piece) }
+                    }
+                case "turn.failed":
+                    error = ((obj["error"] as? [String: Any])?["message"] as? String) ?? error
+                case "error":
+                    error = (obj["message"] as? String) ?? error
+                default:
+                    break
+                }
+            }
+        }
+
+        p.terminationHandler = { [weak self] proc in
+            DispatchQueue.main.async {
+                guard self?.process === proc else { return } // cancelled or replaced
+                self?.process = nil
+                let text = error ?? ""
+                if ["login", "logged in", "auth", "401", "unauthorized"].contains(where: { text.localizedCaseInsensitiveContains($0) }) {
+                    onDone(S.errCodexLogin)
+                } else if let e = error, reply.isEmpty {
+                    onDone(S.errCodex(e))
+                } else if proc.terminationStatus != 0 && reply.isEmpty {
+                    onDone(S.errCodex("exit \(proc.terminationStatus)"))
+                } else {
+                    self?.history.append((question, reply))
+                    onDone(nil)
+                }
+            }
+        }
+
+        do {
+            try p.run()
+            process = p
+            inPipe.fileHandleForWriting.write(Data(input.utf8))
+            try? inPipe.fileHandleForWriting.close()
+        } catch {
+            onDone(S.errCodex(error.localizedDescription))
+        }
+    }
+}
+
 // MARK: - Model
 
 enum Row: Equatable {
@@ -881,6 +1014,7 @@ final class LauncherModel: ObservableObject {
     let claude = ClaudeRunner()
     let api = APIRunner()
     let gemini = GeminiRunner()
+    let codex = CodexRunner()
     var hide: () -> Void = {}
 
     init() {
@@ -905,6 +1039,7 @@ final class LauncherModel: ObservableObject {
         claude.reset()
         api.reset()
         gemini.reset()
+        codex.reset()
         ask(asked)
     }
 
@@ -981,10 +1116,13 @@ final class LauncherModel: ObservableObject {
         claude.cancel()
         api.cancel()
         gemini.cancel()
+        codex.cancel()
         if let connection = Settings.shared.connection {
             api.ask(text, via: connection, onText: onText, onDone: onDone)
         } else if case let .gemini(model) = Settings.shared.choice {
             gemini.ask(text, model: model, onText: onText, onDone: onDone)
+        } else if Settings.shared.choice == .codex {
+            codex.ask(text, onText: onText, onDone: onDone)
         } else {
             claude.ask(text, onText: onText, onDone: onDone)
         }
@@ -996,6 +1134,7 @@ final class LauncherModel: ObservableObject {
             claude.cancel()
             api.cancel()
             gemini.cancel()
+            codex.cancel()
             isAnswering = false
         } else if answer != nil {
             answer = nil
@@ -1003,6 +1142,7 @@ final class LauncherModel: ObservableObject {
             claude.reset()
             api.reset()
             gemini.reset()
+            codex.reset()
             query = ""
         } else if !query.isEmpty {
             query = ""
@@ -1025,6 +1165,7 @@ final class LauncherModel: ObservableObject {
         claude.reset()
         api.reset()
         gemini.reset()
+        codex.reset()
         query = ""
         hits = []
         selection = 0
@@ -1737,6 +1878,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
         for m in ClaudeModel.allCases { add("\(m.title) — \(m.note)", .claude(m)) }
+        menu.addItem(.separator())
+        menu.addItem(.separator())
+        add("\(S.codexTitle) — \(S.noteCodex)", .codex)
         menu.addItem(.separator())
         for m in GeminiModel.allCases { add("\(m.title) — \(m.note)", .gemini(m)) }
         if !settings.connections.isEmpty {

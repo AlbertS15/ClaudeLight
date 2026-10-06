@@ -178,7 +178,11 @@ public sealed class Settings
         System.Array.Find(ClaudeModel.All, m => "claude:" + m.Id == Choice) ?? ClaudeModel.All[0];
 
     [JsonIgnore]
-    public string ChoiceTitle => Connection?.Name ?? GeminiModel?.Title ?? ClaudeModel.Title;
+    public string ChoiceTitle => Connection?.Name ?? GeminiModel?.Title ?? (IsCodex ? S.CodexTitle : ClaudeModel.Title);
+
+    /// "codex:" = ChatGPT through Codex CLI on the person's own login.
+    [JsonIgnore]
+    public bool IsCodex => Choice == "codex:";
 
     /// The Gemini model when the choice is "gemini:<id>", else null.
     [JsonIgnore]

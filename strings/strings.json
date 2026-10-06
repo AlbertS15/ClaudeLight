@@ -546,6 +546,48 @@
       "Autorisierungsschlüssel von developers.sber.ru",
       "clave de autorización de developers.sber.ru",
       "clé d'autorisation de developers.sber.ru"
+    ],
+    "codex_title": [
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)"
+    ],
+    "note_codex": [
+      "ChatGPT Plus subscription",
+      "подписка ChatGPT Plus",
+      "ChatGPT-Plus-Abo",
+      "suscripción ChatGPT Plus",
+      "abonnement ChatGPT Plus"
+    ],
+    "codex_section": [
+      "ChatGPT (subscription)",
+      "ChatGPT (подписка)",
+      "ChatGPT (Abo)",
+      "ChatGPT (suscripción)",
+      "ChatGPT (abonnement)"
+    ],
+    "err_no_codex": [
+      "Codex CLI not found. Install it: `brew install codex` (or `npm install -g @openai/codex`), then run `codex login` and sign in with ChatGPT.",
+      "Codex не найден. Установите его: `brew install codex` (или `npm install -g @openai/codex`), затем выполните `codex login` и войдите через ChatGPT.",
+      "Codex CLI nicht gefunden. Installieren: `brew install codex` (oder `npm install -g @openai/codex`), dann `codex login` ausführen und mit ChatGPT anmelden.",
+      "No se encontró Codex CLI. Instálalo: `brew install codex` (o `npm install -g @openai/codex`), luego ejecuta `codex login` e inicia sesión con ChatGPT.",
+      "Codex CLI introuvable. Installez-le : `brew install codex` (ou `npm install -g @openai/codex`), puis lancez `codex login` et connectez-vous avec ChatGPT."
+    ],
+    "err_codex_login": [
+      "Codex is not signed in. Run `codex login` in a terminal and sign in with ChatGPT (Plus or higher).",
+      "Codex не вошёл в аккаунт. Выполните `codex login` в терминале и войдите через ChatGPT (тариф Plus или выше).",
+      "Codex ist nicht angemeldet. Führen Sie `codex login` im Terminal aus und melden Sie sich mit ChatGPT an (Plus oder höher).",
+      "Codex no ha iniciado sesión. Ejecuta `codex login` en la terminal e inicia sesión con ChatGPT (Plus o superior).",
+      "Codex n'est pas connecté. Lancez `codex login` dans un terminal et connectez-vous avec ChatGPT (Plus ou plus)."
+    ],
+    "err_codex": [
+      "Codex returned an error: {0}",
+      "Codex вернул ошибку: {0}",
+      "Codex meldete einen Fehler: {0}",
+      "Codex devolvió un error: {0}",
+      "Codex a renvoyé une erreur : {0}"
     ]
   },
   "question_words": {

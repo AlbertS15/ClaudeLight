@@ -19,6 +19,7 @@ public sealed class LauncherWindow : Window
     private readonly ClaudeRunner _claude = new();
     private readonly ApiRunner _api = new();
     private readonly GeminiRunner _gemini = new();
+    private readonly CodexRunner _codex = new();
 
     private readonly TextBox _input = new();
     private readonly TextBlock _placeholder;
@@ -213,6 +214,7 @@ public sealed class LauncherWindow : Window
         _claude.Reset();
         _api.Reset();
         _gemini.Reset();
+        _codex.Reset();
         _hasAnswer = false;
         _isAnswering = false;
         _input.Text = "";
@@ -431,6 +433,7 @@ public sealed class LauncherWindow : Window
             _claude.Cancel();
             _api.Cancel();
             _gemini.Cancel();
+            _codex.Cancel();
             SetAnswering(false);
         }
         else if (_hasAnswer)
@@ -438,6 +441,7 @@ public sealed class LauncherWindow : Window
             _claude.Reset();
             _api.Reset();
             _gemini.Reset();
+            _codex.Reset();
             _hasAnswer = false;
             _input.Text = "";
             ShowResultsMode();
@@ -477,6 +481,7 @@ public sealed class LauncherWindow : Window
         _claude.Reset();
         _api.Reset();
         _gemini.Reset();
+        _codex.Reset();
         Ask(_asked.Text);
     }
 
@@ -522,8 +527,10 @@ public sealed class LauncherWindow : Window
         _claude.Cancel();
         _api.Cancel();
         _gemini.Cancel();
+        _codex.Cancel();
         if (Settings.Shared.Connection is Connection c) _api.Ask(question, c, Post, OnText, OnDone);
         else if (Settings.Shared.GeminiModel is GeminiModel g) _gemini.Ask(question, g, Post, OnText, OnDone);
+        else if (Settings.Shared.IsCodex) _codex.Ask(question, Post, OnText, OnDone);
         else _claude.Ask(question, Post, OnText, OnDone);
     }
 
@@ -551,6 +558,10 @@ public static class ModelMenu
             item.Click += (_, _) => Settings.Shared.Select(choice);
             menu.Items.Add(item);
         }
+        menu.Items.Add(new Separator());
+        var codex = new MenuItem { Header = $"{S.CodexTitle} — {S.NoteCodex}", IsChecked = Settings.Shared.IsCodex };
+        codex.Click += (_, _) => Settings.Shared.Select("codex:");
+        menu.Items.Add(codex);
         menu.Items.Add(new Separator());
         foreach (var m in GeminiModel.All)
         {

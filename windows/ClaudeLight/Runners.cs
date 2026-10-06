@@ -344,6 +344,147 @@ public static class GigaChat
     }
 }
 
+/// Runs Codex CLI (`codex exec`) read-only on the person's own ChatGPT login and returns its answer.
+/// Codex sends the answer whole; follow-ups carry the conversation in the prompt.
+public sealed class CodexRunner
+{
+    private Process? _process;
+    private readonly List<(string Question, string Answer)> _history = new();
+
+    /// npm puts codex.cmd in %APPDATA%\npm; otherwise whatever PATH finds.
+    public static string? Binary
+    {
+        get
+        {
+            var candidates = new List<string>
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "codex.cmd"),
+            };
+            foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(dir)) continue;
+                candidates.Add(Path.Combine(dir.Trim(), "codex.exe"));
+                candidates.Add(Path.Combine(dir.Trim(), "codex.cmd"));
+            }
+            return candidates.FirstOrDefault(File.Exists);
+        }
+    }
+
+    private static string WorkFolder
+    {
+        get
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "codex");
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+    }
+
+    public void Reset()
+    {
+        Cancel();
+        _history.Clear();
+    }
+
+    public void Cancel()
+    {
+        try { _process?.Kill(true); } catch { }
+        _process = null;
+    }
+
+    public void Ask(string question, Action<Action> post, Action<string> onText, Action<string?> onDone)
+    {
+        Cancel();
+        var binary = Binary;
+        if (binary == null)
+        {
+            onDone(S.ErrNoCodex);
+            return;
+        }
+
+        var input = new StringBuilder(ClaudeRunner.SystemPrompt + " Do not run commands or read files; just answer.\n\n");
+        foreach (var (q, a) in _history) input.Append($"User: {q}\n\nAssistant: {a}\n\n");
+        input.Append(_history.Count == 0 ? question : "User: " + question);
+
+        var psi = new ProcessStartInfo(binary)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardInputEncoding = new UTF8Encoding(false),
+            WorkingDirectory = WorkFolder,
+        };
+        foreach (var a in new[] { "exec", "--json", "--skip-git-repo-check", "--ephemeral", "--sandbox", "read-only", "--cd", WorkFolder, "-" })
+            psi.ArgumentList.Add(a);
+
+        Process p;
+        try
+        {
+            p = Process.Start(psi)!;
+        }
+        catch (Exception e)
+        {
+            onDone(S.ErrCodex(e.Message));
+            return;
+        }
+        _process = p;
+        p.StandardInput.Write(input.ToString());
+        p.StandardInput.Close();
+        p.ErrorDataReceived += (_, _) => { };
+        p.BeginErrorReadLine();
+
+        Task.Run(() =>
+        {
+            var reply = new StringBuilder();
+            string? error = null;
+            string? line;
+            while ((line = p.StandardOutput.ReadLine()) != null)
+            {
+                JsonNode? obj;
+                try { obj = JsonNode.Parse(line); } catch { continue; }
+                switch ((string?)obj?["type"])
+                {
+                    case "item.completed" when (string?)obj?["item"]?["type"] == "agent_message":
+                        var text = (string?)obj?["item"]?["text"];
+                        if (string.IsNullOrEmpty(text)) break;
+                        var piece = reply.Length == 0 ? text : "\n\n" + text;
+                        reply.Append(piece);
+                        post(() => onText(piece));
+                        break;
+                    case "turn.failed":
+                        error = (obj?["error"] is JsonObject e ? (string?)e["message"] : null) ?? error;
+                        break;
+                    case "error":
+                        error = (string?)obj?["message"] ?? error;
+                        break;
+                }
+            }
+            p.WaitForExit();
+            var full = reply.ToString();
+            post(() =>
+            {
+                if (_process != p) return; // cancelled or replaced
+                _process = null;
+                var message = error ?? "";
+                if (new[] { "login", "logged in", "auth", "401", "unauthorized" }.Any(k => message.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                    onDone(S.ErrCodexLogin);
+                else if (error != null && full.Length == 0)
+                    onDone(S.ErrCodex(error));
+                else if (p.ExitCode != 0 && full.Length == 0)
+                    onDone(S.ErrCodex("exit " + p.ExitCode));
+                else
+                {
+                    _history.Add((question, full));
+                    onDone(null);
+                }
+            });
+        });
+    }
+}
+
 /// Runs Gemini CLI headless on the person's own Google login and streams the reply.
 /// Headless runs keep no conversation here, so follow-ups carry the history in the prompt.
 public sealed class GeminiRunner

@@ -95,6 +95,10 @@ public sealed class App : Application
             models.DropDownItems.Add(item);
         }
         models.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
+        var codex = new System.Windows.Forms.ToolStripMenuItem($"{S.CodexTitle} — {S.NoteCodex}") { Checked = Settings.Shared.IsCodex };
+        codex.Click += (_, _) => Settings.Shared.Select("codex:");
+        models.DropDownItems.Add(codex);
+        models.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
         foreach (var m in GeminiModel.All)
         {
             var choice = "gemini:" + m.Id;
