@@ -423,13 +423,21 @@ final class APIRunner {
                     guard line.hasPrefix("data:") else { continue }
                     let payload = line.dropFirst(5).trimmingCharacters(in: .whitespaces)
                     if payload == "[DONE]" { break }
-                    guard let obj = try? JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any],
-                          let choices = obj["choices"] as? [[String: Any]],
+                    guard let obj = try? JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any] else { continue }
+                    // Services such as OpenRouter report a failure after the 200 as an "error" event in the stream.
+                    if let error = obj["error"] {
+                        let detail = (error as? [String: Any])?["message"] as? String ?? "\(error)"
+                        throw StreamError(message: S.errStream(c.name, detail))
+                    }
+                    guard let choices = obj["choices"] as? [[String: Any]],
                           let delta = choices.first?["delta"] as? [String: Any],
                           let text = delta["content"] as? String, !text.isEmpty
                     else { continue }
                     reply += text
                     await MainActor.run { onText(text) }
+                }
+                if reply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    throw StreamError(message: S.errEmpty(c.name))
                 }
                 let full = reply
                 await MainActor.run { [weak self] in
@@ -439,6 +447,8 @@ final class APIRunner {
                 }
             } catch is CancellationError {
                 return
+            } catch let e as StreamError {
+                await MainActor.run { onDone(e.message) }
             } catch let e as APIError {
                 await MainActor.run { onDone(e.message(for: c)) }
             } catch {
@@ -448,6 +458,10 @@ final class APIRunner {
             }
         }
     }
+}
+
+struct StreamError: Error {
+    let message: String
 }
 
 struct APIError: Error {

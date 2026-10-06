@@ -100,6 +100,8 @@ public static class S
         ["ask_chatgpt"] = new[] { "Ask in ChatGPT", "Спросить в ChatGPT", "In ChatGPT fragen", "Preguntar en ChatGPT", "Demander dans ChatGPT" },
         ["chatgpt_note"] = new[] { "opens chatgpt.com with your subscription", "откроется chatgpt.com с вашей подпиской", "öffnet chatgpt.com mit Ihrem Abo", "abre chatgpt.com con tu suscripción", "ouvre chatgpt.com avec votre abonnement" },
         ["show_chatgpt"] = new[] { "Show “Ask in ChatGPT”", "Показывать «Спросить в ChatGPT»", "„In ChatGPT fragen“ zeigen", "Mostrar «Preguntar en ChatGPT»", "Afficher « Demander dans ChatGPT »" },
+        ["err_stream"] = new[] { "“{0}” stopped answering: {1}", "«{0}» прервал ответ: {1}", "„{0}“ hat die Antwort abgebrochen: {1}", "«{0}» interrumpió la respuesta: {1}", "« {0} » a interrompu la réponse : {1}" },
+        ["err_empty"] = new[] { "“{0}” sent an empty answer — the free model may be busy. Press ↩ to retry or pick another model.", "«{0}» прислал пустой ответ — возможно, бесплатная модель перегружена. Нажмите ↩, чтобы повторить, или выберите другую модель.", "„{0}“ hat eine leere Antwort gesendet — das kostenlose Modell ist evtl. ausgelastet. ↩ zum Wiederholen oder anderes Modell wählen.", "«{0}» envió una respuesta vacía; puede que el modelo gratuito esté saturado. Pulsa ↩ para reintentar o elige otro modelo.", "« {0} » a renvoyé une réponse vide — le modèle gratuit est peut-être saturé. ↩ pour réessayer ou choisissez un autre modèle." },
     };
 
     private static string F(string key, params string[] args)
@@ -174,4 +176,6 @@ public static class S
     public static string AskChatgpt => F("ask_chatgpt");
     public static string ChatgptNote => F("chatgpt_note");
     public static string ShowChatgpt => F("show_chatgpt");
+    public static string ErrStream(string a0, string a1) => F("err_stream", a0, a1);
+    public static string ErrEmpty(string a0) => F("err_empty", a0);
 }

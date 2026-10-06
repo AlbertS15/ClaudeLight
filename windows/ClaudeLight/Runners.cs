@@ -208,12 +208,25 @@ public sealed class ApiRunner
                     if (!line.StartsWith("data:")) continue;
                     var payload = line.Substring(5).Trim();
                     if (payload == "[DONE]") break;
-                    string? piece;
-                    try { piece = (string?)JsonNode.Parse(payload)?["choices"]?[0]?["delta"]?["content"]; }
+                    JsonNode? obj;
+                    try { obj = JsonNode.Parse(payload); }
                     catch { continue; }
+                    // Services such as OpenRouter report a failure after the 200 as an "error" event in the stream.
+                    if (obj?["error"] is JsonNode streamError)
+                    {
+                        var detail = (streamError is JsonObject o ? (string?)o["message"] : null) ?? streamError.ToJsonString();
+                        post(() => onDone(S.ErrStream(c.Name, detail)));
+                        return;
+                    }
+                    var piece = (string?)obj?["choices"]?[0]?["delta"]?["content"];
                     if (string.IsNullOrEmpty(piece)) continue;
                     reply.Append(piece);
                     post(() => onText(piece));
+                }
+                if (string.IsNullOrWhiteSpace(reply.ToString()))
+                {
+                    post(() => onDone(S.ErrEmpty(c.Name)));
+                    return;
                 }
                 var full = reply.ToString();
                 post(() =>

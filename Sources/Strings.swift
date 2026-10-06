@@ -89,6 +89,8 @@ private let table: [String: [String]] = [
     "ask_chatgpt": ["Ask in ChatGPT", "Спросить в ChatGPT", "In ChatGPT fragen", "Preguntar en ChatGPT", "Demander dans ChatGPT"],
     "chatgpt_note": ["opens chatgpt.com with your subscription", "откроется chatgpt.com с вашей подпиской", "öffnet chatgpt.com mit Ihrem Abo", "abre chatgpt.com con tu suscripción", "ouvre chatgpt.com avec votre abonnement"],
     "show_chatgpt": ["Show “Ask in ChatGPT”", "Показывать «Спросить в ChatGPT»", "„In ChatGPT fragen“ zeigen", "Mostrar «Preguntar en ChatGPT»", "Afficher « Demander dans ChatGPT »"],
+    "err_stream": ["“{0}” stopped answering: {1}", "«{0}» прервал ответ: {1}", "„{0}“ hat die Antwort abgebrochen: {1}", "«{0}» interrumpió la respuesta: {1}", "« {0} » a interrompu la réponse : {1}"],
+    "err_empty": ["“{0}” sent an empty answer — the free model may be busy. Press ↩ to retry or pick another model.", "«{0}» прислал пустой ответ — возможно, бесплатная модель перегружена. Нажмите ↩, чтобы повторить, или выберите другую модель.", "„{0}“ hat eine leere Antwort gesendet — das kostenlose Modell ist evtl. ausgelastet. ↩ zum Wiederholen oder anderes Modell wählen.", "«{0}» envió una respuesta vacía; puede que el modelo gratuito esté saturado. Pulsa ↩ para reintentar o elige otro modelo.", "« {0} » a renvoyé une réponse vide — le modèle gratuit est peut-être saturé. ↩ pour réessayer ou choisissez un autre modèle."],
 ]
 
 private func format(_ key: String, _ args: [String]) -> String {
@@ -164,4 +166,6 @@ enum S {
     static var askChatgpt: String { format("ask_chatgpt", []) }
     static var chatgptNote: String { format("chatgpt_note", []) }
     static var showChatgpt: String { format("show_chatgpt", []) }
+    static func errStream(_ a0: String, _ a1: String) -> String { format("err_stream", [a0, a1]) }
+    static func errEmpty(_ a0: String) -> String { format("err_empty", [a0]) }
 }
