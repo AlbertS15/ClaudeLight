@@ -102,6 +102,11 @@ public static class S
         ["show_chatgpt"] = new[] { "Show “Ask in ChatGPT”", "Показывать «Спросить в ChatGPT»", "„In ChatGPT fragen“ zeigen", "Mostrar «Preguntar en ChatGPT»", "Afficher « Demander dans ChatGPT »" },
         ["err_stream"] = new[] { "“{0}” stopped answering: {1}", "«{0}» прервал ответ: {1}", "„{0}“ hat die Antwort abgebrochen: {1}", "«{0}» interrumpió la respuesta: {1}", "« {0} » a interrompu la réponse : {1}" },
         ["err_empty"] = new[] { "“{0}” sent an empty answer — the free model may be busy. Press ↩ to retry or pick another model.", "«{0}» прислал пустой ответ — возможно, бесплатная модель перегружена. Нажмите ↩, чтобы повторить, или выберите другую модель.", "„{0}“ hat eine leere Antwort gesendet — das kostenlose Modell ist evtl. ausgelastet. ↩ zum Wiederholen oder anderes Modell wählen.", "«{0}» envió una respuesta vacía; puede que el modelo gratuito esté saturado. Pulsa ↩ para reintentar o elige otro modelo.", "« {0} » a renvoyé une réponse vide — le modèle gratuit est peut-être saturé. ↩ pour réessayer ou choisissez un autre modèle." },
+        ["gemini_section"] = new[] { "Gemini (Google subscription)", "Gemini (подписка Google)", "Gemini (Google-Abo)", "Gemini (suscripción de Google)", "Gemini (abonnement Google)" },
+        ["note_gemini_auto"] = new[] { "as in Gemini CLI", "как в Gemini CLI", "wie in Gemini CLI", "como en Gemini CLI", "comme dans Gemini CLI" },
+        ["err_no_gemini"] = new[] { "Gemini CLI not found. Install it: `brew install gemini-cli` (or `npm install -g @google/gemini-cli`), then run `gemini` once and sign in with Google.", "Gemini CLI не найден. Установите его: `brew install gemini-cli` (или `npm install -g @google/gemini-cli`), затем один раз запустите `gemini` и войдите через Google.", "Gemini CLI nicht gefunden. Installieren: `brew install gemini-cli` (oder `npm install -g @google/gemini-cli`), dann einmal `gemini` starten und mit Google anmelden.", "No se encontró Gemini CLI. Instálalo: `brew install gemini-cli` (o `npm install -g @google/gemini-cli`), ejecuta `gemini` una vez e inicia sesión con Google.", "Gemini CLI introuvable. Installez-le : `brew install gemini-cli` (ou `npm install -g @google/gemini-cli`), puis lancez `gemini` une fois et connectez-vous avec Google." },
+        ["err_gemini_login"] = new[] { "Gemini CLI is not signed in. Run `gemini` in a terminal and choose “Sign in with Google”.", "Gemini CLI не вошёл в аккаунт. Запустите `gemini` в терминале и выберите «Sign in with Google».", "Gemini CLI ist nicht angemeldet. Starten Sie `gemini` im Terminal und wählen Sie „Sign in with Google“.", "Gemini CLI no ha iniciado sesión. Ejecuta `gemini` en la terminal y elige «Sign in with Google».", "Gemini CLI n'est pas connecté. Lancez `gemini` dans un terminal et choisissez « Sign in with Google »." },
+        ["err_gemini"] = new[] { "Gemini returned an error: {0}", "Gemini вернул ошибку: {0}", "Gemini meldete einen Fehler: {0}", "Gemini devolvió un error: {0}", "Gemini a renvoyé une erreur : {0}" },
     };
 
     private static string F(string key, params string[] args)
@@ -178,4 +183,9 @@ public static class S
     public static string ShowChatgpt => F("show_chatgpt");
     public static string ErrStream(string a0, string a1) => F("err_stream", a0, a1);
     public static string ErrEmpty(string a0) => F("err_empty", a0);
+    public static string GeminiSection => F("gemini_section");
+    public static string NoteGeminiAuto => F("note_gemini_auto");
+    public static string ErrNoGemini => F("err_no_gemini");
+    public static string ErrGeminiLogin => F("err_gemini_login");
+    public static string ErrGemini(string a0) => F("err_gemini", a0);
 }

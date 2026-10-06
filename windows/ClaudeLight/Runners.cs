@@ -269,6 +269,149 @@ public sealed class ApiRunner
     }
 }
 
+/// Runs Gemini CLI headless on the person's own Google login and streams the reply.
+/// Headless runs keep no conversation here, so follow-ups carry the history in the prompt.
+public sealed class GeminiRunner
+{
+    private Process? _process;
+    private readonly List<(string Question, string Answer)> _history = new();
+
+    /// npm puts gemini.cmd in %APPDATA%\npm; otherwise whatever PATH finds.
+    public static string? Binary
+    {
+        get
+        {
+            var candidates = new List<string>
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "gemini.cmd"),
+            };
+            foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(dir)) continue;
+                candidates.Add(Path.Combine(dir.Trim(), "gemini.cmd"));
+                candidates.Add(Path.Combine(dir.Trim(), "gemini.exe"));
+            }
+            return candidates.FirstOrDefault(File.Exists);
+        }
+    }
+
+    /// An empty folder to run in, so Gemini never reads or indexes the home folder.
+    private static string WorkFolder
+    {
+        get
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "gemini");
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+    }
+
+    public void Reset()
+    {
+        Cancel();
+        _history.Clear();
+    }
+
+    public void Cancel()
+    {
+        try { _process?.Kill(true); } catch { }
+        _process = null;
+    }
+
+    public void Ask(string question, GeminiModel model, Action<Action> post, Action<string> onText, Action<string?> onDone)
+    {
+        Cancel();
+        var binary = Binary;
+        if (binary == null)
+        {
+            onDone(S.ErrNoGemini);
+            return;
+        }
+
+        // The conversation goes in on stdin, so no shell (gemini.cmd) parses it; -p adds the instructions after it.
+        var input = new StringBuilder();
+        foreach (var (q, a) in _history) input.Append($"User: {q}\n\nAssistant: {a}\n\n");
+        input.Append(_history.Count == 0 ? question : "User: " + question);
+
+        var psi = new ProcessStartInfo(binary)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardInputEncoding = new UTF8Encoding(false),
+            WorkingDirectory = WorkFolder,
+        };
+        foreach (var a in new[] { "-p", "Answer briefly, in the language of the question.", "--output-format", "stream-json", "--approval-mode", "plan" })
+            psi.ArgumentList.Add(a);
+        if (model.Id != "") { psi.ArgumentList.Add("--model"); psi.ArgumentList.Add(model.Id); }
+
+        Process p;
+        try
+        {
+            p = Process.Start(psi)!;
+        }
+        catch (Exception e)
+        {
+            onDone(S.ErrGemini(e.Message));
+            return;
+        }
+        _process = p;
+        p.StandardInput.Write(input.ToString());
+        p.StandardInput.Close();
+        p.ErrorDataReceived += (_, _) => { };
+        p.BeginErrorReadLine();
+
+        Task.Run(() =>
+        {
+            var reply = new StringBuilder();
+            string? error = null;
+            string? line;
+            while ((line = p.StandardOutput.ReadLine()) != null)
+            {
+                JsonNode? obj;
+                try { obj = JsonNode.Parse(line); } catch { continue; }
+                switch ((string?)obj?["type"])
+                {
+                    case "message" when (string?)obj?["role"] == "assistant":
+                        var piece = (string?)obj?["content"];
+                        if (string.IsNullOrEmpty(piece)) break;
+                        reply.Append(piece);
+                        post(() => onText(piece));
+                        break;
+                    case "error" when (string?)obj?["severity"] == "error":
+                        error = (string?)obj?["message"];
+                        break;
+                    case "result" when (string?)obj?["status"] == "error":
+                        error = (obj?["error"] is JsonObject e ? (string?)e["message"] : null) ?? error ?? "";
+                        break;
+                }
+            }
+            p.WaitForExit();
+            var full = reply.ToString();
+            post(() =>
+            {
+                if (_process != p) return; // cancelled or replaced
+                _process = null;
+                var text = error ?? "";
+                if (new[] { "auth", "login", "credential", "sign in" }.Any(k => text.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                    onDone(S.ErrGeminiLogin);
+                else if (error != null)
+                    onDone(S.ErrGemini(error));
+                else if (p.ExitCode != 0 && full.Length == 0)
+                    onDone(S.ErrGemini("exit " + p.ExitCode));
+                else
+                {
+                    _history.Add((question, full));
+                    onDone(null);
+                }
+            });
+        });
+    }
+}
+
 /// Asks `claude auth status`, which answers from local credentials without a model call.
 public static class ClaudeAuth
 {

@@ -94,6 +94,14 @@ public sealed class App : Application
             item.Click += (_, _) => Settings.Shared.Select(choice);
             models.DropDownItems.Add(item);
         }
+        models.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());
+        foreach (var m in GeminiModel.All)
+        {
+            var choice = "gemini:" + m.Id;
+            var item = new System.Windows.Forms.ToolStripMenuItem($"{m.Title} — {m.Note}") { Checked = Settings.Shared.Choice == choice };
+            item.Click += (_, _) => Settings.Shared.Select(choice);
+            models.DropDownItems.Add(item);
+        }
         if (Settings.Shared.Connections.Count > 0)
         {
             models.DropDownItems.Add(new System.Windows.Forms.ToolStripSeparator());

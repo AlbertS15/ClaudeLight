@@ -234,13 +234,40 @@ enum Keychain {
 }
 
 /// What answers a question: a Claude model through Claude Code, or a connection.
+/// Gemini models through the person's own Google login in Gemini CLI; `auto` leaves the choice to the CLI.
+enum GeminiModel: String, CaseIterable, Identifiable {
+    case auto = "", pro = "gemini-3.1-pro-preview", flash = "gemini-3.8-flash", lite = "gemini-3.1-flash-lite"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .auto: return "Gemini"
+        case .pro: return "Gemini 3.1 Pro"
+        case .flash: return "Gemini 3.8 Flash"
+        case .lite: return "Gemini 3.1 Flash-Lite"
+        }
+    }
+
+    var note: String {
+        switch self {
+        case .auto: return S.noteGeminiAuto
+        case .pro: return S.noteOpus
+        case .flash: return S.noteSonnet
+        case .lite: return S.noteHaiku
+        }
+    }
+}
+
 enum Choice: Hashable {
     case claude(ClaudeModel)
+    case gemini(GeminiModel)
     case custom(UUID)
 
     var stored: String {
         switch self {
         case let .claude(m): return "claude:" + m.rawValue
+        case let .gemini(m): return "gemini:" + m.rawValue
         case let .custom(id): return "custom:" + id.uuidString
         }
     }
@@ -248,6 +275,8 @@ enum Choice: Hashable {
     init(stored: String) {
         if stored.hasPrefix("custom:"), let id = UUID(uuidString: String(stored.dropFirst(7))) {
             self = .custom(id)
+        } else if stored.hasPrefix("gemini:") {
+            self = .gemini(GeminiModel(rawValue: String(stored.dropFirst(7))) ?? .auto)
         } else {
             let raw = stored.hasPrefix("claude:") ? String(stored.dropFirst(7)) : stored
             self = .claude(ClaudeModel(rawValue: raw) ?? .auto)
@@ -291,6 +320,7 @@ final class Settings: ObservableObject {
     func title(of c: Choice) -> String {
         switch c {
         case let .claude(m): return m.title
+        case let .gemini(m): return m.title
         case let .custom(id): return connections.first { $0.id == id }?.name ?? "—"
         }
     }
@@ -341,6 +371,12 @@ struct ModelPicker: View {
             Picker("Claude", selection: $settings.choice) {
                 ForEach(ClaudeModel.allCases) { m in
                     Text("\(m.title) — \(m.note)").tag(Choice.claude(m))
+                }
+            }
+            .pickerStyle(.inline)
+            Picker(S.geminiSection, selection: $settings.choice) {
+                ForEach(GeminiModel.allCases) { m in
+                    Text("\(m.title) — \(m.note)").tag(Choice.gemini(m))
                 }
             }
             .pickerStyle(.inline)
@@ -608,6 +644,133 @@ final class ClaudeRunner {
     }
 }
 
+// MARK: - Gemini
+
+/// Runs Gemini CLI (`gemini`) headless on the person's own Google login and streams the reply.
+/// Gemini CLI keeps no conversation between headless runs here, so follow-ups carry the history in the prompt.
+final class GeminiRunner {
+    private var process: Process?
+    private var history: [(question: String, answer: String)] = []
+
+    static var binary: String? {
+        let home = NSHomeDirectory()
+        var candidates = ["/opt/homebrew/bin/gemini", "/usr/local/bin/gemini", home + "/.local/bin/gemini", home + "/.npm-global/bin/gemini"]
+        // nvm keeps one bin folder per Node version.
+        if let versions = try? FileManager.default.contentsOfDirectory(atPath: home + "/.nvm/versions/node") {
+            candidates += versions.sorted().reversed().map { home + "/.nvm/versions/node/\($0)/bin/gemini" }
+        }
+        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+    }
+
+    /// An empty folder to run in, so Gemini never reads or indexes the home folder.
+    private static var workFolder: URL {
+        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ClaudeLight/gemini", isDirectory: true)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    func reset() {
+        cancel()
+        history = []
+    }
+
+    func cancel() {
+        process?.terminate()
+        process = nil
+    }
+
+    func ask(_ question: String, model: GeminiModel, onText: @escaping (String) -> Void, onDone: @escaping (String?) -> Void) {
+        cancel()
+        guard let binary = Self.binary else {
+            onDone(S.errNoGemini)
+            return
+        }
+
+        // The conversation goes in on stdin; -p adds the instructions after it.
+        var input = ""
+        for turn in history {
+            input += "User: \(turn.question)\n\nAssistant: \(turn.answer)\n\n"
+        }
+        input += history.isEmpty ? question : "User: \(question)"
+
+        var args = ["-p", ClaudeRunner.systemPrompt, "--output-format", "stream-json", "--approval-mode", "plan"]
+        if model != .auto { args += ["--model", model.rawValue] }
+
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: binary)
+        p.arguments = args
+        p.currentDirectoryURL = Self.workFolder
+        var env = ProcessInfo.processInfo.environment
+        let nodeDir = (binary as NSString).deletingLastPathComponent
+        env["PATH"] = "\(nodeDir):/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        p.environment = env
+
+        let out = Pipe()
+        let inPipe = Pipe()
+        p.standardOutput = out
+        p.standardError = Pipe()
+        p.standardInput = inPipe
+
+        var buffer = Data()
+        var reply = ""
+        var error: String?
+        out.fileHandleForReading.readabilityHandler = { h in
+            let chunk = h.availableData
+            guard !chunk.isEmpty else {
+                h.readabilityHandler = nil
+                return
+            }
+            buffer.append(chunk)
+            while let nl = buffer.firstIndex(of: 0x0A) {
+                let line = buffer.subdata(in: buffer.startIndex..<nl)
+                buffer.removeSubrange(buffer.startIndex...nl)
+                guard let obj = try? JSONSerialization.jsonObject(with: line) as? [String: Any] else { continue }
+                switch obj["type"] as? String {
+                case "message" where obj["role"] as? String == "assistant":
+                    if let text = obj["content"] as? String, !text.isEmpty {
+                        reply += text
+                        DispatchQueue.main.async { onText(text) }
+                    }
+                case "error" where obj["severity"] as? String == "error":
+                    error = obj["message"] as? String
+                case "result" where obj["status"] as? String == "error":
+                    error = ((obj["error"] as? [String: Any])?["message"] as? String) ?? error ?? S.errGemini("")
+                default:
+                    break
+                }
+            }
+        }
+
+        p.terminationHandler = { [weak self] proc in
+            DispatchQueue.main.async {
+                guard self?.process === proc else { return } // cancelled or replaced
+                self?.process = nil
+                let text = error ?? ""
+                if ["auth", "login", "credential", "sign in"].contains(where: { text.localizedCaseInsensitiveContains($0) }) {
+                    onDone(S.errGeminiLogin)
+                } else if let e = error {
+                    onDone(S.errGemini(e))
+                } else if proc.terminationStatus != 0 && reply.isEmpty {
+                    onDone(S.errGemini("exit \(proc.terminationStatus)"))
+                } else {
+                    self?.history.append((question, reply))
+                    onDone(nil)
+                }
+            }
+        }
+
+        do {
+            try p.run()
+            process = p
+            inPipe.fileHandleForWriting.write(Data(input.utf8))
+            try? inPipe.fileHandleForWriting.close()
+        } catch {
+            onDone(S.errGemini(error.localizedDescription))
+        }
+    }
+}
+
 // MARK: - Model
 
 enum Row: Equatable {
@@ -649,6 +812,7 @@ final class LauncherModel: ObservableObject {
     let search = FileSearch()
     let claude = ClaudeRunner()
     let api = APIRunner()
+    let gemini = GeminiRunner()
     var hide: () -> Void = {}
 
     init() {
@@ -672,6 +836,7 @@ final class LauncherModel: ObservableObject {
         guard answer != nil, answerError != nil, !isAnswering, !asked.isEmpty else { return }
         claude.reset()
         api.reset()
+        gemini.reset()
         ask(asked)
     }
 
@@ -745,11 +910,14 @@ final class LauncherModel: ObservableObject {
             self?.isAnswering = false
             self?.answerError = error
         }
+        claude.cancel()
+        api.cancel()
+        gemini.cancel()
         if let connection = Settings.shared.connection {
-            claude.cancel()
             api.ask(text, via: connection, onText: onText, onDone: onDone)
+        } else if case let .gemini(model) = Settings.shared.choice {
+            gemini.ask(text, model: model, onText: onText, onDone: onDone)
         } else {
-            api.cancel()
             claude.ask(text, onText: onText, onDone: onDone)
         }
     }
@@ -759,12 +927,14 @@ final class LauncherModel: ObservableObject {
         if isAnswering {
             claude.cancel()
             api.cancel()
+            gemini.cancel()
             isAnswering = false
         } else if answer != nil {
             answer = nil
             answerError = nil
             claude.reset()
             api.reset()
+            gemini.reset()
             query = ""
         } else if !query.isEmpty {
             query = ""
@@ -786,6 +956,7 @@ final class LauncherModel: ObservableObject {
         isAnswering = false
         claude.reset()
         api.reset()
+        gemini.reset()
         query = ""
         hits = []
         selection = 0
@@ -1498,6 +1669,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item)
         }
         for m in ClaudeModel.allCases { add("\(m.title) — \(m.note)", .claude(m)) }
+        menu.addItem(.separator())
+        for m in GeminiModel.allCases { add("\(m.title) — \(m.note)", .gemini(m)) }
         if !settings.connections.isEmpty {
             menu.addItem(.separator())
             for c in settings.connections { add("\(c.name) — \(c.model)", .custom(c.id)) }

@@ -490,6 +490,41 @@
       "„{0}“ hat eine leere Antwort gesendet — das kostenlose Modell ist evtl. ausgelastet. ↩ zum Wiederholen oder anderes Modell wählen.",
       "«{0}» envió una respuesta vacía; puede que el modelo gratuito esté saturado. Pulsa ↩ para reintentar o elige otro modelo.",
       "« {0} » a renvoyé une réponse vide — le modèle gratuit est peut-être saturé. ↩ pour réessayer ou choisissez un autre modèle."
+    ],
+    "gemini_section": [
+      "Gemini (Google subscription)",
+      "Gemini (подписка Google)",
+      "Gemini (Google-Abo)",
+      "Gemini (suscripción de Google)",
+      "Gemini (abonnement Google)"
+    ],
+    "note_gemini_auto": [
+      "as in Gemini CLI",
+      "как в Gemini CLI",
+      "wie in Gemini CLI",
+      "como en Gemini CLI",
+      "comme dans Gemini CLI"
+    ],
+    "err_no_gemini": [
+      "Gemini CLI not found. Install it: `brew install gemini-cli` (or `npm install -g @google/gemini-cli`), then run `gemini` once and sign in with Google.",
+      "Gemini CLI не найден. Установите его: `brew install gemini-cli` (или `npm install -g @google/gemini-cli`), затем один раз запустите `gemini` и войдите через Google.",
+      "Gemini CLI nicht gefunden. Installieren: `brew install gemini-cli` (oder `npm install -g @google/gemini-cli`), dann einmal `gemini` starten und mit Google anmelden.",
+      "No se encontró Gemini CLI. Instálalo: `brew install gemini-cli` (o `npm install -g @google/gemini-cli`), ejecuta `gemini` una vez e inicia sesión con Google.",
+      "Gemini CLI introuvable. Installez-le : `brew install gemini-cli` (ou `npm install -g @google/gemini-cli`), puis lancez `gemini` une fois et connectez-vous avec Google."
+    ],
+    "err_gemini_login": [
+      "Gemini CLI is not signed in. Run `gemini` in a terminal and choose “Sign in with Google”.",
+      "Gemini CLI не вошёл в аккаунт. Запустите `gemini` в терминале и выберите «Sign in with Google».",
+      "Gemini CLI ist nicht angemeldet. Starten Sie `gemini` im Terminal und wählen Sie „Sign in with Google“.",
+      "Gemini CLI no ha iniciado sesión. Ejecuta `gemini` en la terminal y elige «Sign in with Google».",
+      "Gemini CLI n'est pas connecté. Lancez `gemini` dans un terminal et choisissez « Sign in with Google »."
+    ],
+    "err_gemini": [
+      "Gemini returned an error: {0}",
+      "Gemini вернул ошибку: {0}",
+      "Gemini meldete einen Fehler: {0}",
+      "Gemini devolvió un error: {0}",
+      "Gemini a renvoyé une erreur : {0}"
     ]
   },
   "question_words": {

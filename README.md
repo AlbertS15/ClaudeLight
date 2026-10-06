@@ -21,6 +21,8 @@ Windows SmartScreen тоже может предупредить о неизве
 - **Поиск** программ и файлов: на Mac — по индексу Spotlight, на Windows — по меню «Пуск» и индексу Windows Search.
 - **Вопросы Claude** через установленный [Claude Code](https://claude.com/claude-code) (`claude`): без API-ключа, по вашей подписке; ответы печатаются по ходу, уточняющие вопросы продолжают разговор.
 - **Выбор модели**: Haiku, Sonnet, Opus, Fable.
+- **Gemini по подписке Google** через официальный [Gemini CLI](https://github.com/google-gemini/gemini-cli) (`gemini`): вход через аккаунт Google, без API-ключа; у подписчиков Google AI Pro лимиты выше. Модели: 3.1 Pro, 3.8 Flash, 3.1 Flash-Lite. Установка: `brew install gemini-cli` (или `npm install -g @google/gemini-cli`), затем один раз `gemini` и «Sign in with Google».
+- **Спросить в ChatGPT** (⇧⌘↩ / Ctrl+Shift+Enter) — открывает chatgpt.com с вопросом, ответ идёт по вашей подписке ChatGPT.
 - **Свои подключения**: любой OpenAI-совместимый сервис — OpenRouter, OpenAI, DeepSeek, Groq, Mistral, а также локальные Ollama и LM Studio. Ключи хранятся в Связке ключей macOS / зашифрованы средствами Windows (DPAPI).
 - Иконка в строке меню (Mac) или в трее (Windows), стартовое окно, запуск при входе в систему.
 

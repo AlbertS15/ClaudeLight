@@ -31,6 +31,26 @@ public sealed record ClaudeModel(string Id)
     };
 }
 
+/// Gemini models through the person's own Google login in Gemini CLI; "" leaves the choice to the CLI.
+public sealed record GeminiModel(string Id, string Title)
+{
+    public static readonly GeminiModel[] All =
+    {
+        new("", "Gemini"),
+        new("gemini-3.1-pro-preview", "Gemini 3.1 Pro"),
+        new("gemini-3.8-flash", "Gemini 3.8 Flash"),
+        new("gemini-3.1-flash-lite", "Gemini 3.1 Flash-Lite"),
+    };
+
+    public string Note => Id switch
+    {
+        "gemini-3.1-pro-preview" => S.NoteOpus,
+        "gemini-3.8-flash" => S.NoteSonnet,
+        "gemini-3.1-flash-lite" => S.NoteHaiku,
+        _ => S.NoteGeminiAuto,
+    };
+}
+
 /// A model on any OpenAI-compatible service. The key is stored encrypted for this Windows user (DPAPI).
 public sealed class Connection
 {
@@ -156,7 +176,12 @@ public sealed class Settings
         System.Array.Find(ClaudeModel.All, m => "claude:" + m.Id == Choice) ?? ClaudeModel.All[0];
 
     [JsonIgnore]
-    public string ChoiceTitle => Connection?.Name ?? ClaudeModel.Title;
+    public string ChoiceTitle => Connection?.Name ?? GeminiModel?.Title ?? ClaudeModel.Title;
+
+    /// The Gemini model when the choice is "gemini:<id>", else null.
+    [JsonIgnore]
+    public GeminiModel? GeminiModel =>
+        Choice.StartsWith("gemini:") ? System.Array.Find(GeminiModel.All, m => "gemini:" + m.Id == Choice) ?? GeminiModel.All[0] : null;
 
     public void Select(string choice)
     {
