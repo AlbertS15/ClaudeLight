@@ -170,7 +170,7 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         switch self {
         case .openRouter: return "https://openrouter.ai/api/v1"
         case .openAI: return "https://api.openai.com/v1"
-        case .deepSeek: return "https://api.deepseek.com/v1"
+        case .deepSeek: return "https://api.deepseek.com"
         case .groq: return "https://api.groq.com/openai/v1"
         case .mistral: return "https://api.mistral.ai/v1"
         case .ollama: return "http://localhost:11434/v1"
@@ -183,7 +183,7 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         switch self {
         case .openRouter: return S.hintExample("openai/gpt-4o")
         case .openAI: return S.hintExample("gpt-4o")
-        case .deepSeek: return S.hintExample("deepseek-chat")
+        case .deepSeek: return S.hintExample("deepseek-flash")
         case .groq: return S.hintExample("llama-3.3-70b-versatile")
         case .mistral: return S.hintExample("mistral-large-latest")
         case .ollama: return S.hintExample("llama3.2")

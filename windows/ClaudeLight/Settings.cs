@@ -92,7 +92,7 @@ public sealed record ServicePreset(string Key, string BaseUrl, string Example, b
     {
         new("OpenRouter", "https://openrouter.ai/api/v1", "openai/gpt-4o", true),
         new("OpenAI", "https://api.openai.com/v1", "gpt-4o", true),
-        new("DeepSeek", "https://api.deepseek.com/v1", "deepseek-chat", true),
+        new("DeepSeek", "https://api.deepseek.com", "deepseek-flash", true),
         new("Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", true),
         new("Mistral", "https://api.mistral.ai/v1", "mistral-large-latest", true),
         new("ollama", "http://localhost:11434/v1", "llama3.2", false),
