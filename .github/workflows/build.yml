@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
+          echo "APP_VERSION=$v" >> "$GITHUB_ENV"
+
+      - name: Publish single-file exe
+        run: >
+          dotnet publish windows/ClaudeLight/ClaudeLight.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ env.APP_VERSION }} -o dist/app
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) { choco install innosetup -y --no-progress }
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc windows/installer/ClaudeLight.iss
+          Copy-Item dist/app/ClaudeLight.exe "dist/ClaudeLight-Portable-${env:APP_VERSION}.exe"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ClaudeLight-Windows
+          path: |
+            dist/ClaudeLight-Setup-*.exe
+            dist/ClaudeLight-Portable-*.exe
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app and disk image
+        run: |
+          ./build.sh
+          mkdir -p dist/dmg
+          cp -R build/ClaudeLight.app dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+          hdiutil create -volname ClaudeLight -srcfolder dist/dmg -ov -format UDZO dist/ClaudeLight-macOS.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ClaudeLight-macOS
+          path: dist/ClaudeLight-macOS.dmg
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

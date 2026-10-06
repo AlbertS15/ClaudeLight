@@ -9,7 +9,7 @@ mkdir -p $APP/Contents/MacOS $APP/Contents/Resources
 
 swiftc -O -swift-version 5 -target arm64-apple-macos14.0 \
   -framework AppKit -framework SwiftUI -framework Carbon -framework ServiceManagement \
-  Sources/main.swift -o $APP/Contents/MacOS/ClaudeLight
+  Sources/*.swift -o $APP/Contents/MacOS/ClaudeLight
 
 swift Icon/make_icon.swift build/AppIcon.iconset
 iconutil -c icns build/AppIcon.iconset -o $APP/Contents/Resources/AppIcon.icns

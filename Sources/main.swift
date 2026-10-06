@@ -3,6 +3,7 @@
 
 import AppKit
 import Carbon.HIToolbox
+import Combine
 import ServiceManagement
 import SwiftUI
 
@@ -119,7 +120,7 @@ enum ClaudeModel: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .auto: return "Авто"
+        case .auto: return S.modelAuto
         case .haiku: return "Haiku"
         case .sonnet: return "Sonnet"
         case .opus: return "Opus"
@@ -129,11 +130,11 @@ enum ClaudeModel: String, CaseIterable, Identifiable {
 
     var note: String {
         switch self {
-        case .auto: return "как в Claude Code"
-        case .haiku: return "самый быстрый"
-        case .sonnet: return "быстрый и умный"
-        case .opus: return "самый умный"
-        case .fable: return "нужны кредиты"
+        case .auto: return S.noteAuto
+        case .haiku: return S.noteHaiku
+        case .sonnet: return S.noteSonnet
+        case .opus: return S.noteOpus
+        case .fable: return S.noteFable
         }
     }
 }
@@ -159,9 +160,9 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         case .deepSeek: return "DeepSeek"
         case .groq: return "Groq"
         case .mistral: return "Mistral"
-        case .ollama: return "Ollama (на этом Mac)"
-        case .lmStudio: return "LM Studio (на этом Mac)"
-        case .other: return "Другой адрес"
+        case .ollama: return S.presetOllama
+        case .lmStudio: return S.presetLmstudio
+        case .other: return S.presetOther
         }
     }
 
@@ -180,14 +181,14 @@ enum ServicePreset: String, CaseIterable, Identifiable {
 
     var modelHint: String {
         switch self {
-        case .openRouter: return "например, openai/gpt-4o"
-        case .openAI: return "например, gpt-4o"
-        case .deepSeek: return "например, deepseek-chat"
-        case .groq: return "например, llama-3.3-70b-versatile"
-        case .mistral: return "например, mistral-large-latest"
-        case .ollama: return "например, llama3.2"
-        case .lmStudio: return "имя загруженной модели"
-        case .other: return "имя модели"
+        case .openRouter: return S.hintExample("openai/gpt-4o")
+        case .openAI: return S.hintExample("gpt-4o")
+        case .deepSeek: return S.hintExample("deepseek-chat")
+        case .groq: return S.hintExample("llama-3.3-70b-versatile")
+        case .mistral: return S.hintExample("mistral-large-latest")
+        case .ollama: return S.hintExample("llama3.2")
+        case .lmStudio: return S.hintLoadedModel
+        case .other: return S.hintModelName
         }
     }
 
@@ -261,12 +262,17 @@ final class Settings: ObservableObject {
     @Published var choice: Choice {
         didSet { UserDefaults.standard.set(choice.stored, forKey: "model") }
     }
+    /// Interface language code, "" for the system's. Strings read it through Lang.index.
+    @Published var language: String {
+        didSet { UserDefaults.standard.set(language, forKey: "language") }
+    }
     @Published private(set) var connections: [Connection] {
         didSet { UserDefaults.standard.set(try? JSONEncoder().encode(connections), forKey: "connections") }
     }
 
     private init() {
         choice = Choice(stored: UserDefaults.standard.string(forKey: "model") ?? "")
+        language = UserDefaults.standard.string(forKey: "language") ?? ""
         let data = UserDefaults.standard.data(forKey: "connections")
         connections = data.flatMap { try? JSONDecoder().decode([Connection].self, from: $0) } ?? []
         if case let .custom(id) = choice, !connections.contains(where: { $0.id == id }) { choice = .claude(.auto) }
@@ -297,6 +303,25 @@ final class Settings: ObservableObject {
     }
 }
 
+/// The label of the hotkey's key: Ё on a Russian layout, ` elsewhere (the same physical key).
+var hotkeyKey: String { Lang.codes[Lang.index] == "ru" ? "Ё" : "`" }
+
+/// Picks the interface language, "As in system" first.
+struct LanguagePicker: View {
+    @ObservedObject var settings = Settings.shared
+
+    var body: some View {
+        Picker("", selection: $settings.language) {
+            Text(S.languageSystem).tag("")
+            ForEach(Array(zip(Lang.codes, Lang.names)), id: \.0) { code, name in
+                Text(name).tag(code)
+            }
+        }
+        .labelsHidden()
+        .fixedSize()
+    }
+}
+
 extension Notification.Name {
     static let addConnection = Notification.Name("addConnection")
 }
@@ -315,7 +340,7 @@ struct ModelPicker: View {
             }
             .pickerStyle(.inline)
             if !settings.connections.isEmpty {
-                Picker("Подключения", selection: $settings.choice) {
+                Picker(S.connections, selection: $settings.choice) {
                     ForEach(settings.connections) { c in
                         Text("\(c.name) — \(c.model)").tag(Choice.custom(c.id))
                     }
@@ -323,7 +348,7 @@ struct ModelPicker: View {
                 .pickerStyle(.inline)
             }
             Divider()
-            Button("Подключить модель…") {
+            Button(S.connectModel) {
                 NotificationCenter.default.post(name: .addConnection, object: nil)
             }
         } label: {
@@ -337,7 +362,7 @@ struct ModelPicker: View {
         .background(
             Capsule().fill(Color.primary.opacity(isCompact ? 0.07 : 0))
         )
-        .help("Модель")
+        .help(S.model)
     }
 }
 
@@ -362,7 +387,7 @@ final class APIRunner {
         cancel()
         let base = c.baseURL.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         guard let url = URL(string: base + "/chat/completions") else {
-            onDone("Неверный адрес подключения «\(c.name)».")
+            onDone(S.errBadUrl(c.name))
             return
         }
         history.append(["role": "user", "content": question])
@@ -412,8 +437,8 @@ final class APIRunner {
                 await MainActor.run { onDone(e.message(for: c)) }
             } catch {
                 if (error as? URLError)?.code == .cancelled { return }
-                let hint = c.baseURL.contains("localhost") ? " Запущен ли сервер модели на этом Mac?" : ""
-                await MainActor.run { onDone("Не удалось связаться с «\(c.name)»: \(error.localizedDescription).\(hint)") }
+                let hint = c.baseURL.contains("localhost") ? S.errLocalHint : ""
+                await MainActor.run { onDone(S.errConnect(c.name, error.localizedDescription) + hint) }
             }
         }
     }
@@ -427,10 +452,10 @@ struct APIError: Error {
         let json = try? JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any]
         let detail = (json?["error"] as? [String: Any])?["message"] as? String ?? (json?["error"] as? String) ?? String(body.prefix(300))
         switch status {
-        case 401, 403: return "«\(c.name)» не принял ключ (\(status)). Проверьте API-ключ. \(detail)"
-        case 404: return "«\(c.name)»: модель или адрес не найдены (404). \(detail)"
-        case 429: return "«\(c.name)»: превышен лимит запросов или закончились средства (429). \(detail)"
-        default: return "«\(c.name)» вернул ошибку \(status). \(detail)"
+        case 401, 403: return S.errKey(c.name, String(status), detail)
+        case 404: return S.err404(c.name, detail)
+        case 429: return S.err429(c.name, detail)
+        default: return S.errStatus(c.name, String(status), detail)
         }
     }
 }
@@ -453,8 +478,8 @@ final class ClaudeRunner {
     }()
 
     static let systemPrompt = """
-        Тебя вызвали из быстрой строки в стиле Spotlight на Mac. Отвечай коротко и по делу, \
-        на языке вопроса. Используй Markdown только для списков, жирного и кода.
+        You were called from a Spotlight-style quick bar on a Mac. Answer briefly and to the point, \
+        in the language of the question. Use Markdown only for lists, bold and code.
         """
 
     func reset() {
@@ -470,7 +495,7 @@ final class ClaudeRunner {
     func ask(_ question: String, onText: @escaping (String) -> Void, onDone: @escaping (String?) -> Void) {
         cancel()
         guard let binary = Self.binary else {
-            onDone("Не нашёл `claude`. Установите Claude Code: https://claude.com/claude-code")
+            onDone(S.errNoClaude)
             return
         }
 
@@ -537,7 +562,7 @@ final class ClaudeRunner {
                         DispatchQueue.main.async { onText("\n\n") }
                     }
                 } else if type == "result", obj["is_error"] as? Bool == true, error == nil {
-                    error = (obj["result"] as? String) ?? "Claude вернул ошибку."
+                    error = (obj["result"] as? String) ?? S.errClaude
                 }
             }
         }
@@ -547,7 +572,7 @@ final class ClaudeRunner {
                 if self?.process === proc { self?.process = nil }
                 if proc.terminationReason == .uncaughtSignal { return }
                 if let e = error, e.localizedCaseInsensitiveContains("authenticate") || e.localizedCaseInsensitiveContains("login") {
-                    onDone("Claude не залогинен. Откройте Терминал, выполните `claude`, затем `/login`.")
+                    onDone(S.errNotLoggedIn)
                 } else {
                     onDone(error)
                 }
@@ -558,7 +583,7 @@ final class ClaudeRunner {
             try p.run()
             process = p
         } catch {
-            onDone("Не удалось запустить claude: \(error.localizedDescription)")
+            onDone(S.errStart(error.localizedDescription))
         }
     }
 }
@@ -616,12 +641,8 @@ final class LauncherModel: ObservableObject {
         let t = text.trimmingCharacters(in: .whitespaces).lowercased()
         if t.hasSuffix("?") { return true }
         if t.split(separator: " ").count >= 4 { return true }
-        let starts = [
-            "что", "как", "почему", "зачем", "когда", "где", "кто", "сколько", "какой", "какая", "какие", "какое",
-            "можно", "объясни", "напиши", "переведи", "посчитай", "расскажи", "придумай", "сравни", "чем", "есть ли",
-            "what", "how", "why", "when", "where", "who", "which", "explain", "write", "translate", "can ", "is ", "are ", "should",
-        ]
-        return starts.contains { t.hasPrefix($0 + " ") || t == $0 }
+        let first = String(t.split(separator: " ").first ?? "")
+        return Lang.questionWords.contains(first)
     }
 
     func move(_ delta: Int) {
@@ -713,6 +734,7 @@ final class LauncherModel: ObservableObject {
 
 struct LauncherView: View {
     @ObservedObject var model: LauncherModel
+    @ObservedObject var settings = Settings.shared
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -720,7 +742,7 @@ struct LauncherView: View {
             HStack(spacing: 12) {
                 MascotView(isWalking: model.isAnswering)
                     .frame(width: 30, height: 22)
-                TextField(model.answer != nil ? "Задайте уточняющий вопрос…" : "Поиск или вопрос для Claude", text: $model.query)
+                TextField(model.answer != nil ? S.followupPlaceholder : S.searchPlaceholder, text: $model.query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 24, weight: .regular))
                     .focused($isFocused)
@@ -742,6 +764,7 @@ struct LauncherView: View {
             }
         }
         .frame(width: 720)
+        .id(settings.language)
         .background(VisualEffect().clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous)))
         .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).strokeBorder(Color.primary.opacity(0.12)))
         .onAppear { isFocused = true }
@@ -787,7 +810,7 @@ struct RowView: View {
                 MascotView(color: isSelected ? .white : .claude, eyes: isSelected ? nil : .black)
                     .frame(width: 28, height: 28)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Спросить Claude").font(.system(size: 14, weight: .semibold))
+                    Text(S.askRow(Settings.shared.title(of: Settings.shared.choice))).font(.system(size: 14, weight: .semibold))
                     Text(query).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
@@ -798,7 +821,7 @@ struct RowView: View {
                     .frame(width: 28, height: 28)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(hit.name).font(.system(size: 14, weight: .medium)).lineLimit(1)
-                    Text(hit.isApp ? "Программа" : hit.subtitle)
+                    Text(hit.isApp ? S.application : hit.subtitle)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -833,7 +856,7 @@ struct AnswerView: View {
                             .textSelection(.enabled)
                             .lineSpacing(3)
                     } else if model.isAnswering {
-                        Text("Думает…").foregroundStyle(.secondary)
+                        Text(S.thinking).foregroundStyle(.secondary)
                     }
                     if let error = model.answerError {
                         Text(markdown(error)).foregroundStyle(.red)
@@ -848,7 +871,7 @@ struct AnswerView: View {
             .onChange(of: model.answer) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
         }
         HStack {
-            Text(model.isAnswering ? "esc — остановить" : "↩ — уточнить   ⌘C — копировать ответ   esc — назад")
+            Text(model.isAnswering ? S.hintStop : S.hintDone("⌘C"))
             Spacer()
         }
         .font(.system(size: 11))
@@ -1061,7 +1084,7 @@ final class WelcomeModel: ObservableObject {
     func signIn() {
         guard let binary = ClaudeRunner.binary else { return }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("claudelight-login.command")
-        let script = "#!/bin/zsh\n'\(binary)' auth login\necho\necho 'Готово — можно закрыть это окно.'\n"
+        let script = "#!/bin/zsh\n'\(binary)' auth login\necho\necho '\(S.loginDone.replacingOccurrences(of: "'", with: ""))'\n"
         try? script.write(to: url, atomically: true, encoding: .utf8)
         try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
         NSWorkspace.shared.open(url)
@@ -1112,26 +1135,26 @@ struct ConnectionFormView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Подключить модель").font(.system(size: 17, weight: .semibold))
-            Text("Любой сервис с OpenAI-совместимым API: адрес, модель и ключ.")
+            Text(S.formTitle).font(.system(size: 17, weight: .semibold))
+            Text(S.formSubtitle)
                 .font(.system(size: 12)).foregroundStyle(.secondary)
 
             Form {
-                Picker("Сервис", selection: $form.preset) {
+                Picker(S.service, selection: $form.preset) {
                     ForEach(ServicePreset.allCases) { Text($0.title).tag($0) }
                 }
-                TextField("Название", text: $form.name)
-                TextField("Адрес", text: $form.baseURL, prompt: Text("https://…/v1"))
-                TextField("Модель", text: $form.model, prompt: Text(form.preset.modelHint))
-                SecureField("API-ключ", text: $form.key, prompt: Text(form.preset.needsKey ? "хранится в Связке ключей" : "не нужен"))
+                TextField(S.name, text: $form.name)
+                TextField(S.address, text: $form.baseURL, prompt: Text("https://…/v1"))
+                TextField(S.model, text: $form.model, prompt: Text(form.preset.modelHint))
+                SecureField(S.apiKey, text: $form.key, prompt: Text(form.preset.needsKey ? S.keyStored : S.keyNotNeeded))
             }
             .formStyle(.columns)
             .font(.system(size: 13))
 
             HStack {
                 Spacer()
-                Button("Отмена", action: onCancel).keyboardShortcut(.cancelAction)
-                Button("Подключить", action: onSave)
+                Button(S.cancel, action: onCancel).keyboardShortcut(.cancelAction)
+                Button(S.connect, action: onSave)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!form.isValid)
             }
@@ -1155,15 +1178,15 @@ struct WelcomeView: View {
             Text("ClaudeLight")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .padding(.top, 14)
-            Text("Поиск по Mac и ответы Claude в одной строке")
+            Text(S.welcomeSubtitle)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
             HStack(spacing: 6) {
                 KeyCap("⌥")
-                KeyCap("Ё")
-                Text("— открыть строку из любого места")
+                KeyCap(hotkeyKey)
+                Text(S.hotkeyHint)
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
@@ -1173,11 +1196,18 @@ struct WelcomeView: View {
                 authRow
                 Divider().padding(.leading, 14)
                 HStack {
-                    Text("Модель")
+                    Text(S.model)
                     Spacer()
                     ModelPicker()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
+                Divider().padding(.leading, 14)
+                HStack {
+                    Text(S.language)
+                    Spacer()
+                    LanguagePicker()
+                }
+                .padding(.horizontal, 14).padding(.vertical, 6)
                 ForEach(settings.connections) { c in
                     Divider().padding(.leading, 14)
                     HStack(spacing: 8) {
@@ -1193,26 +1223,26 @@ struct WelcomeView: View {
                             Image(systemName: "trash")
                         }
                         .buttonStyle(.borderless)
-                        .help("Удалить подключение")
+                        .help(S.deleteConnection)
                     }
                     .padding(.horizontal, 14).padding(.vertical, 8)
                 }
                 Divider().padding(.leading, 14)
                 HStack {
-                    Button("Подключить модель…", action: model.startAdding)
+                    Button(S.connectModel, action: model.startAdding)
                         .buttonStyle(.borderless)
                         .foregroundStyle(Color.claude)
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 Divider().padding(.leading, 14)
-                Toggle("Запускать при входе в систему", isOn: Binding(
+                Toggle(S.launchAtLogin, isOn: Binding(
                     get: { model.launchesAtLogin },
                     set: { model.setLaunchesAtLogin($0) }
                 ))
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 Divider().padding(.leading, 14)
-                Toggle("Показывать это окно при запуске", isOn: $model.showsOnLaunch)
+                Toggle(S.showOnLaunch, isOn: $model.showsOnLaunch)
                     .padding(.horizontal, 14).padding(.vertical, 10)
             }
             .toggleStyle(.switch)
@@ -1225,7 +1255,7 @@ struct WelcomeView: View {
             Spacer(minLength: 22)
 
             Button(action: model.openSearch) {
-                Text("Открыть поиск")
+                Text(S.openSearch)
                     .font(.system(size: 14, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
@@ -1238,6 +1268,7 @@ struct WelcomeView: View {
             .padding(.bottom, 24)
         }
         .frame(width: 400)
+        .id(settings.language)
         .frame(minHeight: 560)
         .fixedSize(horizontal: false, vertical: true)
         .background(VisualEffect())
@@ -1255,22 +1286,22 @@ struct WelcomeView: View {
             switch model.auth {
             case .checking:
                 ProgressView().controlSize(.mini)
-                Text("Проверяю Claude…").foregroundStyle(.secondary)
+                Text(S.authChecking).foregroundStyle(.secondary)
                 Spacer()
             case .signedIn:
                 Circle().fill(Color.green).frame(width: 8, height: 8)
-                Text("Claude подключён")
+                Text(S.authOk)
                 Spacer()
             case .signedOut:
                 Circle().fill(Color.orange).frame(width: 8, height: 8)
-                Text("Claude: нужен вход")
+                Text(S.authSignedOut)
                 Spacer()
-                Button("Войти", action: model.signIn).controlSize(.small)
+                Button(S.signIn, action: model.signIn).controlSize(.small)
             case .missing:
                 Circle().fill(Color.red).frame(width: 8, height: 8)
-                Text("Claude Code не установлен")
+                Text(S.authMissing)
                 Spacer()
-                Link("Скачать", destination: URL(string: "https://claude.com/claude-code")!)
+                Link(S.download, destination: URL(string: "https://claude.com/claude-code")!)
             }
         }
         .font(.system(size: 13))
@@ -1318,6 +1349,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let welcome = WelcomeModel()
     private var welcomeWindow: NSWindow?
     private var loginItem: NSMenuItem?
+    private var languageWatch: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -1391,7 +1423,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for c in settings.connections { add("\(c.name) — \(c.model)", .custom(c.id)) }
         }
         menu.addItem(.separator())
-        let item = NSMenuItem(title: "Подключить модель…", action: #selector(addConnection), keyEquivalent: "")
+        let item = NSMenuItem(title: S.connectModel, action: #selector(addConnection), keyEquivalent: "")
         item.target = self
         menu.addItem(item)
     }
@@ -1451,20 +1483,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func buildMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = Self.sparkImage()
+        rebuildMenu()
+        // Published fires before the value is stored, so rebuild on the next turn of the run loop.
+        languageWatch = Settings.shared.$language.dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.rebuildMenu() }
+        }
+    }
+
+    private func rebuildMenu() {
         let menu = NSMenu()
-        menu.addItem(withTitle: "Открыть поиск  (⌥ Ё)", action: #selector(togglePanel), keyEquivalent: "")
-        menu.addItem(withTitle: "Окно ClaudeLight…", action: #selector(showWelcome), keyEquivalent: "")
-        let login = NSMenuItem(title: "Запускать при входе", action: #selector(toggleLogin(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: S.menuOpenSearch("⌥ " + hotkeyKey), action: #selector(togglePanel), keyEquivalent: "")
+        menu.addItem(withTitle: S.menuWindow, action: #selector(showWelcome), keyEquivalent: "")
+        let login = NSMenuItem(title: S.menuLaunchAtLogin, action: #selector(toggleLogin(_:)), keyEquivalent: "")
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
         menu.addItem(login)
         loginItem = login
         let models = NSMenu()
         models.delegate = self
-        let modelItem = NSMenuItem(title: "Модель", action: nil, keyEquivalent: "")
+        let modelItem = NSMenuItem(title: S.model, action: nil, keyEquivalent: "")
         modelItem.submenu = models
         menu.addItem(modelItem)
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Выйти", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: S.menuQuit, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         for item in menu.items where item.action != #selector(NSApplication.terminate(_:)) { item.target = self }
         statusItem.menu = menu
     }

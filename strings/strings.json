@@ -1,0 +1,551 @@
+{
+  "languages": [
+    [
+      "en",
+      "English"
+    ],
+    [
+      "ru",
+      "Русский"
+    ],
+    [
+      "de",
+      "Deutsch"
+    ],
+    [
+      "es",
+      "Español"
+    ],
+    [
+      "fr",
+      "Français"
+    ]
+  ],
+  "strings": {
+    "search_placeholder": [
+      "Search or ask a question",
+      "Поиск или вопрос",
+      "Suchen oder fragen",
+      "Buscar o preguntar",
+      "Rechercher ou poser une question"
+    ],
+    "followup_placeholder": [
+      "Ask a follow-up…",
+      "Задайте уточняющий вопрос…",
+      "Rückfrage stellen…",
+      "Haz una pregunta de seguimiento…",
+      "Posez une question de suivi…"
+    ],
+    "ask_row": [
+      "Ask {0}",
+      "Спросить {0}",
+      "{0} fragen",
+      "Preguntar a {0}",
+      "Demander à {0}"
+    ],
+    "application": [
+      "Application",
+      "Программа",
+      "Programm",
+      "Aplicación",
+      "Application"
+    ],
+    "thinking": [
+      "Thinking…",
+      "Думает…",
+      "Denkt nach…",
+      "Pensando…",
+      "Réflexion…"
+    ],
+    "hint_stop": [
+      "esc — stop",
+      "esc — остановить",
+      "esc — anhalten",
+      "esc — detener",
+      "esc — arrêter"
+    ],
+    "hint_done": [
+      "↩ follow up   {0} copy answer   esc back",
+      "↩ уточнить   {0} копировать ответ   esc назад",
+      "↩ nachfragen   {0} Antwort kopieren   esc zurück",
+      "↩ seguir   {0} copiar respuesta   esc atrás",
+      "↩ relancer   {0} copier la réponse   esc retour"
+    ],
+    "welcome_subtitle": [
+      "Search your computer and ask AI in one bar",
+      "Поиск по компьютеру и ответы ИИ в одной строке",
+      "Computer durchsuchen und KI fragen in einer Leiste",
+      "Busca en tu ordenador y pregunta a la IA en una barra",
+      "Cherchez sur votre ordinateur et interrogez l'IA dans une barre"
+    ],
+    "hotkey_hint": [
+      "— open the bar from anywhere",
+      "— открыть строку из любого места",
+      "— Leiste überall öffnen",
+      "— abrir la barra desde cualquier lugar",
+      "— ouvrir la barre depuis n'importe où"
+    ],
+    "auth_checking": [
+      "Checking Claude…",
+      "Проверяю Claude…",
+      "Claude wird geprüft…",
+      "Comprobando Claude…",
+      "Vérification de Claude…"
+    ],
+    "auth_ok": [
+      "Claude connected",
+      "Claude подключён",
+      "Claude verbunden",
+      "Claude conectado",
+      "Claude connecté"
+    ],
+    "auth_signed_out": [
+      "Claude: sign-in needed",
+      "Claude: нужен вход",
+      "Claude: Anmeldung nötig",
+      "Claude: inicia sesión",
+      "Claude : connexion requise"
+    ],
+    "auth_missing": [
+      "Claude Code is not installed",
+      "Claude Code не установлен",
+      "Claude Code ist nicht installiert",
+      "Claude Code no está instalado",
+      "Claude Code n'est pas installé"
+    ],
+    "sign_in": [
+      "Sign in",
+      "Войти",
+      "Anmelden",
+      "Iniciar sesión",
+      "Se connecter"
+    ],
+    "download": [
+      "Download",
+      "Скачать",
+      "Herunterladen",
+      "Descargar",
+      "Télécharger"
+    ],
+    "model": [
+      "Model",
+      "Модель",
+      "Modell",
+      "Modelo",
+      "Modèle"
+    ],
+    "language": [
+      "Language",
+      "Язык",
+      "Sprache",
+      "Idioma",
+      "Langue"
+    ],
+    "language_system": [
+      "System",
+      "Как в системе",
+      "System",
+      "Sistema",
+      "Système"
+    ],
+    "connect_model": [
+      "Connect a model…",
+      "Подключить модель…",
+      "Modell verbinden…",
+      "Conectar un modelo…",
+      "Connecter un modèle…"
+    ],
+    "delete_connection": [
+      "Remove connection",
+      "Удалить подключение",
+      "Verbindung entfernen",
+      "Eliminar conexión",
+      "Supprimer la connexion"
+    ],
+    "launch_at_login": [
+      "Open at login",
+      "Запускать при входе в систему",
+      "Beim Anmelden öffnen",
+      "Abrir al iniciar sesión",
+      "Ouvrir à la connexion"
+    ],
+    "show_on_launch": [
+      "Show this window on launch",
+      "Показывать это окно при запуске",
+      "Dieses Fenster beim Start zeigen",
+      "Mostrar esta ventana al abrir",
+      "Afficher cette fenêtre au démarrage"
+    ],
+    "open_search": [
+      "Open search",
+      "Открыть поиск",
+      "Suche öffnen",
+      "Abrir búsqueda",
+      "Ouvrir la recherche"
+    ],
+    "menu_open_search": [
+      "Open search  ({0})",
+      "Открыть поиск  ({0})",
+      "Suche öffnen  ({0})",
+      "Abrir búsqueda  ({0})",
+      "Ouvrir la recherche  ({0})"
+    ],
+    "menu_window": [
+      "ClaudeLight window…",
+      "Окно ClaudeLight…",
+      "ClaudeLight-Fenster…",
+      "Ventana de ClaudeLight…",
+      "Fenêtre ClaudeLight…"
+    ],
+    "menu_launch_at_login": [
+      "Open at login",
+      "Запускать при входе",
+      "Beim Anmelden öffnen",
+      "Abrir al iniciar sesión",
+      "Ouvrir à la connexion"
+    ],
+    "menu_quit": [
+      "Quit",
+      "Выйти",
+      "Beenden",
+      "Salir",
+      "Quitter"
+    ],
+    "model_auto": [
+      "Auto",
+      "Авто",
+      "Auto",
+      "Auto",
+      "Auto"
+    ],
+    "note_auto": [
+      "as in Claude Code",
+      "как в Claude Code",
+      "wie in Claude Code",
+      "como en Claude Code",
+      "comme dans Claude Code"
+    ],
+    "note_haiku": [
+      "fastest",
+      "самый быстрый",
+      "am schnellsten",
+      "el más rápido",
+      "le plus rapide"
+    ],
+    "note_sonnet": [
+      "fast and smart",
+      "быстрый и умный",
+      "schnell und klug",
+      "rápido e inteligente",
+      "rapide et intelligent"
+    ],
+    "note_opus": [
+      "smartest",
+      "самый умный",
+      "am klügsten",
+      "el más inteligente",
+      "le plus intelligent"
+    ],
+    "note_fable": [
+      "needs credits",
+      "нужны кредиты",
+      "braucht Guthaben",
+      "requiere créditos",
+      "nécessite des crédits"
+    ],
+    "connections": [
+      "Connections",
+      "Подключения",
+      "Verbindungen",
+      "Conexiones",
+      "Connexions"
+    ],
+    "form_title": [
+      "Connect a model",
+      "Подключить модель",
+      "Modell verbinden",
+      "Conectar un modelo",
+      "Connecter un modèle"
+    ],
+    "form_subtitle": [
+      "Any service with an OpenAI-compatible API: address, model and key.",
+      "Любой сервис с OpenAI-совместимым API: адрес, модель и ключ.",
+      "Jeder Dienst mit OpenAI-kompatibler API: Adresse, Modell und Schlüssel.",
+      "Cualquier servicio con API compatible con OpenAI: dirección, modelo y clave.",
+      "Tout service avec une API compatible OpenAI : adresse, modèle et clé."
+    ],
+    "service": [
+      "Service",
+      "Сервис",
+      "Dienst",
+      "Servicio",
+      "Service"
+    ],
+    "name": [
+      "Name",
+      "Название",
+      "Name",
+      "Nombre",
+      "Nom"
+    ],
+    "address": [
+      "Address",
+      "Адрес",
+      "Adresse",
+      "Dirección",
+      "Adresse"
+    ],
+    "api_key": [
+      "API key",
+      "API-ключ",
+      "API-Schlüssel",
+      "Clave API",
+      "Clé API"
+    ],
+    "key_stored": [
+      "stored securely",
+      "хранится в защищённом хранилище",
+      "wird sicher gespeichert",
+      "se guarda de forma segura",
+      "stockée de façon sécurisée"
+    ],
+    "key_not_needed": [
+      "not needed",
+      "не нужен",
+      "nicht nötig",
+      "no es necesaria",
+      "inutile"
+    ],
+    "cancel": [
+      "Cancel",
+      "Отмена",
+      "Abbrechen",
+      "Cancelar",
+      "Annuler"
+    ],
+    "connect": [
+      "Connect",
+      "Подключить",
+      "Verbinden",
+      "Conectar",
+      "Connecter"
+    ],
+    "preset_ollama": [
+      "Ollama (this computer)",
+      "Ollama (на этом компьютере)",
+      "Ollama (dieser Computer)",
+      "Ollama (este ordenador)",
+      "Ollama (cet ordinateur)"
+    ],
+    "preset_lmstudio": [
+      "LM Studio (this computer)",
+      "LM Studio (на этом компьютере)",
+      "LM Studio (dieser Computer)",
+      "LM Studio (este ordenador)",
+      "LM Studio (cet ordinateur)"
+    ],
+    "preset_other": [
+      "Other address",
+      "Другой адрес",
+      "Andere Adresse",
+      "Otra dirección",
+      "Autre adresse"
+    ],
+    "hint_example": [
+      "e.g. {0}",
+      "например, {0}",
+      "z. B. {0}",
+      "p. ej., {0}",
+      "p. ex. {0}"
+    ],
+    "hint_loaded_model": [
+      "name of the loaded model",
+      "имя загруженной модели",
+      "Name des geladenen Modells",
+      "nombre del modelo cargado",
+      "nom du modèle chargé"
+    ],
+    "hint_model_name": [
+      "model name",
+      "имя модели",
+      "Modellname",
+      "nombre del modelo",
+      "nom du modèle"
+    ],
+    "err_no_claude": [
+      "Claude Code not found. Install it: https://claude.com/claude-code",
+      "Не нашёл Claude Code. Установите его: https://claude.com/claude-code",
+      "Claude Code nicht gefunden. Installieren: https://claude.com/claude-code",
+      "No se encontró Claude Code. Instálalo: https://claude.com/claude-code",
+      "Claude Code introuvable. Installez-le : https://claude.com/claude-code"
+    ],
+    "err_not_logged_in": [
+      "Claude is not signed in. Press “Sign in” in the ClaudeLight window, or run `claude` and then `/login`.",
+      "Claude не залогинен. Нажмите «Войти» в окне ClaudeLight или выполните `claude`, затем `/login`.",
+      "Claude ist nicht angemeldet. Klicken Sie im ClaudeLight-Fenster auf „Anmelden“ oder führen Sie `claude` und dann `/login` aus.",
+      "Claude no ha iniciado sesión. Pulsa «Iniciar sesión» en la ventana de ClaudeLight o ejecuta `claude` y luego `/login`.",
+      "Claude n'est pas connecté. Cliquez sur « Se connecter » dans la fenêtre ClaudeLight ou lancez `claude` puis `/login`."
+    ],
+    "err_start": [
+      "Couldn't start claude: {0}",
+      "Не удалось запустить claude: {0}",
+      "claude konnte nicht starten: {0}",
+      "No se pudo iniciar claude: {0}",
+      "Impossible de lancer claude : {0}"
+    ],
+    "err_claude": [
+      "Claude returned an error.",
+      "Claude вернул ошибку.",
+      "Claude hat einen Fehler gemeldet.",
+      "Claude devolvió un error.",
+      "Claude a renvoyé une erreur."
+    ],
+    "err_bad_url": [
+      "The address of “{0}” is invalid.",
+      "Неверный адрес подключения «{0}».",
+      "Die Adresse von „{0}“ ist ungültig.",
+      "La dirección de «{0}» no es válida.",
+      "L'adresse de « {0} » est invalide."
+    ],
+    "err_key": [
+      "“{0}” rejected the key ({1}). Check the API key. {2}",
+      "«{0}» не принял ключ ({1}). Проверьте API-ключ. {2}",
+      "„{0}“ hat den Schlüssel abgelehnt ({1}). Prüfen Sie den API-Schlüssel. {2}",
+      "«{0}» rechazó la clave ({1}). Revisa la clave API. {2}",
+      "« {0} » a refusé la clé ({1}). Vérifiez la clé API. {2}"
+    ],
+    "err_404": [
+      "“{0}”: model or address not found (404). {1}",
+      "«{0}»: модель или адрес не найдены (404). {1}",
+      "„{0}“: Modell oder Adresse nicht gefunden (404). {1}",
+      "«{0}»: modelo o dirección no encontrados (404). {1}",
+      "« {0} » : modèle ou adresse introuvable (404). {1}"
+    ],
+    "err_429": [
+      "“{0}”: rate limit reached or out of funds (429). {1}",
+      "«{0}»: превышен лимит запросов или закончились средства (429). {1}",
+      "„{0}“: Ratenlimit erreicht oder kein Guthaben (429). {1}",
+      "«{0}»: límite de peticiones o sin saldo (429). {1}",
+      "« {0} » : limite atteinte ou crédit épuisé (429). {1}"
+    ],
+    "err_status": [
+      "“{0}” returned error {1}. {2}",
+      "«{0}» вернул ошибку {1}. {2}",
+      "„{0}“ meldete Fehler {1}. {2}",
+      "«{0}» devolvió el error {1}. {2}",
+      "« {0} » a renvoyé l'erreur {1}. {2}"
+    ],
+    "err_connect": [
+      "Couldn't reach “{0}”: {1}.",
+      "Не удалось связаться с «{0}»: {1}.",
+      "„{0}“ nicht erreichbar: {1}.",
+      "No se pudo conectar con «{0}»: {1}.",
+      "Impossible de joindre « {0} » : {1}."
+    ],
+    "err_local_hint": [
+      " Is the model server running on this computer?",
+      " Запущен ли сервер модели на этом компьютере?",
+      " Läuft der Modellserver auf diesem Computer?",
+      " ¿Está el servidor del modelo en marcha en este ordenador?",
+      " Le serveur du modèle tourne-t-il sur cet ordinateur ?"
+    ],
+    "login_done": [
+      "Done — you can close this window.",
+      "Готово — можно закрыть это окно.",
+      "Fertig — Sie können dieses Fenster schließen.",
+      "Listo — puedes cerrar esta ventana.",
+      "Terminé — vous pouvez fermer cette fenêtre."
+    ]
+  },
+  "question_words": {
+    "en": [
+      "what",
+      "how",
+      "why",
+      "when",
+      "where",
+      "who",
+      "which",
+      "explain",
+      "write",
+      "translate",
+      "can",
+      "is",
+      "are",
+      "should",
+      "does",
+      "do"
+    ],
+    "ru": [
+      "что",
+      "как",
+      "почему",
+      "зачем",
+      "когда",
+      "где",
+      "кто",
+      "сколько",
+      "какой",
+      "какая",
+      "какие",
+      "какое",
+      "можно",
+      "объясни",
+      "напиши",
+      "переведи",
+      "посчитай",
+      "расскажи",
+      "придумай",
+      "сравни",
+      "чем"
+    ],
+    "de": [
+      "was",
+      "wie",
+      "warum",
+      "wann",
+      "wo",
+      "wer",
+      "welche",
+      "welcher",
+      "erkläre",
+      "schreibe",
+      "übersetze",
+      "kann",
+      "ist",
+      "sind"
+    ],
+    "es": [
+      "qué",
+      "que",
+      "cómo",
+      "como",
+      "por",
+      "cuándo",
+      "dónde",
+      "quién",
+      "cuál",
+      "explica",
+      "escribe",
+      "traduce",
+      "puedo",
+      "es"
+    ],
+    "fr": [
+      "quoi",
+      "que",
+      "comment",
+      "pourquoi",
+      "quand",
+      "où",
+      "qui",
+      "quel",
+      "quelle",
+      "explique",
+      "écris",
+      "traduis",
+      "peut",
+      "est"
+    ]
+  }
+}
