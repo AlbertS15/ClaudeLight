@@ -139,7 +139,11 @@ public sealed class LauncherWindow : Window
 
         Deactivated += (_, _) => HideBar();
         SizeChanged += (_, _) => Place();
-        Settings.Shared.Changed += () => Dispatcher.Invoke(Refresh);
+        Settings.Shared.Changed += () => Dispatcher.Invoke(() =>
+        {
+            Refresh();
+            RetryAfterError();
+        });
         Refresh();
     }
 
@@ -364,7 +368,11 @@ public sealed class LauncherWindow : Window
     private void Run(bool forceAsk, bool reveal)
     {
         var text = _input.Text.Trim();
-        if (text.Length == 0) return;
+        if (text.Length == 0)
+        {
+            RetryAfterError();
+            return;
+        }
         if (_hasAnswer || forceAsk || _selection == 0 || _selection > _hits.Count)
         {
             Ask(text);
@@ -425,6 +433,15 @@ public sealed class LauncherWindow : Window
         _mascot.IsWalking = value;
         _footer.Text = value ? S.HintStop : S.HintDone("Ctrl+C");
         if (!value && _answer.Text.Length == 0 && _error.Text.Length == 0) _answer.Text = "…";
+    }
+
+    /// Asks the last question again when its answer failed: Enter on an empty bar, or a switch of model.
+    private void RetryAfterError()
+    {
+        if (!_hasAnswer || _isAnswering || _error.Text.Length == 0 || _asked.Text.Length == 0) return;
+        _claude.Reset();
+        _api.Reset();
+        Ask(_asked.Text);
     }
 
     private void Ask(string question)

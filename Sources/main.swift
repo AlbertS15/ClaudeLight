@@ -390,8 +390,8 @@ final class APIRunner {
             onDone(S.errBadUrl(c.name))
             return
         }
-        history.append(["role": "user", "content": question])
-        let messages = [["role": "system", "content": ClaudeRunner.systemPrompt]] + history
+        // The question joins the history only with its answer, so a failed try never repeats in it.
+        let messages = [["role": "system", "content": ClaudeRunner.systemPrompt]] + history + [["role": "user", "content": question]]
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -428,6 +428,7 @@ final class APIRunner {
                 }
                 let full = reply
                 await MainActor.run { [weak self] in
+                    self?.history.append(["role": "user", "content": question])
                     self?.history.append(["role": "assistant", "content": full])
                     onDone(nil)
                 }
@@ -630,6 +631,20 @@ final class LauncherModel: ObservableObject {
             if self.selection > maxIndex { self.selection = maxIndex }
             if !self.looksLikeQuestion(self.query), self.selection == 0, !hits.isEmpty { self.selection = 1 }
         }
+        // Published fires before the value is stored, so retry on the next turn of the run loop.
+        choiceWatch = Settings.shared.$choice.dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.retryAfterError() }
+        }
+    }
+
+    private var choiceWatch: AnyCancellable?
+
+    /// Asks the last question again when its answer failed: Enter on an empty bar, or a switch of model.
+    func retryAfterError() {
+        guard answer != nil, answerError != nil, !isAnswering, !asked.isEmpty else { return }
+        claude.reset()
+        api.reset()
+        ask(asked)
     }
 
     var rows: [Row] {
@@ -653,7 +668,10 @@ final class LauncherModel: ObservableObject {
 
     func activate(forceAsk: Bool = false, reveal: Bool = false) {
         let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty else {
+            retryAfterError()
+            return
+        }
         if answer != nil || forceAsk || selection == 0 || rows.count <= selection {
             ask(text)
             return

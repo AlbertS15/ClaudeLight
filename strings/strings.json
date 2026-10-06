@@ -65,11 +65,11 @@
       "esc — arrêter"
     ],
     "hint_done": [
-      "↩ follow up   {0} copy answer   esc back",
-      "↩ уточнить   {0} копировать ответ   esc назад",
-      "↩ nachfragen   {0} Antwort kopieren   esc zurück",
-      "↩ seguir   {0} copiar respuesta   esc atrás",
-      "↩ relancer   {0} copier la réponse   esc retour"
+      "↩ follow up · retry   {0} copy answer   esc back",
+      "↩ уточнить · повторить   {0} копировать ответ   esc назад",
+      "↩ nachfragen · wiederholen   {0} Antwort kopieren   esc zurück",
+      "↩ seguir · reintentar   {0} copiar respuesta   esc atrás",
+      "↩ relancer · réessayer   {0} copier la réponse   esc retour"
     ],
     "welcome_subtitle": [
       "Search your computer and ask AI in one bar",
@@ -373,11 +373,11 @@
       "nom du modèle"
     ],
     "err_no_claude": [
-      "Claude Code not found. Install it: https://claude.com/claude-code",
-      "Не нашёл Claude Code. Установите его: https://claude.com/claude-code",
-      "Claude Code nicht gefunden. Installieren: https://claude.com/claude-code",
-      "No se encontró Claude Code. Instálalo: https://claude.com/claude-code",
-      "Claude Code introuvable. Installez-le : https://claude.com/claude-code"
+      "Claude Code not found. Pick another model at the top right, or install Claude Code: https://claude.com/claude-code",
+      "Claude Code не найден. Выберите другую модель справа вверху или установите Claude Code: https://claude.com/claude-code",
+      "Claude Code nicht gefunden. Wählen Sie oben rechts ein anderes Modell oder installieren Sie Claude Code: https://claude.com/claude-code",
+      "No se encontró Claude Code. Elige otro modelo arriba a la derecha o instala Claude Code: https://claude.com/claude-code",
+      "Claude Code introuvable. Choisissez un autre modèle en haut à droite ou installez Claude Code : https://claude.com/claude-code"
     ],
     "err_not_logged_in": [
       "Claude is not signed in. Press “Sign in” in the ClaudeLight window, or run `claude` and then `/login`.",

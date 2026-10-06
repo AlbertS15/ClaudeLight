@@ -172,10 +172,10 @@ public sealed class ApiRunner
         Cancel();
         var cts = new CancellationTokenSource();
         _cts = cts;
-        _history.Add(("user", question));
-
+        // The question joins the history only with its answer, so a failed try never repeats in it.
         var messages = new JsonArray { new JsonObject { ["role"] = "system", ["content"] = ClaudeRunner.SystemPrompt } };
         foreach (var (role, content) in _history) messages.Add(new JsonObject { ["role"] = role, ["content"] = content });
+        messages.Add(new JsonObject { ["role"] = "user", ["content"] = question });
         var body = new JsonObject { ["model"] = c.Model, ["messages"] = messages, ["stream"] = true };
 
         Task.Run(async () =>
@@ -218,6 +218,7 @@ public sealed class ApiRunner
                 var full = reply.ToString();
                 post(() =>
                 {
+                    _history.Add(("user", question));
                     _history.Add(("assistant", full));
                     onDone(null);
                 });
