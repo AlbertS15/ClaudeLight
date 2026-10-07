@@ -116,6 +116,11 @@ public static class S
         ["err_no_codex"] = new[] { "Codex CLI not found. Install it: `brew install codex` (or `npm install -g @openai/codex`), then run `codex login` and sign in with ChatGPT.", "Codex не найден. Установите его: `brew install codex` (или `npm install -g @openai/codex`), затем выполните `codex login` и войдите через ChatGPT.", "Codex CLI nicht gefunden. Installieren: `brew install codex` (oder `npm install -g @openai/codex`), dann `codex login` ausführen und mit ChatGPT anmelden.", "No se encontró Codex CLI. Instálalo: `brew install codex` (o `npm install -g @openai/codex`), luego ejecuta `codex login` e inicia sesión con ChatGPT.", "Codex CLI introuvable. Installez-le : `brew install codex` (ou `npm install -g @openai/codex`), puis lancez `codex login` et connectez-vous avec ChatGPT." },
         ["err_codex_login"] = new[] { "Codex is not signed in. Run `codex login` in a terminal and sign in with ChatGPT (Plus or higher).", "Codex не вошёл в аккаунт. Выполните `codex login` в терминале и войдите через ChatGPT (тариф Plus или выше).", "Codex ist nicht angemeldet. Führen Sie `codex login` im Terminal aus und melden Sie sich mit ChatGPT an (Plus oder höher).", "Codex no ha iniciado sesión. Ejecuta `codex login` en la terminal e inicia sesión con ChatGPT (Plus o superior).", "Codex n'est pas connecté. Lancez `codex login` dans un terminal et connectez-vous avec ChatGPT (Plus ou plus)." },
         ["err_codex"] = new[] { "Codex returned an error: {0}", "Codex вернул ошибку: {0}", "Codex meldete einen Fehler: {0}", "Codex devolvió un error: {0}", "Codex a renvoyé une erreur : {0}" },
+        ["quit_app"] = new[] { "Quit ClaudeLight", "Выйти из ClaudeLight", "ClaudeLight beenden", "Salir de ClaudeLight", "Quitter ClaudeLight" },
+        ["uninstall"] = new[] { "Uninstall ClaudeLight…", "Удалить ClaudeLight…", "ClaudeLight deinstallieren…", "Desinstalar ClaudeLight…", "Désinstaller ClaudeLight…" },
+        ["uninstall_title"] = new[] { "Uninstall ClaudeLight?", "Удалить ClaudeLight?", "ClaudeLight deinstallieren?", "¿Desinstalar ClaudeLight?", "Désinstaller ClaudeLight ?" },
+        ["uninstall_text"] = new[] { "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.", "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.", "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.", "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.", "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion." },
+        ["uninstall_button"] = new[] { "Uninstall", "Удалить", "Deinstallieren", "Desinstalar", "Désinstaller" },
     };
 
     private static string F(string key, params string[] args)
@@ -206,4 +211,9 @@ public static class S
     public static string ErrNoCodex => F("err_no_codex");
     public static string ErrCodexLogin => F("err_codex_login");
     public static string ErrCodex(string a0) => F("err_codex", a0);
+    public static string QuitApp => F("quit_app");
+    public static string Uninstall => F("uninstall");
+    public static string UninstallTitle => F("uninstall_title");
+    public static string UninstallText => F("uninstall_text");
+    public static string UninstallButton => F("uninstall_button");
 }

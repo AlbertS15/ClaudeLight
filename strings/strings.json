@@ -588,6 +588,41 @@
       "Codex meldete einen Fehler: {0}",
       "Codex devolvió un error: {0}",
       "Codex a renvoyé une erreur : {0}"
+    ],
+    "quit_app": [
+      "Quit ClaudeLight",
+      "Выйти из ClaudeLight",
+      "ClaudeLight beenden",
+      "Salir de ClaudeLight",
+      "Quitter ClaudeLight"
+    ],
+    "uninstall": [
+      "Uninstall ClaudeLight…",
+      "Удалить ClaudeLight…",
+      "ClaudeLight deinstallieren…",
+      "Desinstalar ClaudeLight…",
+      "Désinstaller ClaudeLight…"
+    ],
+    "uninstall_title": [
+      "Uninstall ClaudeLight?",
+      "Удалить ClaudeLight?",
+      "ClaudeLight deinstallieren?",
+      "¿Desinstalar ClaudeLight?",
+      "Désinstaller ClaudeLight ?"
+    ],
+    "uninstall_text": [
+      "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.",
+      "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.",
+      "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.",
+      "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.",
+      "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion."
+    ],
+    "uninstall_button": [
+      "Uninstall",
+      "Удалить",
+      "Deinstallieren",
+      "Desinstalar",
+      "Désinstaller"
     ]
   },
   "question_words": {

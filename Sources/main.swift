@@ -1726,7 +1726,18 @@ struct WelcomeView: View {
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
             .padding(.horizontal, 24)
-            .padding(.bottom, 24)
+
+            HStack {
+                Button(S.quitApp) { NSApp.terminate(nil) }
+                Spacer()
+                Button(S.uninstall) { Uninstaller.confirmAndRun() }
+            }
+            .buttonStyle(.borderless)
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 26)
+            .padding(.top, 12)
+            .padding(.bottom, 18)
         }
         .frame(width: 400)
         .id(settings.language)
@@ -1799,6 +1810,31 @@ func debugLog(_ line: String) {
     }
 }
 
+/// Removes ClaudeLight completely: login item, saved keys, settings, and the app itself (to the Trash, so it can be restored).
+enum Uninstaller {
+    static func confirmAndRun() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = S.uninstallTitle
+        alert.informativeText = S.uninstallText
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: S.uninstallButton)
+        alert.addButton(withTitle: S.cancel)
+        alert.buttons.first?.hasDestructiveAction = true
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        try? SMAppService.mainApp.unregister()
+        for connection in Settings.shared.connections { Keychain.delete(connection.id) }
+        if let domain = Bundle.main.bundleIdentifier { UserDefaults.standard.removePersistentDomain(forName: domain) }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.removeItem(at: support.appendingPathComponent("ClaudeLight"))
+        // A running app may move its own bundle; the process keeps running from memory until it quits.
+        NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var panel: LauncherPanel!
     private let model = LauncherModel()
@@ -1814,6 +1850,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        buildMainMenu()
         buildPanel()
         buildMenu()
         registerHotKey()
@@ -1956,6 +1993,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func uninstall() { Uninstaller.confirmAndRun() }
+
+    /// An app without a Dock icon has no menu bar of its own; this hidden one makes ⌘Q, ⌘C and ⌘V work in its windows.
+    private func buildMainMenu() {
+        let main = NSMenu()
+        let appItem = NSMenuItem()
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: S.quitApp, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appItem.submenu = appMenu
+        main.addItem(appItem)
+        let editItem = NSMenuItem()
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = editMenu
+        main.addItem(editItem)
+        NSApp.mainMenu = main
+    }
+
     private func rebuildMenu() {
         let menu = NSMenu()
         menu.addItem(withTitle: S.menuOpenSearch("⌥ " + hotkeyKey), action: #selector(togglePanel), keyEquivalent: "")
@@ -1970,6 +2028,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         modelItem.submenu = models
         menu.addItem(modelItem)
         menu.addItem(.separator())
+        menu.addItem(withTitle: S.uninstall, action: #selector(uninstall), keyEquivalent: "")
         menu.addItem(withTitle: S.menuQuit, action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         for item in menu.items where item.action != #selector(NSApplication.terminate(_:)) { item.target = self }
         statusItem.menu = menu

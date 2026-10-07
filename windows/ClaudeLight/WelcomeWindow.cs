@@ -106,6 +106,11 @@ public sealed class WelcomeWindow : Window
             _openSearch();
         };
         stack.Children.Add(open);
+        var quit = LinkButton(S.QuitApp, () => App.Current.Quit());
+        quit.Foreground = Theme.Secondary;
+        quit.HorizontalAlignment = HorizontalAlignment.Center;
+        quit.Margin = new Thickness(0, 12, 0, 0);
+        stack.Children.Add(quit);
         Content = stack;
     }
 

@@ -143,7 +143,7 @@ public sealed class App : Application
         thread.Start();
     }
 
-    private void Quit()
+    public void Quit()
     {
         _hotKey?.Dispose();
         if (_tray != null) _tray.Visible = false;
