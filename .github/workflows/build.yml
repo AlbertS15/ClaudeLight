@@ -41,6 +41,17 @@ jobs:
           & $iscc windows/installer/ClaudeLight.iss
           Copy-Item dist/app/ClaudeLight.exe "dist/ClaudeLight-Portable-${env:APP_VERSION}.exe"
 
+      - name: Smoke test (launch, hotkey, search, ask)
+        shell: powershell
+        run: ./windows/ci/smoke.ps1
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-screenshots
+          path: dist/screenshots
+
       - uses: actions/upload-artifact@v4
         with:
           name: ClaudeLight-Windows
@@ -73,6 +84,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: ClaudeLight-*
           path: dist
           merge-multiple: true
 
