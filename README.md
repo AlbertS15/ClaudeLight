@@ -69,3 +69,11 @@ dotnet publish windows/ClaudeLight/ClaudeLight.csproj -c Release -r win-x64 --se
 - `strings/strings.json` — все тексты интерфейса на всех языках. После правки: `python3 strings/generate.py` — он пересоздаёт `Sources/Strings.swift` и `windows/ClaudeLight/Strings.cs`.
 - `Icon/make_icon.swift` — рисует иконку при сборке.
 - `build.sh` — сборка через `swiftc`, без проекта Xcode.
+
+## Выпуск версии
+
+1. Написать заметку `release-notes/vX.Y.Z.html` (по-русски, HTML Telegram: `<b>`, `<i>`, `<a>`, `<code>`, до ~3900 символов).
+2. `git tag -a vX.Y.Z -m "ClaudeLight X.Y.Z" && git push origin vX.Y.Z`.
+
+GitHub Actions соберёт обе версии, проверит Windows-версию, опубликует релиз с текстом заметки и, если заданы секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`, отправит заметку в Telegram-канал. Повторить пост вручную: Actions → «Post release to Telegram» → Run workflow.
+
