@@ -1,11 +1,11 @@
 name: Post release to Telegram
 
-# Posts (or re-posts) an existing release's notes to the channel by hand.
+# Posts a release's notes (tag) or any file under posts/ to the channel by hand.
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.2.1"
+        description: "Release tag (v1.2.1) or a post file (posts/guide.html)"
         required: true
 
 jobs:

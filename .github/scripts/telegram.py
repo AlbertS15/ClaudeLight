@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Posts a release's notes to the Telegram channel.
 
-Usage: telegram.py <tag>   (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID and GITHUB_REPOSITORY in the environment)
-The text is release-notes/<tag>.html, Telegram's HTML subset (<b>, <i>, <a>, <code>), plus download links.
+Usage: telegram.py <tag>              release-notes/<tag>.html plus download links
+       telegram.py posts/<name>.html   any other post, as written
+(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID and GITHUB_REPOSITORY in the environment)
+Posts are Telegram's HTML subset: <b>, <i>, <a>, <code>.
 """
 import json
 import os
@@ -10,14 +12,19 @@ import sys
 import urllib.request
 from pathlib import Path
 
-tag = sys.argv[1]
-notes = Path(__file__).resolve().parents[2] / "release-notes" / f"{tag}.html"
+arg = sys.argv[1]
+root = Path(__file__).resolve().parents[2]
+repo = os.environ["GITHUB_REPOSITORY"]
+if arg.endswith(".html"):
+    notes = root / arg
+    link = f'<a href="https://github.com/{repo}/releases/latest">⬇️ Скачать ClaudeLight</a>'
+else:
+    notes = root / "release-notes" / f"{arg}.html"
+    link = f'<a href="https://github.com/{repo}/releases/tag/{arg}">⬇️ Скачать {arg} для Mac и Windows</a>'
 if not notes.exists():
     sys.exit(f"no {notes.name}, nothing to post")
 
-repo = os.environ["GITHUB_REPOSITORY"]
-page = f"https://github.com/{repo}/releases/tag/{tag}"
-text = notes.read_text().strip() + f'\n\n<a href="{page}">⬇️ Скачать {tag} для Mac и Windows</a>'
+text = notes.read_text().strip() + "\n\n" + link
 if len(text) > 4096:
     sys.exit(f"{notes.name} is {len(text)} characters with the link; Telegram allows 4096")
 
