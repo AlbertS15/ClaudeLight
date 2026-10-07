@@ -11,7 +11,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 /// Runs the local `claude` CLI in print mode and streams the reply text.
 public sealed class ClaudeRunner
@@ -374,7 +374,7 @@ public sealed class CodexRunner
     {
         get
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "codex");
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Lumi", "codex");
             Directory.CreateDirectory(dir);
             return dir;
         }
@@ -516,7 +516,7 @@ public sealed class GeminiRunner
     {
         get
         {
-            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "gemini");
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Lumi", "gemini");
             Directory.CreateDirectory(dir);
             return dir;
         }

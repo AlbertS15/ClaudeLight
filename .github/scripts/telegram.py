@@ -17,7 +17,7 @@ root = Path(__file__).resolve().parents[2]
 repo = os.environ["GITHUB_REPOSITORY"]
 if arg.endswith(".html"):
     notes = root / arg
-    link = f'<a href="https://github.com/{repo}/releases/latest">⬇️ Скачать ClaudeLight</a>'
+    link = f'<a href="https://github.com/{repo}/releases/latest">⬇️ Скачать Lumi</a>'
 else:
     notes = root / "release-notes" / f"{arg}.html"
     link = f'<a href="https://github.com/{repo}/releases/tag/{arg}">⬇️ Скачать {arg} для Mac и Windows</a>'

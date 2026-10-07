@@ -1,6 +1,6 @@
-# ClaudeLight
+# Lumi
 
-Строка в стиле Spotlight для **macOS и Windows**: ищет программы и файлы и отвечает на вопросы через Claude или любую другую подключённую модель.
+**Lumi** — строка в стиле Spotlight для **macOS и Windows**: ищет программы и файлы и отвечает на вопросы через Claude, ChatGPT, Gemini, локальные модели (Ollama, LM Studio) или любой другой подключённый ИИ. Раньше называлась ClaudeLight.
 
 📢 **Новости и обновления — в Telegram-канале: [t.me/+3IU-_WIhrTU4MjAy](https://t.me/+3IU-_WIhrTU4MjAy)**
 
@@ -8,14 +8,14 @@
 
 ## Скачать
 
-Готовые сборки — на странице [Releases](https://github.com/AlbertS15/ClaudeLight/releases):
+Готовые сборки — на странице [Releases](https://github.com/AlbertS15/Lumi/releases):
 
-- **Windows:** `ClaudeLight-Setup-….exe` (установщик, права администратора не нужны) или `ClaudeLight-Portable-….exe` (без установки).
-- **macOS:** `ClaudeLight-macOS.dmg`. Приложение не подписано сертификатом Apple, поэтому при первом запуске: правый клик → «Открыть», или «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».
+- **Windows:** `Lumi-Setup-….exe` (установщик, права администратора не нужны) или `Lumi-Portable-….exe` (без установки).
+- **macOS:** `Lumi-macOS.dmg`. Приложение не подписано сертификатом Apple, поэтому при первом запуске: правый клик → «Открыть», или «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».
 
 Windows SmartScreen тоже может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае».
 
-> Неофициальный проект, не связан с Anthropic. Claude и Clawd — товарные знаки Anthropic.
+> Независимый проект, не связан с Anthropic, OpenAI или Google. Claude, ChatGPT и Gemini — товарные знаки их владельцев.
 
 ## Возможности
 
@@ -50,32 +50,32 @@ Windows SmartScreen тоже может предупредить о неизве
 ./build.sh
 ```
 
-Скрипт соберёт `build/ClaudeLight.app` и установит его в `~/Applications`.
+Скрипт соберёт `build/Lumi.app` и установит его в `~/Applications`.
 
 ### Windows
 
 Нужен .NET 8 SDK:
 
 ```powershell
-dotnet publish windows/ClaudeLight/ClaudeLight.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist/app
+dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist/app
 ```
 
-Установщик собирается [Inno Setup](https://jrsoftware.org/isinfo.php) из `windows/installer/ClaudeLight.iss`. GitHub Actions собирает обе версии при каждом пуше, а при теге `v*` публикует релиз.
+Установщик собирается [Inno Setup](https://jrsoftware.org/isinfo.php) из `windows/installer/Lumi.iss`. GitHub Actions собирает обе версии при каждом пуше, а при теге `v*` публикует релиз.
 
 Для ответов Claude нужен вход в Claude Code: `claude`, затем `/login`.
 
 ## Устройство
 
 - `Sources/main.swift` — приложение для Mac (AppKit + SwiftUI): окно поиска, `NSMetadataQuery`, запуск `claude -p --output-format stream-json`, клиент OpenAI-совместимого API, стартовое окно.
-- `windows/ClaudeLight/` — приложение для Windows (WPF, .NET 8) с теми же возможностями.
-- `strings/strings.json` — все тексты интерфейса на всех языках. После правки: `python3 strings/generate.py` — он пересоздаёт `Sources/Strings.swift` и `windows/ClaudeLight/Strings.cs`.
+- `windows/Lumi/` — приложение для Windows (WPF, .NET 8) с теми же возможностями.
+- `strings/strings.json` — все тексты интерфейса на всех языках. После правки: `python3 strings/generate.py` — он пересоздаёт `Sources/Strings.swift` и `windows/Lumi/Strings.cs`.
 - `Icon/make_icon.swift` — рисует иконку при сборке.
 - `build.sh` — сборка через `swiftc`, без проекта Xcode.
 
 ## Выпуск версии
 
 1. Написать заметку `release-notes/vX.Y.Z.html` (по-русски, HTML Telegram: `<b>`, `<i>`, `<a>`, `<code>`, до ~3900 символов).
-2. `git tag -a vX.Y.Z -m "ClaudeLight X.Y.Z" && git push origin vX.Y.Z`.
+2. `git tag -a vX.Y.Z -m "Lumi X.Y.Z" && git push origin vX.Y.Z`.
 
 GitHub Actions соберёт обе версии, проверит Windows-версию, опубликует релиз с текстом заметки и, если заданы секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`, отправит заметку в Telegram-канал. Повторить пост вручную: Actions → «Post release to Telegram» → Run workflow.
 

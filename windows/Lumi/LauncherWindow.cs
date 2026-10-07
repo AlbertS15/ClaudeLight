@@ -10,7 +10,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 /// The Spotlight-style bar: one text box, then either results or an answer.
 public sealed class LauncherWindow : Window
@@ -65,8 +65,8 @@ public sealed class LauncherWindow : Window
         _placeholder.IsHitTestVisible = false;
         _placeholder.Margin = new Thickness(3, 0, 0, 0);
 
-        _mascot.Width = 32;
-        _mascot.Height = 22;
+        _mascot.Width = 26;
+        _mascot.Height = 24;
         _mascot.Margin = new Thickness(0, 0, 12, 0);
 
         _modelButton.Padding = new Thickness(10, 3, 10, 3);
@@ -288,7 +288,7 @@ public sealed class LauncherWindow : Window
             var sub = selected ? Theme.Brush("#DDFFFFFF") : Theme.Secondary;
             if (i == 0)
             {
-                icon = new MascotView(selected ? Brushes.White : null, selected ? Theme.Selection : null) { Width = 28, Height = 20 };
+                icon = new MascotView(selected ? Brushes.White : null, selected ? Theme.Selection : null) { Width = 24, Height = 22 };
                 texts.Children.Add(Theme.Label(S.AskRow(Settings.Shared.ChoiceTitle), 14, fg, FontWeights.SemiBold));
                 texts.Children.Add(Theme.Label(_input.Text, 12, sub));
                 var hint = Theme.Label("Ctrl+↩", 12, sub);

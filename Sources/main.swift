@@ -1,4 +1,4 @@
-// ClaudeLight — Spotlight-style launcher: finds apps and files, and asks Claude.
+// Lumi — Spotlight-style launcher: finds apps and files, and asks Claude.
 // Option+Space opens the panel. Built by build.sh with swiftc, no Xcode project.
 
 import AppKit
@@ -742,7 +742,7 @@ final class GeminiRunner {
     /// An empty folder to run in, so Gemini never reads or indexes the home folder.
     private static var workFolder: URL {
         let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ClaudeLight/gemini", isDirectory: true)
+            .appendingPathComponent("Lumi/gemini", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
@@ -868,7 +868,7 @@ final class CodexRunner {
     /// An empty folder to run in, so Codex never reads the home folder.
     private static var workFolder: URL {
         let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ClaudeLight/codex", isDirectory: true)
+            .appendingPathComponent("Lumi/codex", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
@@ -1184,7 +1184,7 @@ struct LauncherView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 MascotView(isWalking: model.isAnswering)
-                    .frame(width: 30, height: 22)
+                    .frame(width: 26, height: 24)
                 TextField(model.answer != nil ? S.followupPlaceholder : S.searchPlaceholder, text: $model.query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 24, weight: .regular))
@@ -1250,7 +1250,7 @@ struct RowView: View {
         HStack(spacing: 10) {
             switch row {
             case .ask:
-                MascotView(color: isSelected ? .white : .claude, eyes: isSelected ? nil : .black)
+                MascotView(color: isSelected ? .white : .lumi, eyes: isSelected ? nil : .black)
                     .frame(width: 28, height: 28)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(S.askRow(Settings.shared.title(of: Settings.shared.choice))).font(.system(size: 14, weight: .semibold))
@@ -1341,47 +1341,45 @@ struct AnswerView: View {
 }
 
 extension Color {
-    static let claude = Color(red: 215 / 255, green: 119 / 255, blue: 87 / 255)
+    static let lumi = Color(red: 93 / 255, green: 202 / 255, blue: 165 / 255)
 }
 
-/// Clawd, the Claude Code mascot, from the pixel art inside Claude Code itself: C body, E eyes.
-/// Proportions follow the terminal welcome screen. `step` 1 is the walking pose: legs shift in, the body hops a pixel.
+/// Lumi, the glowing ghost: B body, E eyes and mouth.
+/// `step` 1 is the floating pose: the ghost rises a pixel and its hem ripples the other way.
 enum Mascot {
-    static let width = 18
-    static let height = 11
+    static let width = 14
+    static let height = 12
 
     private static let rows = [
-        "...CCCCCCCCCCCC...",
-        "...CCCCCCCCCCCC...",
-        "...CCECCCCCCECC...",
-        "...CCECCCCCCECC...",
-        ".CCCCCCCCCCCCCCCC.",
-        ".CCCCCCCCCCCCCCCC.",
-        "...CCCCCCCCCCCC...",
-        "...CCCCCCCCCCCC...",
+        "....BBBBBB....",
+        "..BBBBBBBBBB..",
+        ".BBBBBBBBBBBB.",
+        ".BBBBBBBBBBBB.",
+        "BBBEEBBBBEEBBB",
+        "BBBEEBBBBEEBBB",
+        "BBBBBBBBBBBBBB",
+        "BBBBBBEEBBBBBB",
+        "BBBBBBBBBBBBBB",
+        "BBBBBBBBBBBBBB",
     ]
-    private static let legs = ["....C.C....C.C....", ".....C.C..C.C....."]
+    private static let hems = ["BB..BBBBBB..BB", "..BBBB..BBBB.."]
 
     /// Each lit pixel as (column, row, isEye), row 0 at the top.
     static func pixels(step: Int = 0) -> [(x: Int, y: Int, isEye: Bool)] {
-        let hop = step == 1 ? 0 : 1
+        let lift = step == 1 ? 0 : 1
         var out: [(x: Int, y: Int, isEye: Bool)] = []
-        for (r, line) in rows.enumerated() {
+        for (r, line) in (rows + [hems[step]]).enumerated() {
             for (c, ch) in line.enumerated() where ch != "." {
-                out.append((c, r + hop, ch == "E"))
+                out.append((c, r + lift, ch == "E"))
             }
-        }
-        // Legs are two pixels tall, stretching to three while the body hops.
-        for (c, ch) in legs[step].enumerated() where ch != "." {
-            for y in (rows.count + hop)...(rows.count + 2) { out.append((c, y, false)) }
         }
         return out
     }
 }
 
-/// Clawd in the panel; it walks while `isWalking`. `eyes` nil cuts the eyes out instead.
+/// Lumi in the panel; it walks while `isWalking`. `eyes` nil cuts the eyes out instead.
 struct MascotView: View {
-    var color: Color = .claude
+    var color: Color = .lumi
     var eyes: Color? = .black
     var isWalking = false
 
@@ -1629,11 +1627,11 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 0) {
             MascotView(isWalking: model.isMascotWalking)
-                .frame(width: 108, height: 66)
+                .frame(width: 84, height: 72)
                 .onHover { model.isMascotWalking = $0 }
                 .padding(.top, 34)
 
-            Text("ClaudeLight")
+            Text("Lumi")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .padding(.top, 14)
             Text(S.welcomeSubtitle)
@@ -1689,7 +1687,7 @@ struct WelcomeView: View {
                 HStack {
                     Button(S.connectModel, action: model.startAdding)
                         .buttonStyle(.borderless)
-                        .foregroundStyle(Color.claude)
+                        .foregroundStyle(Color.lumi)
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -1722,7 +1720,7 @@ struct WelcomeView: View {
                     .padding(.vertical, 6)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.claude)
+            .tint(.lumi)
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
             .padding(.horizontal, 24)
@@ -1797,9 +1795,9 @@ struct KeyCap: View {
 
 // MARK: - App
 
-/// Appends a line to ~/Library/Logs/ClaudeLight.log.
+/// Appends a line to ~/Library/Logs/Lumi.log.
 func debugLog(_ line: String) {
-    let url = URL(fileURLWithPath: NSHomeDirectory() + "/Library/Logs/ClaudeLight.log")
+    let url = URL(fileURLWithPath: NSHomeDirectory() + "/Library/Logs/Lumi.log")
     let data = Data("\(Date()) \(line)\n".utf8)
     if let h = try? FileHandle(forWritingTo: url) {
         h.seekToEndOfFile()
@@ -1810,7 +1808,7 @@ func debugLog(_ line: String) {
     }
 }
 
-/// Removes ClaudeLight completely: login item, saved keys, settings, and the app itself (to the Trash, so it can be restored).
+/// Removes Lumi completely: login item, saved keys, settings, and the app itself (to the Trash, so it can be restored).
 enum Uninstaller {
     static func confirmAndRun() {
         NSApp.activate(ignoringOtherApps: true)
@@ -1827,7 +1825,7 @@ enum Uninstaller {
         for connection in Settings.shared.connections { Keychain.delete(connection.id) }
         if let domain = Bundle.main.bundleIdentifier { UserDefaults.standard.removePersistentDomain(forName: domain) }
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        try? FileManager.default.removeItem(at: support.appendingPathComponent("ClaudeLight"))
+        try? FileManager.default.removeItem(at: support.appendingPathComponent("Lumi"))
         // A running app may move its own bundle; the process keeps running from memory until it quits.
         NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, _ in
             DispatchQueue.main.async { NSApp.terminate(nil) }
@@ -1850,6 +1848,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        Self.retireClaudeLight()
         buildMainMenu()
         buildPanel()
         buildMenu()
@@ -1995,6 +1994,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func uninstall() { Uninstaller.confirmAndRun() }
 
+    /// Lumi used to be called ClaudeLight (same bundle id, so settings carry over). Two copies would both
+    /// grab the hotkey, so the old one is quit and its app moved to the Trash, where it can be restored.
+    private static func retireClaudeLight() {
+        let me = Bundle.main.bundleURL.standardizedFileURL
+        for app in NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+        where app.bundleURL?.standardizedFileURL != me {
+            app.terminate()
+        }
+        let old = ["/Applications/ClaudeLight.app", NSHomeDirectory() + "/Applications/ClaudeLight.app"]
+            .map { URL(fileURLWithPath: $0) }
+            .filter { FileManager.default.fileExists(atPath: $0.path) }
+        if !old.isEmpty {
+            // Give the old process a moment to quit before its bundle moves.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { NSWorkspace.shared.recycle(old) }
+        }
+    }
+
     /// An app without a Dock icon has no menu bar of its own; this hidden one makes ⌘Q, ⌘C and ⌘V work in its windows.
     private func buildMainMenu() {
         let main = NSMenu()
@@ -2034,17 +2050,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
     }
 
-    /// The menu bar Clawd, a template image (eyes cut out) so it follows the menu bar's colour.
+    /// The menu bar Lumi, a template image (eyes cut out) so it follows the menu bar's colour.
     static func sparkImage() -> NSImage {
         let image = NSImage(size: NSSize(width: 18, height: 14), flipped: true) { _ in
             NSColor.black.setFill()
             for p in Mascot.pixels() where !p.isEye {
-                NSRect(x: CGFloat(p.x), y: 1 + CGFloat(p.y - 1), width: 1, height: 1).fill()
+                NSRect(x: 2 + CGFloat(p.x), y: 1 + CGFloat(p.y), width: 1, height: 1).fill()
             }
             return true
         }
         image.isTemplate = true
-        image.accessibilityDescription = "ClaudeLight"
+        image.accessibilityDescription = "Lumi"
         return image
     }
 

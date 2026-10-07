@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Win32;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 /// The Claude models the picker offers; Auto ("") leaves the choice to Claude Code's own default.
 public sealed record ClaudeModel(string Id)
@@ -120,7 +120,7 @@ public sealed record ServicePreset(string Key, string BaseUrl, string Example, b
     public override string ToString() => Title;
 }
 
-/// Choices kept across launches in %APPDATA%\ClaudeLight\settings.json.
+/// Choices kept across launches in %APPDATA%\Lumi\settings.json.
 public sealed class Settings
 {
     public static Settings Shared { get; } = Load();
@@ -136,11 +136,24 @@ public sealed class Settings
 
     public event Action? Changed;
 
-    private static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight");
+    private static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Lumi");
     private static string FilePath => Path.Combine(Folder, "settings.json");
 
     private static Settings Load()
     {
+        // Lumi used to be called ClaudeLight: bring its settings (and their encrypted keys) along once.
+        var oldFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "settings.json");
+        try
+        {
+            if (!File.Exists(FilePath) && File.Exists(oldFile))
+            {
+                Directory.CreateDirectory(Folder);
+                File.Copy(oldFile, FilePath);
+            }
+        }
+        catch
+        {
+        }
         try
         {
             if (File.Exists(FilePath))
@@ -209,6 +222,13 @@ public sealed class Settings
         Save();
     }
 
+    /// Moves a ClaudeLight start-with-Windows entry over to Lumi, once.
+    public static void MigrateLaunchAtLogin()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(RunKey);
+        if (key?.GetValue("ClaudeLight") != null) LaunchesAtLogin = true;
+    }
+
     // Start with Windows: a value under the current user's Run key.
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
@@ -217,13 +237,14 @@ public sealed class Settings
         get
         {
             using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-            return key?.GetValue("ClaudeLight") != null;
+            return key?.GetValue("Lumi") != null;
         }
         set
         {
             using var key = Registry.CurrentUser.CreateSubKey(RunKey);
-            if (value) key.SetValue("ClaudeLight", $"\"{Environment.ProcessPath}\" --startup");
-            else key.DeleteValue("ClaudeLight", false);
+            if (value) key.SetValue("Lumi", $"\"{Environment.ProcessPath}\" --startup");
+            else key.DeleteValue("Lumi", false);
+            key.DeleteValue("ClaudeLight", false);
         }
     }
 }

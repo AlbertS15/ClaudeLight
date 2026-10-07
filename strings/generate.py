@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates Sources/Strings.swift and windows/ClaudeLight/Strings.cs from strings.json.
+"""Generates Sources/Strings.swift and windows/Lumi/Strings.cs from strings.json.
 
 Run after editing strings.json:  python3 strings/generate.py
 """
@@ -73,7 +73,7 @@ sw.append("}\n")
 (root / "Sources" / "Strings.swift").write_text("\n".join(sw))
 
 # C#
-cs = [header, "using System.Collections.Generic;", "using System.Globalization;", "", "namespace ClaudeLight;", "",
+cs = [header, "using System.Collections.Generic;", "using System.Globalization;", "", "namespace Lumi;", "",
       "/// Interface languages: code and native name, in table order.",
       "public static class Lang", "{",
       f"    public static readonly string[] Codes = {{ {', '.join(lit(c) for c in codes)} }};",
@@ -116,5 +116,5 @@ for k, v in strings.items():
         args = ", ".join(f"a{i}" for i in range(n))
         cs.append(f"    public static string {camel(k, True)}({params}) => F({lit(k)}, {args});")
 cs.append("}\n")
-(root / "windows" / "ClaudeLight" / "Strings.cs").write_text("\n".join(cs))
+(root / "windows" / "Lumi" / "Strings.cs").write_text("\n".join(cs))
 print("generated", len(strings), "strings in", len(codes), "languages")

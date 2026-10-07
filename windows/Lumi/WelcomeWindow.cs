@@ -7,7 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 /// The window shown when the app is opened: status, model, language, connections, startup options.
 public sealed class WelcomeWindow : Window
@@ -18,7 +18,7 @@ public sealed class WelcomeWindow : Window
     public WelcomeWindow(Action openSearch)
     {
         _openSearch = openSearch;
-        Title = "ClaudeLight";
+        Title = "Lumi";
         Width = 420;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
@@ -41,12 +41,12 @@ public sealed class WelcomeWindow : Window
         Background = Theme.Background;
         var stack = new StackPanel { Margin = new Thickness(24) };
 
-        var mascot = new MascotView { Width = 108, Height = 66, Margin = new Thickness(0, 10, 0, 0) };
+        var mascot = new MascotView { Width = 84, Height = 72, Margin = new Thickness(0, 10, 0, 0) };
         mascot.MouseEnter += (_, _) => mascot.IsWalking = true;
         mascot.MouseLeave += (_, _) => mascot.IsWalking = false;
         stack.Children.Add(mascot);
 
-        var title = Theme.Label("ClaudeLight", 26, null, FontWeights.Bold);
+        var title = Theme.Label("Lumi", 26, null, FontWeights.Bold);
         title.HorizontalAlignment = HorizontalAlignment.Center;
         title.Margin = new Thickness(0, 14, 0, 0);
         stack.Children.Add(title);

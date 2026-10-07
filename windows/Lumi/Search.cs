@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 public sealed record Hit(string Name, string Path, bool IsApp)
 {

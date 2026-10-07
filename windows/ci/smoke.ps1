@@ -1,6 +1,6 @@
-# Smoke test on the CI runner's desktop: starts ClaudeLight, drives the hotkey and the bar,
+# Smoke test on the CI runner's desktop: starts Lumi, drives the hotkey and the bar,
 # and saves a screenshot after each step to dist/screenshots. Fails if the app exits early.
-param([string]$Exe = "dist/app/ClaudeLight.exe")
+param([string]$Exe = "dist/app/Lumi.exe")
 
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
@@ -36,12 +36,12 @@ function Shot([string]$name) {
 function AssertAlive([string]$step) {
     if ($script:app.HasExited) {
         Shot "crash-$step"
-        throw "ClaudeLight exited during '$step' with code $($script:app.ExitCode)"
+        throw "Lumi exited during '$step' with code $($script:app.ExitCode)"
     }
 }
 
 # Interface in Russian, as most users have it; the welcome window shows on first launch.
-$settingsDir = Join-Path $env:APPDATA "ClaudeLight"
+$settingsDir = Join-Path $env:APPDATA "Lumi"
 New-Item -ItemType Directory -Force -Path $settingsDir | Out-Null
 '{ "Language": "ru", "ShowWelcomeOnLaunch": true }' | Set-Content -Encoding UTF8 (Join-Path $settingsDir "settings.json")
 

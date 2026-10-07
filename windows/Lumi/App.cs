@@ -5,7 +5,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
 
-namespace ClaudeLight;
+namespace Lumi;
 
 public static class Program
 {
@@ -13,12 +13,12 @@ public static class Program
     public static void Main(string[] args)
     {
         // One copy at a time; a second launch asks the first to show its window and exits.
-        using var mutex = new Mutex(true, "ClaudeLight.SingleInstance", out var isFirst);
+        using var mutex = new Mutex(true, "Lumi.SingleInstance", out var isFirst);
         if (!isFirst)
         {
             try
             {
-                using var signal = EventWaitHandle.OpenExisting("ClaudeLight.ShowWelcome");
+                using var signal = EventWaitHandle.OpenExisting("Lumi.ShowWelcome");
                 signal.Set();
             }
             catch (WaitHandleCannotBeOpenedException)
@@ -27,6 +27,13 @@ public static class Program
             }
             return;
         }
+        // The same app under its old name would grab the same hotkey.
+        foreach (var old in System.Diagnostics.Process.GetProcessesByName("ClaudeLight"))
+        {
+            try { old.Kill(); } catch { }
+        }
+        try { Settings.MigrateLaunchAtLogin(); } catch { }
+
         var app = new App(isStartup: args.Contains("--startup"));
         app.Run();
     }
@@ -57,7 +64,7 @@ public sealed class App : Application
         // Alt + the key left of 1 (` on English layouts, Ё on Russian): VK_OEM_3.
         _hotKey = new HotKey(HotKey.ModAlt, 0xC0, () => _launcher.Toggle());
 
-        _tray = new System.Windows.Forms.NotifyIcon { Icon = Mascot.TrayIcon(), Text = "ClaudeLight", Visible = true };
+        _tray = new System.Windows.Forms.NotifyIcon { Icon = Mascot.TrayIcon(), Text = "Lumi", Visible = true };
         _tray.MouseClick += (_, a) =>
         {
             if (a.Button == System.Windows.Forms.MouseButtons.Left) _launcher.Toggle();
@@ -131,7 +138,7 @@ public sealed class App : Application
     /// A second copy of the app signals this event; the first shows its welcome window.
     private void WatchSecondLaunch()
     {
-        var signal = new EventWaitHandle(false, EventResetMode.AutoReset, "ClaudeLight.ShowWelcome");
+        var signal = new EventWaitHandle(false, EventResetMode.AutoReset, "Lumi.ShowWelcome");
         var thread = new Thread(() =>
         {
             while (true)
@@ -171,7 +178,7 @@ public sealed class HotKey : IDisposable
     public HotKey(uint modifiers, uint vk, Action onPress)
     {
         _onPress = onPress;
-        _source = new HwndSource(new HwndSourceParameters("ClaudeLightHotKey") { Width = 0, Height = 0, WindowStyle = 0 });
+        _source = new HwndSource(new HwndSourceParameters("LumiHotKey") { Width = 0, Height = 0, WindowStyle = 0 });
         _source.AddHook(Hook);
         IsRegistered = RegisterHotKey(_source.Handle, Id, modifiers | ModNoRepeat, vk);
     }

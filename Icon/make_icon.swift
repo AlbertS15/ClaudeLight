@@ -1,18 +1,19 @@
-// Draws the app icon (the Claude Code mascot in orange pixels on a dark tile) into an .iconset folder.
+// Draws the Lumi app icon (the glowing ghost on a dark tile) into an .iconset folder.
 import AppKit
 
-/// Clawd, from the pixel art inside Claude Code (the same grid as Mascot in main.swift): C body, E eyes.
-let clawd = [
-    "...CCCCCCCCCCCC...",
-    "...CCCCCCCCCCCC...",
-    "...CCECCCCCCECC...",
-    "...CCECCCCCCECC...",
-    ".CCCCCCCCCCCCCCCC.",
-    ".CCCCCCCCCCCCCCCC.",
-    "...CCCCCCCCCCCC...",
-    "...CCCCCCCCCCCC...",
-    "....C.C....C.C....",
-    "....C.C....C.C....",
+/// Lumi, the glowing ghost (the same grid as Mascot in main.swift): B body, E eyes and mouth.
+let lumi = [
+    "....BBBBBB....",
+    "..BBBBBBBBBB..",
+    ".BBBBBBBBBBBB.",
+    ".BBBBBBBBBBBB.",
+    "BBBEEBBBBEEBBB",
+    "BBBEEBBBBEEBBB",
+    "BBBBBBBBBBBBBB",
+    "BBBBBBEEBBBBBB",
+    "BBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBB",
+    "BB..BBBBBB..BB",
 ]
 
 func icon(_ px: Int) -> Data {
@@ -33,14 +34,19 @@ func icon(_ px: Int) -> Data {
                ending: NSColor(red: 0.10, green: 0.10, blue: 0.09, alpha: 1))!.draw(in: shape, angle: -90)
     NSGraphicsContext.current?.shouldAntialias = false
 
+    // A soft glow behind the ghost: the one place the icon is not flat pixels.
+    let teal = NSColor(red: 93 / 255, green: 202 / 255, blue: 165 / 255, alpha: 1)
+    NSGradient(colors: [teal.withAlphaComponent(0.35), teal.withAlphaComponent(0)])!
+        .draw(in: NSBezierPath(ovalIn: tile.insetBy(dx: tile.width * 0.12, dy: tile.width * 0.12)), relativeCenterPosition: .zero)
+
     NSGraphicsContext.current?.shouldAntialias = false
-    let u = (tile.width * 0.62 / 18).rounded(.down)
-    let x0 = (s / 2 - u * 18 / 2).rounded()
-    let top = (s / 2 + u * 10 / 2).rounded()
-    let body = NSColor(red: 215 / 255, green: 119 / 255, blue: 87 / 255, alpha: 1)
-    for (r, line) in clawd.enumerated() {
+    let u = (tile.width * 0.5 / 14).rounded(.down)
+    let x0 = (s / 2 - u * 14 / 2).rounded()
+    let top = (s / 2 + u * 11 / 2).rounded()
+    let eye = NSColor(red: 0.12, green: 0.12, blue: 0.11, alpha: 1)
+    for (r, line) in lumi.enumerated() {
         for (c, ch) in line.enumerated() where ch != "." {
-            (ch == "E" ? NSColor.black : body).setFill()
+            (ch == "E" ? eye : teal).setFill()
             NSRect(x: x0 + CGFloat(c) * u, y: top - CGFloat(r + 1) * u, width: u, height: u).fill()
         }
     }

@@ -191,11 +191,11 @@
       "Ouvrir la recherche  ({0})"
     ],
     "menu_window": [
-      "ClaudeLight window…",
-      "Окно ClaudeLight…",
-      "ClaudeLight-Fenster…",
-      "Ventana de ClaudeLight…",
-      "Fenêtre ClaudeLight…"
+      "Lumi window…",
+      "Окно Lumi…",
+      "Lumi-Fenster…",
+      "Ventana de Lumi…",
+      "Fenêtre Lumi…"
     ],
     "menu_launch_at_login": [
       "Open at login",
@@ -380,11 +380,11 @@
       "Claude Code introuvable. Choisissez un autre modèle en haut à droite ou installez Claude Code : https://claude.com/claude-code"
     ],
     "err_not_logged_in": [
-      "Claude is not signed in. Press “Sign in” in the ClaudeLight window, or run `claude` and then `/login`.",
-      "Claude не залогинен. Нажмите «Войти» в окне ClaudeLight или выполните `claude`, затем `/login`.",
-      "Claude ist nicht angemeldet. Klicken Sie im ClaudeLight-Fenster auf „Anmelden“ oder führen Sie `claude` und dann `/login` aus.",
-      "Claude no ha iniciado sesión. Pulsa «Iniciar sesión» en la ventana de ClaudeLight o ejecuta `claude` y luego `/login`.",
-      "Claude n'est pas connecté. Cliquez sur « Se connecter » dans la fenêtre ClaudeLight ou lancez `claude` puis `/login`."
+      "Claude is not signed in. Press “Sign in” in the Lumi window, or run `claude` and then `/login`.",
+      "Claude не залогинен. Нажмите «Войти» в окне Lumi или выполните `claude`, затем `/login`.",
+      "Claude ist nicht angemeldet. Klicken Sie im Lumi-Fenster auf „Anmelden“ oder führen Sie `claude` und dann `/login` aus.",
+      "Claude no ha iniciado sesión. Pulsa «Iniciar sesión» en la ventana de Lumi o ejecuta `claude` y luego `/login`.",
+      "Claude n'est pas connecté. Cliquez sur « Se connecter » dans la fenêtre Lumi ou lancez `claude` puis `/login`."
     ],
     "err_start": [
       "Couldn't start claude: {0}",
@@ -590,25 +590,25 @@
       "Codex a renvoyé une erreur : {0}"
     ],
     "quit_app": [
-      "Quit ClaudeLight",
-      "Выйти из ClaudeLight",
-      "ClaudeLight beenden",
-      "Salir de ClaudeLight",
-      "Quitter ClaudeLight"
+      "Quit Lumi",
+      "Выйти из Lumi",
+      "Lumi beenden",
+      "Salir de Lumi",
+      "Quitter Lumi"
     ],
     "uninstall": [
-      "Uninstall ClaudeLight…",
-      "Удалить ClaudeLight…",
-      "ClaudeLight deinstallieren…",
-      "Desinstalar ClaudeLight…",
-      "Désinstaller ClaudeLight…"
+      "Uninstall Lumi…",
+      "Удалить Lumi…",
+      "Lumi deinstallieren…",
+      "Desinstalar Lumi…",
+      "Désinstaller Lumi…"
     ],
     "uninstall_title": [
-      "Uninstall ClaudeLight?",
-      "Удалить ClaudeLight?",
-      "ClaudeLight deinstallieren?",
-      "¿Desinstalar ClaudeLight?",
-      "Désinstaller ClaudeLight ?"
+      "Uninstall Lumi?",
+      "Удалить Lumi?",
+      "Lumi deinstallieren?",
+      "¿Desinstalar Lumi?",
+      "Désinstaller Lumi ?"
     ],
     "uninstall_text": [
       "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.",
