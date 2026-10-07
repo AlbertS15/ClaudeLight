@@ -1,5 +1,7 @@
 # Lumi для macOS
 
+README: [English](https://github.com/AlbertS15/Lumi/blob/main/README.md) · [Русский](https://github.com/AlbertS15/Lumi/blob/main/README.ru.md) · [Deutsch](https://github.com/AlbertS15/Lumi/blob/main/README.de.md) · [Español](https://github.com/AlbertS15/Lumi/blob/main/README.es.md) · [Français](https://github.com/AlbertS15/Lumi/blob/main/README.fr.md)
+
 > Это ветка **macos**: только код версии для Mac. Она собирается автоматически из ветки [`main`](https://github.com/AlbertS15/Lumi) при каждом изменении — правки вносите туда.
 
 **Lumi** — строка в стиле Spotlight, которая ещё и отвечает на вопросы. Нажмите **⌥ Ё** (на английской раскладке ⌥ `` ` ``) — и откройте программу или файл либо спросите Claude, ChatGPT, Gemini, локальную модель или любой подключённый ИИ.
