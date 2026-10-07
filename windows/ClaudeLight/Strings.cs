@@ -62,7 +62,7 @@ public static class S
         ["menu_window"] = new[] { "ClaudeLight window…", "Окно ClaudeLight…", "ClaudeLight-Fenster…", "Ventana de ClaudeLight…", "Fenêtre ClaudeLight…" },
         ["menu_launch_at_login"] = new[] { "Open at login", "Запускать при входе", "Beim Anmelden öffnen", "Abrir al iniciar sesión", "Ouvrir à la connexion" },
         ["menu_quit"] = new[] { "Quit", "Выйти", "Beenden", "Salir", "Quitter" },
-        ["model_auto"] = new[] { "Auto", "Авто", "Auto", "Auto", "Auto" },
+        ["model_auto"] = new[] { "Claude", "Claude", "Claude", "Claude", "Claude" },
         ["note_auto"] = new[] { "as in Claude Code", "как в Claude Code", "wie in Claude Code", "como en Claude Code", "comme dans Claude Code" },
         ["note_haiku"] = new[] { "fastest", "самый быстрый", "am schnellsten", "el más rápido", "le plus rapide" },
         ["note_sonnet"] = new[] { "fast and smart", "быстрый и умный", "schnell und klug", "rápido e inteligente", "rapide et intelligent" },

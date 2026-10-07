@@ -1023,7 +1023,8 @@ final class LauncherModel: ObservableObject {
             self.hits = hits
             let maxIndex = hits.count
             if self.selection > maxIndex { self.selection = maxIndex }
-            if !self.looksLikeQuestion(self.query), self.selection == 0, !hits.isEmpty { self.selection = self.firstHit }
+            // A search lands on the first file or app; a question stays on the ask row.
+            if !self.looksLikeQuestion(self.query), self.selection < self.firstHit, !hits.isEmpty { self.selection = self.firstHit }
         }
         // Published fires before the value is stored, so retry on the next turn of the run loop.
         choiceWatch = Settings.shared.$choice.dropFirst().sink { [weak self] _ in

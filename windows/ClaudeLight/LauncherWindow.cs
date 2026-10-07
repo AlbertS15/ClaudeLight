@@ -235,7 +235,8 @@ public sealed class LauncherWindow : Window
         {
             if (_input.Text != text) return;
             _hits = hits;
-            if (!LooksLikeQuestion(text) && _selection == 0 && hits.Count > 0) _selection = FirstHit;
+            // A search lands on the first file or app; a question stays on the ask row.
+            if (!LooksLikeQuestion(text) && _selection < FirstHit && hits.Count > 0) _selection = FirstHit;
             if (_selection >= RowCount) _selection = Math.Max(RowCount - 1, 0);
             RenderResults();
         }));
@@ -471,7 +472,6 @@ public sealed class LauncherWindow : Window
         _isAnswering = value;
         _mascot.IsWalking = value;
         _footer.Text = value ? S.HintStop : S.HintDone("Ctrl+C");
-        if (!value && _answer.Text.Length == 0 && _error.Text.Length == 0) _answer.Text = "…";
     }
 
     /// Asks the last question again when its answer failed: Enter on an empty bar, or a switch of model.
