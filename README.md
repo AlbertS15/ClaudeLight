@@ -1,33 +1,65 @@
 # Lumi
 
-**Lumi** — строка в стиле Spotlight для **macOS и Windows**: ищет программы и файлы и отвечает на вопросы через Claude, ChatGPT, Gemini, локальные модели (Ollama, LM Studio) или любой другой подключённый ИИ. Раньше называлась ClaudeLight.
+**Строка в стиле Spotlight для macOS и Windows, которая ещё и отвечает на вопросы.** Одна горячая клавиша — и вы открываете программу или файл либо спрашиваете Claude, ChatGPT, Gemini, локальную модель или любой другой подключённый ИИ. Раньше называлась ClaudeLight.
+
+![Lumi: строка, поиск, языки и модели](docs/lumi-demo.gif)
 
 📢 **Новости и обновления — в Telegram-канале: [t.me/+3IU-_WIhrTU4MjAy](https://t.me/+3IU-_WIhrTU4MjAy)**
 
-**Языки интерфейса:** English, Русский, Deutsch, Español, Français (по умолчанию — как в системе).
+| | macOS | Windows |
+|---|---|---|
+| Скачать | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` или `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) |
+| Горячая клавиша | **⌥ Ё** (на английской раскладке ⌥ `` ` ``) | **Alt+Ё** (на английской раскладке Alt+`` ` ``) |
+| Код только этой системы | ветка [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | ветка [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) |
 
-## Скачать
-
-Готовые сборки — на странице [Releases](https://github.com/AlbertS15/Lumi/releases):
-
-- **Windows:** `Lumi-Setup-….exe` (установщик, права администратора не нужны) или `Lumi-Portable-….exe` (без установки).
-- **macOS:** `Lumi-macOS.dmg`. Приложение не подписано сертификатом Apple, поэтому при первом запуске: правый клик → «Открыть», или «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».
-
-Windows SmartScreen тоже может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае».
+Интерфейс на пяти языках: English, Русский, Deutsch, Español, Français (по умолчанию — как в системе).
 
 > Независимый проект, не связан с Anthropic, OpenAI или Google. Claude, ChatGPT и Gemini — товарные знаки их владельцев.
 
 ## Возможности
 
-- **⌥ Ё** на Mac / **Alt+Ё** на Windows (клавиша слева от 1, на английской раскладке `` ` ``) — открыть строку из любого места.
-- **Поиск** программ и файлов: на Mac — по индексу Spotlight, на Windows — по меню «Пуск» и индексу Windows Search.
-- **Вопросы Claude** через установленный [Claude Code](https://claude.com/claude-code) (`claude`): без API-ключа, по вашей подписке; ответы печатаются по ходу, уточняющие вопросы продолжают разговор.
-- **Выбор модели**: Haiku, Sonnet, Opus, Fable.
-- **ChatGPT по подписке Plus** через официальный [Codex CLI](https://github.com/openai/codex) (`codex`): вход через аккаунт ChatGPT, без API-ключа, в пределах лимитов подписки. Установка: `brew install codex` (или `npm install -g @openai/codex`), затем `codex login`.
-- **Gemini по подписке Google** через официальный [Gemini CLI](https://github.com/google-gemini/gemini-cli) (`gemini`): вход через аккаунт Google, без API-ключа; у подписчиков Google AI Pro лимиты выше. Модели: 3.1 Pro, 3.8 Flash, 3.1 Flash-Lite. Установка: `brew install gemini-cli` (или `npm install -g @google/gemini-cli`), затем один раз `gemini` и «Sign in with Google».
-- **Спросить в ChatGPT** (⇧⌘↩ / Ctrl+Shift+Enter) — открывает chatgpt.com с вопросом, ответ идёт по вашей подписке ChatGPT.
-- **Свои подключения**: любой OpenAI-совместимый сервис — OpenRouter, OpenAI, DeepSeek, Groq, Mistral, YandexGPT, GigaChat, а также локальные Ollama и LM Studio. Для GigaChat в системе должен быть установлен [сертификат НУЦ Минцифры](https://www.gosuslugi.ru/crt). Ключи хранятся в Связке ключей macOS / зашифрованы средствами Windows (DPAPI).
-- Иконка в строке меню (Mac) или в трее (Windows), стартовое окно, запуск при входе в систему.
+- **Поиск** программ и файлов: на Mac — по индексу Spotlight, на Windows — по меню «Пуск» и Windows Search. Lumi сама понимает, что вы ввели: поиск или вопрос.
+- **Ответы прямо в строке**: печатаются по ходу, уточняющие вопросы продолжают разговор.
+- **Подписки без API-ключей** — через официальные программы самих сервисов:
+  - Claude — [Claude Code](https://claude.com/claude-code) (`claude`), модели Haiku, Sonnet, Opus, Fable;
+  - ChatGPT Plus — [Codex CLI](https://github.com/openai/codex) (`codex login`);
+  - Gemini — [Gemini CLI](https://github.com/google-gemini/gemini-cli) (вход через Google; 3.1 Pro, 3.8 Flash, 3.1 Flash-Lite).
+- **Спросить в ChatGPT** (⇧⌘↩ / Ctrl+Shift+Enter) — открывает chatgpt.com с вашим вопросом.
+- **Любой OpenAI-совместимый сервис**: OpenRouter, OpenAI, DeepSeek, Groq, Mistral, YandexGPT, GigaChat.
+- **Локальные модели** через Ollama и LM Studio — бесплатно, без интернета, работают в любой стране.
+- Ключи хранятся в Связке ключей macOS / зашифрованы средствами Windows. Иконка в строке меню или в трее, стартовое окно, запуск при входе, удаление в один клик.
+
+## macOS
+
+**Установка.** Скачайте `Lumi-macOS.dmg` со страницы [Releases](https://github.com/AlbertS15/Lumi/releases/latest) и перетащите Lumi в «Программы». Приложение не подписано сертификатом Apple, поэтому первый запуск — правый клик → «Открыть» → «Открыть».
+
+**Обновление.** Скачайте новую версию и замените старую. Если стоял ClaudeLight, Lumi сама закроет его и уберёт в Корзину, а настройки перенесёт.
+
+**Удаление.** Стартовое окно или меню призрака в строке меню → «Удалить Lumi…».
+
+**Сборка из исходников.** Нужны macOS 14+ и Xcode Command Line Tools (`xcode-select --install`):
+
+```bash
+./build.sh
+```
+
+Скрипт соберёт `build/Lumi.app` и установит его в `~/Applications`. Код: `Sources/` (AppKit + SwiftUI), иконка рисуется `Icon/make_icon.swift`.
+
+## Windows
+
+**Установка.** Скачайте со страницы [Releases](https://github.com/AlbertS15/Lumi/releases/latest) установщик `Lumi-Setup-….exe` (права администратора не нужны) или `Lumi-Portable-….exe` (без установки). SmartScreen может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае».
+
+**Обновление.** Запустите новый установщик: он заменит старую версию, в том числе ClaudeLight, и перенесёт настройки и автозапуск.
+
+**Удаление.** «Параметры» → «Приложения» → Lumi → «Удалить».
+
+**Сборка из исходников.** Нужен .NET 8 SDK:
+
+```powershell
+dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist/app
+```
+
+Установщик собирается [Inno Setup](https://jrsoftware.org/isinfo.php) из `windows/installer/Lumi.iss`. Код: `windows/Lumi/` (WPF, .NET 8).
 
 ## Клавиши
 
@@ -35,47 +67,22 @@ Windows SmartScreen тоже может предупредить о неизве
 |---|---|
 | ↩ | открыть файл или спросить модель |
 | ⌘↩ / Ctrl+↩ | всегда спросить модель |
+| ⇧⌘↩ / Ctrl+Shift+↩ | спросить в ChatGPT |
 | ⌥↩ / Alt+↩ | показать файл в Finder / Проводнике |
 | ↑ ↓ | выбрать результат |
 | ⌘C / Ctrl+C | скопировать ответ |
 | esc | остановить ответ, назад, закрыть |
 
-## Сборка
+## Для разработчиков
 
-### macOS
+- `main` — основная ветка с кодом обеих версий. Все изменения вносятся сюда.
+- `macos` и `windows` — только код своей системы. Их автоматически пересобирает GitHub Actions при каждом изменении `main`, вручную их не меняют.
+- `strings/strings.json` — тексты интерфейса на всех языках. После правки: `python3 strings/generate.py` — пересоздаёт `Sources/Strings.swift` и `windows/Lumi/Strings.cs`.
 
-Нужны macOS 14+ и Xcode Command Line Tools (`xcode-select --install`).
+**Выпуск версии.** Написать заметку `release-notes/vX.Y.Z.html` (по-русски, HTML Telegram: `<b>`, `<i>`, `<a>`, `<code>`, до ~3900 символов), затем:
 
 ```bash
-./build.sh
+git tag -a vX.Y.Z -m "Lumi X.Y.Z" && git push origin vX.Y.Z
 ```
 
-Скрипт соберёт `build/Lumi.app` и установит его в `~/Applications`.
-
-### Windows
-
-Нужен .NET 8 SDK:
-
-```powershell
-dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist/app
-```
-
-Установщик собирается [Inno Setup](https://jrsoftware.org/isinfo.php) из `windows/installer/Lumi.iss`. GitHub Actions собирает обе версии при каждом пуше, а при теге `v*` публикует релиз.
-
-Для ответов Claude нужен вход в Claude Code: `claude`, затем `/login`.
-
-## Устройство
-
-- `Sources/main.swift` — приложение для Mac (AppKit + SwiftUI): окно поиска, `NSMetadataQuery`, запуск `claude -p --output-format stream-json`, клиент OpenAI-совместимого API, стартовое окно.
-- `windows/Lumi/` — приложение для Windows (WPF, .NET 8) с теми же возможностями.
-- `strings/strings.json` — все тексты интерфейса на всех языках. После правки: `python3 strings/generate.py` — он пересоздаёт `Sources/Strings.swift` и `windows/Lumi/Strings.cs`.
-- `Icon/make_icon.swift` — рисует иконку при сборке.
-- `build.sh` — сборка через `swiftc`, без проекта Xcode.
-
-## Выпуск версии
-
-1. Написать заметку `release-notes/vX.Y.Z.html` (по-русски, HTML Telegram: `<b>`, `<i>`, `<a>`, `<code>`, до ~3900 символов).
-2. `git tag -a vX.Y.Z -m "Lumi X.Y.Z" && git push origin vX.Y.Z`.
-
-GitHub Actions соберёт обе версии, проверит Windows-версию, опубликует релиз с текстом заметки и, если заданы секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`, отправит заметку в Telegram-канал. Повторить пост вручную: Actions → «Post release to Telegram» → Run workflow.
-
+GitHub Actions соберёт обе версии, проверит Windows-версию со скриншотами, опубликует релиз с текстом заметки и отправит её в Telegram-канал (если заданы секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`). Повторить пост вручную: Actions → «Post release to Telegram».

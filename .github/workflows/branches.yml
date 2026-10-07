@@ -1,0 +1,45 @@
+name: Platform branches
+
+# Rebuilds the read-only `macos` and `windows` branches from main: each keeps only its own platform's
+# code plus the shared strings, with its own README. They are regenerated on every push, so they are
+# force-pushed; changes belong in main.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: platform-branches
+  cancel-in-progress: true
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: macos
+            keep: "Sources Icon build.sh strings docs/lumi-demo.gif .gitignore"
+            readme: docs/README-macos.md
+          - branch: windows
+            keep: "windows strings docs/lumi-demo.gif .gitignore"
+            readme: docs/README-windows.md
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the ${{ matrix.branch }} branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # A separate index holds just this platform's files plus its README, so the checkout is untouched.
+          export GIT_INDEX_FILE="$RUNNER_TEMP/index-${{ matrix.branch }}"
+          git read-tree --empty
+          git add ${{ matrix.keep }}
+          readme=$(git hash-object -w "${{ matrix.readme }}")
+          git update-index --add --cacheinfo "100644,$readme,README.md"
+          tree=$(git write-tree)
+          commit=$(git commit-tree "$tree" -m "${{ matrix.branch }} from main@$(git rev-parse --short HEAD)")
+          git push -f origin "$commit:refs/heads/${{ matrix.branch }}"
