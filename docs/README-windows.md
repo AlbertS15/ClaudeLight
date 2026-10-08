@@ -32,3 +32,7 @@ dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -
 | `windows/Lumi/Strings.cs` | тексты на 5 языках (создаётся из `strings/strings.json`) |
 | `windows/installer/Lumi.iss` | установщик |
 | `windows/ci/smoke.ps1` | автопроверка запуска со скриншотами |
+
+## Лицензия
+
+[MIT](LICENSE) © 2026 AlbertS15

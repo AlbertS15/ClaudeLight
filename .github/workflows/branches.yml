@@ -22,10 +22,10 @@ jobs:
       matrix:
         include:
           - branch: macos
-            keep: "Sources Icon build.sh strings docs/lumi-demo.gif .gitignore"
+            keep: "Sources Icon build.sh strings docs/lumi-demo.gif .gitignore LICENSE"
             readme: docs/README-macos.md
           - branch: windows
-            keep: "windows strings docs/lumi-demo.gif .gitignore"
+            keep: "windows strings docs/lumi-demo.gif .gitignore LICENSE"
             readme: docs/README-windows.md
     steps:
       - uses: actions/checkout@v4

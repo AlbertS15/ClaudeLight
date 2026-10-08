@@ -88,3 +88,7 @@ git tag -a vX.Y.Z -m "Lumi X.Y.Z" && git push origin vX.Y.Z
 ```
 
 GitHub Actions builds both apps, smoke-tests the Windows one with screenshots, publishes the release with the note and posts it to the Telegram channel (when the `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` secrets are set).
+
+## License
+
+[MIT](LICENSE) © 2026 AlbertS15

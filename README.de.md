@@ -82,3 +82,7 @@ Das Installationsprogramm entsteht mit [Inno Setup](https://jrsoftware.org/isinf
 - `strings/strings.json` enthält alle Oberflächentexte in allen Sprachen. Nach Änderungen `python3 strings/generate.py` ausführen.
 
 Details zum Veröffentlichen einer Version: siehe [englische README](README.md#for-developers).
+
+## Lizenz
+
+[MIT](LICENSE) © 2026 AlbertS15

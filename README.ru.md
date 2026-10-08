@@ -88,3 +88,7 @@ git tag -a vX.Y.Z -m "Lumi X.Y.Z" && git push origin vX.Y.Z
 ```
 
 GitHub Actions соберёт обе версии, проверит Windows-версию со скриншотами, опубликует релиз с текстом заметки и отправит её в Telegram-канал (если заданы секреты `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`). Повторить пост вручную: Actions → «Post release to Telegram».
+
+## Лицензия
+
+[MIT](LICENSE) © 2026 AlbertS15

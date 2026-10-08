@@ -82,3 +82,7 @@ El instalador se genera con [Inno Setup](https://jrsoftware.org/isinfo.php) a pa
 - `strings/strings.json` reúne todos los textos de la interfaz en todos los idiomas. Tras editarlo, ejecuta `python3 strings/generate.py`.
 
 Cómo publicar una versión: consulta el [README en inglés](README.md#for-developers).
+
+## Licencia
+
+[MIT](LICENSE) © 2026 AlbertS15

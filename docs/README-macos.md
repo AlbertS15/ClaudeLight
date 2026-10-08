@@ -32,3 +32,7 @@ README: [English](https://github.com/AlbertS15/Lumi/blob/main/README.md) · [Р�
 | `Sources/Strings.swift` | тексты на 5 языках (создаётся из `strings/strings.json`) |
 | `Icon/make_icon.swift` | рисует иконку при сборке |
 | `build.sh` | сборка через `swiftc`, без проекта Xcode |
+
+## Лицензия
+
+[MIT](LICENSE) © 2026 AlbertS15
