@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: News and setup guides (Telegram, in Russian) / Новости и гайды
+    url: https://t.me/+3IU-_WIhrTU4MjAy
+    about: Release notes and how to connect Ollama, OpenRouter and other models. / Обновления и как подключить модели.

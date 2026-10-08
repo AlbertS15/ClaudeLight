@@ -1,0 +1,56 @@
+name: Bug report / Сообщить об ошибке
+description: Something doesn't work as it should / Что-то работает не так
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! You can write in English or Russian.
+        Спасибо, что сообщаете! Можно писать по-русски.
+
+        ⚠️ Never paste API keys or tokens here — screenshots too. / Не вставляйте сюда API-ключи и токены, в том числе на скриншотах.
+  - type: dropdown
+    id: os
+    attributes:
+      label: System / Система
+      options:
+        - macOS
+        - Windows
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lumi version / Версия Lumi
+      description: |
+        Mac: Finder → Applications → Lumi → right-click → Get Info. Windows: Settings → Apps → Lumi.
+        Mac: Finder → Программы → Lumi → правый клик → «Свойства». Windows: «Параметры» → «Приложения» → Lumi.
+      placeholder: "1.3.1"
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model / Модель
+      options:
+        - Claude (Claude Code)
+        - ChatGPT (Codex CLI)
+        - Gemini (Gemini CLI)
+        - OpenRouter
+        - Ollama / LM Studio
+        - DeepSeek
+        - YandexGPT / GigaChat
+        - Other OpenAI-compatible service / Другой OpenAI-совместимый сервис
+        - Not about models (search, hotkey, install) / Не про модели (поиск, клавиша, установка)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Что случилось?
+      description: What you did, what you expected and what happened instead. / Что вы сделали, что ожидали и что получилось.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or error text / Скриншот или текст ошибки
+      description: Drag a screenshot here. / Перетащите сюда скриншот.

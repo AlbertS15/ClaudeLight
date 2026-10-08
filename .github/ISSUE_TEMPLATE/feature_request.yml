@@ -1,0 +1,18 @@
+name: Idea / Идея
+description: Suggest a feature or an improvement / Предложить функцию или улучшение
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: You can write in English or Russian. / Можно писать по-русски.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Lumi to do? / Что должна уметь Lumi?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: When would it help you? / Когда это пригодится?
+      description: A real example helps the most. / Лучше всего — реальный пример.
