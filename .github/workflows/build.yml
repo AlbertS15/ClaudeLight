@@ -66,6 +66,7 @@ jobs:
 
       - name: Build app and disk image
         run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then export LUMI_VERSION="${GITHUB_REF#refs/tags/v}"; else export LUMI_VERSION="0.0.${GITHUB_RUN_NUMBER}"; fi
           ./build.sh
           mkdir -p dist/dmg
           cp -R build/Lumi.app dist/dmg/

@@ -121,6 +121,7 @@ public static class S
         ["uninstall_title"] = new[] { "Uninstall Lumi?", "Удалить Lumi?", "Lumi deinstallieren?", "¿Desinstalar Lumi?", "Désinstaller Lumi ?" },
         ["uninstall_text"] = new[] { "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.", "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.", "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.", "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.", "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion." },
         ["uninstall_button"] = new[] { "Uninstall", "Удалить", "Deinstallieren", "Desinstalar", "Désinstaller" },
+        ["update_available"] = new[] { "Lumi {0} is available — download", "Доступна Lumi {0} — скачать", "Lumi {0} ist verfügbar – herunterladen", "Lumi {0} está disponible: descargar", "Lumi {0} est disponible — télécharger" },
     };
 
     private static string F(string key, params string[] args)
@@ -216,4 +217,5 @@ public static class S
     public static string UninstallTitle => F("uninstall_title");
     public static string UninstallText => F("uninstall_text");
     public static string UninstallButton => F("uninstall_button");
+    public static string UpdateAvailable(string a0) => F("update_available", a0);
 }

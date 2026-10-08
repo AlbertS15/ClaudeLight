@@ -4,6 +4,9 @@ set -euo pipefail
 cd "${0:A:h}"
 
 APP=build/Lumi.app
+# The release workflow passes the tag's version; a local build takes the latest tag, if any.
+VERSION=${LUMI_VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)}
+VERSION=${VERSION:-0.0.0}
 rm -rf build
 mkdir -p $APP/Contents/MacOS $APP/Contents/Resources
 
@@ -25,7 +28,7 @@ cat > $APP/Contents/Info.plist <<PLIST
   <key>CFBundleExecutable</key><string>Lumi</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>

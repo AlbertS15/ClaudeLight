@@ -11,7 +11,7 @@
 | | macOS | Windows |
 |---|---|---|
 | Скачать | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` или `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) |
-| Горячая клавиша | **⌥ Ё** — клавиша слева от 1 (на английской раскладке `` ` ``) | **Alt+Ё** — клавиша слева от 1 (на английской раскладке `` ` ``) |
+| Горячая клавиша | **⌥ Ё** — клавиша слева от 1 (на английской раскладке `` ` ``) | **Alt+Ё** — клавиша слева от 1, на любой раскладке |
 | Код только этой системы | ветка [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | ветка [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) |
 
 Интерфейс на пяти языках: English, Русский, Deutsch, Español, Français (по умолчанию — как в системе).

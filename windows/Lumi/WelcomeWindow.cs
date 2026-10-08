@@ -36,6 +36,9 @@ public sealed class WelcomeWindow : Window
         Build();
     }
 
+    /// Called once a newer release is found; redraws the window so it shows the download link.
+    public void ShowUpdate(string version) => Build();
+
     private void Build()
     {
         Background = Theme.Background;
@@ -60,6 +63,15 @@ public sealed class WelcomeWindow : Window
         hotkey.Children.Add(KeyCap(Theme.HotkeyKey));
         hotkey.Children.Add(Theme.Label(" " + S.HotkeyHint, 13, Theme.Secondary));
         stack.Children.Add(hotkey);
+
+        if (Updates.NewVersion is { } version)
+        {
+            var update = LinkButton("⬆ " + S.UpdateAvailable(version), Updates.OpenReleases);
+            update.HorizontalAlignment = HorizontalAlignment.Center;
+            update.FontWeight = FontWeights.SemiBold;
+            update.Margin = new Thickness(0, 14, 0, 0);
+            stack.Children.Add(update);
+        }
 
         var card = new StackPanel();
         card.Children.Add(AuthRow());

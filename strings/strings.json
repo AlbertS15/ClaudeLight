@@ -623,6 +623,13 @@
       "Deinstallieren",
       "Desinstalar",
       "Désinstaller"
+    ],
+    "update_available": [
+      "Lumi {0} is available — download",
+      "Доступна Lumi {0} — скачать",
+      "Lumi {0} ist verfügbar – herunterladen",
+      "Lumi {0} está disponible: descargar",
+      "Lumi {0} est disponible — télécharger"
     ]
   },
   "question_words": {

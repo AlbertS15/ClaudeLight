@@ -1623,6 +1623,7 @@ struct ConnectionFormView: View {
 struct WelcomeView: View {
     @ObservedObject var model: WelcomeModel
     @ObservedObject var settings = Settings.shared
+    @ObservedObject var updates = UpdateChecker.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1647,6 +1648,15 @@ struct WelcomeView: View {
                     .foregroundStyle(.secondary)
             }
             .padding(.top, 22)
+
+            if let version = updates.newVersion {
+                Link(destination: UpdateChecker.releasesPage) {
+                    Label(S.updateAvailable(version), systemImage: "arrow.down.circle.fill")
+                }
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.lumi)
+                .padding(.top, 14)
+            }
 
             VStack(spacing: 0) {
                 authRow
@@ -1833,6 +1843,53 @@ enum Uninstaller {
     }
 }
 
+/// Asks GitHub once a day whether a newer release is out; the menu bar menu and the welcome window then offer it.
+final class UpdateChecker: ObservableObject {
+    static let shared = UpdateChecker()
+    static let releasesPage = URL(string: "https://github.com/AlbertS15/Lumi/releases/latest")!
+    private static let latestRelease = URL(string: "https://api.github.com/repos/AlbertS15/Lumi/releases/latest")!
+
+    @Published private(set) var newVersion: String?
+    var onChange: (() -> Void)?
+    private var timer: Timer?
+
+    func start() {
+        let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        // Builds made from source without a release tag have no real version to compare.
+        guard !current.isEmpty, !current.hasPrefix("0.") else { return }
+        check(current)
+        timer = Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in self?.check(current) }
+    }
+
+    private func check(_ current: String) {
+        var request = URLRequest(url: Self.latestRelease)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        URLSession.shared.dataTask(with: request) { [weak self] data, _, _ in
+            guard let data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let tag = json["tag_name"] as? String else { return }
+            let latest = tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
+            guard Self.isNewer(latest, than: current) else { return }
+            DispatchQueue.main.async {
+                guard self?.newVersion != latest else { return }
+                self?.newVersion = latest
+                self?.onChange?()
+            }
+        }.resume()
+    }
+
+    /// Compares dotted version numbers: 1.10.0 is newer than 1.9.2.
+    static func isNewer(_ a: String, than b: String) -> Bool {
+        let x = a.split(separator: ".").map { Int($0) ?? 0 }
+        let y = b.split(separator: ".").map { Int($0) ?? 0 }
+        for i in 0..<max(x.count, y.count) {
+            let l = i < x.count ? x[i] : 0, r = i < y.count ? y[i] : 0
+            if l != r { return l > r }
+        }
+        return false
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var panel: LauncherPanel!
     private let model = LauncherModel()
@@ -1865,6 +1922,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         welcome.onLoginItemChange = { [weak self] in self?.syncLoginItem() }
         NotificationCenter.default.addObserver(self, selector: #selector(addConnection), name: .addConnection, object: nil)
+        UpdateChecker.shared.onChange = { [weak self] in self?.rebuildMenu() }
+        UpdateChecker.shared.start()
 
         if welcome.showsOnLaunch && !Self.launchedAsLoginItem() { showWelcome() }
     }
@@ -1994,6 +2053,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func uninstall() { Uninstaller.confirmAndRun() }
 
+    @objc private func openReleases() { NSWorkspace.shared.open(UpdateChecker.releasesPage) }
+
     /// Lumi used to be called ClaudeLight (same bundle id, so settings carry over). Two copies would both
     /// grab the hotkey, so the old one is quit and its app moved to the Trash, where it can be restored.
     private static func retireClaudeLight() {
@@ -2032,6 +2093,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func rebuildMenu() {
         let menu = NSMenu()
+        if let version = UpdateChecker.shared.newVersion {
+            menu.addItem(withTitle: "⬆︎ " + S.updateAvailable(version), action: #selector(openReleases), keyEquivalent: "")
+            menu.addItem(.separator())
+        }
         menu.addItem(withTitle: S.menuOpenSearch("⌥ " + hotkeyKey), action: #selector(togglePanel), keyEquivalent: "")
         menu.addItem(withTitle: S.menuWindow, action: #selector(showWelcome), keyEquivalent: "")
         let login = NSMenuItem(title: S.menuLaunchAtLogin, action: #selector(toggleLogin(_:)), keyEquivalent: "")

@@ -10,10 +10,10 @@ using System.Runtime.InteropServices;
 public static class Keys {
     [DllImport("user32.dll")] static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
     const uint Up = 0x0002;
-    public static void Chord(byte modifier, byte key) {
+    public static void Chord(byte modifier, byte key, byte scan) {
         keybd_event(modifier, 0, 0, UIntPtr.Zero);
-        keybd_event(key, 0, 0, UIntPtr.Zero);
-        keybd_event(key, 0, Up, UIntPtr.Zero);
+        keybd_event(key, scan, 0, UIntPtr.Zero);
+        keybd_event(key, scan, Up, UIntPtr.Zero);
         keybd_event(modifier, 0, Up, UIntPtr.Zero);
     }
 }
@@ -50,8 +50,8 @@ Start-Sleep -Seconds 10
 AssertAlive "launch"
 Shot "1-welcome"
 
-# Alt + the key left of 1 (VK_MENU 0x12, VK_OEM_3 0xC0) opens the bar.
-[Keys]::Chord(0x12, 0xC0)
+# Alt + the key left of 1 (VK_MENU 0x12; VK_OEM_3 0xC0, scan code 0x29, which Lumi matches on) opens the bar.
+[Keys]::Chord(0x12, 0xC0, 0x29)
 Start-Sleep -Seconds 2
 AssertAlive "hotkey"
 Shot "2-bar"

@@ -11,7 +11,7 @@
 | | macOS | Windows |
 |---|---|---|
 | Télécharger | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` ou `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) |
-| Raccourci | **⌥ + la touche à gauche du 1** | **Alt+`` ` ``** (touche à gauche du 1 sur les dispositions américaine et russe) |
+| Raccourci | **⌥ + la touche à gauche du 1** | **Alt + la touche à gauche du 1** (², `` ` ``, Ё, ^ — toute disposition) |
 | Code de cette plateforme seulement | branche [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | branche [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) |
 
 Interface en cinq langues : English, Русский, Deutsch, Español, Français (celle du système par défaut).

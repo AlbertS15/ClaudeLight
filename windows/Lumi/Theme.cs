@@ -38,6 +38,6 @@ public static class Theme
         VerticalAlignment = VerticalAlignment.Center,
     };
 
-    /// The hotkey's key label: Ё on a Russian interface, ` elsewhere (the same physical key).
-    public static string HotkeyKey => Lang.Codes[Lang.Index] == "ru" ? "Ё" : "`";
+    /// The hotkey's key label, as printed on that interface language's usual keyboard (the same physical key).
+    public static string HotkeyKey => Lang.Codes[Lang.Index] switch { "ru" => "Ё", "de" => "^", "fr" => "²", _ => "`" };
 }

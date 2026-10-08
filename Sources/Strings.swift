@@ -110,6 +110,7 @@ private let table: [String: [String]] = [
     "uninstall_title": ["Uninstall Lumi?", "Удалить Lumi?", "Lumi deinstallieren?", "¿Desinstalar Lumi?", "Désinstaller Lumi ?"],
     "uninstall_text": ["The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.", "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.", "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.", "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.", "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion."],
     "uninstall_button": ["Uninstall", "Удалить", "Deinstallieren", "Desinstalar", "Désinstaller"],
+    "update_available": ["Lumi {0} is available — download", "Доступна Lumi {0} — скачать", "Lumi {0} ist verfügbar – herunterladen", "Lumi {0} está disponible: descargar", "Lumi {0} est disponible — télécharger"],
 ]
 
 private func format(_ key: String, _ args: [String]) -> String {
@@ -206,4 +207,5 @@ enum S {
     static var uninstallTitle: String { format("uninstall_title", []) }
     static var uninstallText: String { format("uninstall_text", []) }
     static var uninstallButton: String { format("uninstall_button", []) }
+    static func updateAvailable(_ a0: String) -> String { format("update_available", [a0]) }
 }
