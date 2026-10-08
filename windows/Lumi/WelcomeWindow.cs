@@ -80,6 +80,8 @@ public sealed class WelcomeWindow : Window
         foreach (var c in Settings.Shared.Connections) card.Children.Add(ConnectionRow(c));
         var add = LinkButton(S.ConnectModel, () => AddConnection());
         card.Children.Add(Row(null, add));
+        if (!Settings.Shared.Connections.Exists(c => c.BaseUrl.Contains("localhost:11434")))
+            card.Children.Add(Row(null, LinkButton("✈ " + S.OllamaOffer, () => AddConnection("ollama"))));
         card.Children.Add(Row(S.LaunchAtLogin, Check(Settings.LaunchesAtLogin, v => Settings.LaunchesAtLogin = v)));
         card.Children.Add(Row(S.ShowOnLaunch, Check(Settings.Shared.ShowWelcomeOnLaunch, v =>
         {
@@ -126,9 +128,9 @@ public sealed class WelcomeWindow : Window
         Content = stack;
     }
 
-    public void AddConnection()
+    public void AddConnection(string? preset = null)
     {
-        var dialog = new ConnectionDialog { Owner = IsVisible ? this : null };
+        var dialog = new ConnectionDialog(preset) { Owner = IsVisible ? this : null };
         if (dialog.ShowDialog() == true && dialog.Result != null) Settings.Shared.Add(dialog.Result);
     }
 
@@ -293,11 +295,12 @@ public sealed class ConnectionDialog : Window
     private readonly PasswordBox _key = new();
     private readonly TextBlock _modelHint;
     private readonly TextBlock _keyHint;
+    private readonly StackPanel _ollamaHelp = new() { Margin = new Thickness(0, 10, 0, 0) };
     private readonly Button _save;
 
     public Connection? Result { get; private set; }
 
-    public ConnectionDialog()
+    public ConnectionDialog(string? preset = null)
     {
         Title = S.FormTitle;
         Width = 440;
@@ -322,6 +325,7 @@ public sealed class ConnectionDialog : Window
         stack.Children.Add(Field(S.Address, _url));
         stack.Children.Add(Field(S.Model, _model, _modelHint));
         stack.Children.Add(Field(S.ApiKey, _key, _keyHint));
+        stack.Children.Add(_ollamaHelp);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 14, 0, 0) };
         var cancel = new Button { Content = S.Cancel, IsCancel = true, Padding = new Thickness(14, 4, 14, 4), Margin = new Thickness(0, 0, 8, 0) };
@@ -336,7 +340,7 @@ public sealed class ConnectionDialog : Window
         _name.TextChanged += (_, _) => Validate();
         _url.TextChanged += (_, _) => Validate();
         _model.TextChanged += (_, _) => Validate();
-        _preset.SelectedIndex = 0;
+        _preset.SelectedIndex = Math.Max(0, Array.FindIndex(ServicePreset.All, p => p.Key == preset));
     }
 
     private static UIElement Field(string label, Control control, TextBlock? hint = null)
@@ -358,7 +362,54 @@ public sealed class ConnectionDialog : Window
         _url.Text = p.BaseUrl;
         _modelHint.Text = p.ModelHint;
         _keyHint.Text = p.Key == "GigaChat" ? S.HintGigachatKey : p.NeedsKey ? S.KeyStored : S.KeyNotNeeded;
+        _ollamaHelp.Children.Clear();
+        if (p.Key == "ollama") CheckOllama();
         Validate();
+    }
+
+    private const string OllamaDownload = "https://ollama.com/download";
+    private const string PullCommand = "ollama pull llama3.2";
+
+    /// Under the Ollama preset: whether it's installed, with a download link and the first command if not.
+    private async void CheckOllama()
+    {
+        _ollamaHelp.Children.Clear();
+        _ollamaHelp.Children.Add(Theme.Label("Ollama…", 12, Theme.Secondary));
+        var models = await Ollama.ModelsAsync();
+        if (_preset.SelectedItem is not ServicePreset { Key: "ollama" }) return;
+        _ollamaHelp.Children.Clear();
+        TextBlock Note(string s, Brush? color = null)
+        {
+            var label = Theme.Label(s, 12, color ?? Theme.Text);
+            label.TextWrapping = TextWrapping.Wrap;
+            label.TextTrimming = TextTrimming.None;
+            return label;
+        }
+        if (models == null)
+        {
+            _ollamaHelp.Children.Add(Note(S.OllamaMissing));
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 6) };
+            var download = new Button { Content = S.OllamaDownload, Padding = new Thickness(12, 3, 12, 3), Foreground = Brushes.White, Background = Theme.Accent, BorderThickness = new Thickness(0) };
+            download.Click += (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(OllamaDownload) { UseShellExecute = true });
+            var again = new Button { Content = S.CheckAgain, Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(8, 0, 0, 0) };
+            again.Click += (_, _) => CheckOllama();
+            buttons.Children.Add(download);
+            buttons.Children.Add(again);
+            _ollamaHelp.Children.Add(buttons);
+            _ollamaHelp.Children.Add(Note(S.OllamaPull(PullCommand), Theme.Secondary));
+        }
+        else if (models.Count == 0)
+        {
+            _ollamaHelp.Children.Add(Note(S.OllamaNoModels(PullCommand)));
+            var again = new Button { Content = S.CheckAgain, Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
+            again.Click += (_, _) => CheckOllama();
+            _ollamaHelp.Children.Add(again);
+        }
+        else
+        {
+            _ollamaHelp.Children.Add(Note("✓ " + S.OllamaReady(models.Count.ToString()), Theme.Accent));
+            if (_model.Text.Trim().Length == 0) _model.Text = models[0];
+        }
     }
 
     private void Validate()

@@ -122,6 +122,13 @@ public static class S
         ["uninstall_text"] = new[] { "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.", "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.", "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.", "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.", "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion." },
         ["uninstall_button"] = new[] { "Uninstall", "Удалить", "Deinstallieren", "Desinstalar", "Désinstaller" },
         ["update_available"] = new[] { "Lumi {0} is available — download", "Доступна Lumi {0} — скачать", "Lumi {0} ist verfügbar – herunterladen", "Lumi {0} está disponible: descargar", "Lumi {0} est disponible — télécharger" },
+        ["ollama_offer"] = new[] { "Free and offline: Ollama", "Бесплатно и без интернета — Ollama", "Kostenlos und offline: Ollama", "Gratis y sin conexión: Ollama", "Gratuit et hors ligne : Ollama" },
+        ["ollama_missing"] = new[] { "Ollama isn't installed or running. It's free and works offline.", "Ollama не установлена или не запущена. Она бесплатная и работает без интернета.", "Ollama ist nicht installiert oder läuft nicht. Es ist kostenlos und funktioniert offline.", "Ollama no está instalado o no se está ejecutando. Es gratis y funciona sin conexión.", "Ollama n'est pas installé ou ne tourne pas. C'est gratuit et ça marche hors ligne." },
+        ["ollama_download"] = new[] { "Download Ollama", "Скачать Ollama", "Ollama herunterladen", "Descargar Ollama", "Télécharger Ollama" },
+        ["ollama_pull"] = new[] { "Then download a model in Terminal: {0}", "Потом скачайте модель в Терминале: {0}", "Dann ein Modell im Terminal laden: {0}", "Después descarga un modelo en la Terminal: {0}", "Puis téléchargez un modèle dans le Terminal : {0}" },
+        ["ollama_no_models"] = new[] { "Ollama is running but has no models yet. In Terminal: {0}", "Ollama запущена, но моделей пока нет. В Терминале: {0}", "Ollama läuft, hat aber noch keine Modelle. Im Terminal: {0}", "Ollama está en marcha, pero aún no tiene modelos. En la Terminal: {0}", "Ollama tourne mais n'a pas encore de modèle. Dans le Terminal : {0}" },
+        ["ollama_ready"] = new[] { "Ollama is running · models: {0}", "Ollama работает · моделей: {0}", "Ollama läuft · Modelle: {0}", "Ollama funciona · modelos: {0}", "Ollama fonctionne · modèles : {0}" },
+        ["check_again"] = new[] { "Check again", "Проверить снова", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau" },
     };
 
     private static string F(string key, params string[] args)
@@ -218,4 +225,11 @@ public static class S
     public static string UninstallText => F("uninstall_text");
     public static string UninstallButton => F("uninstall_button");
     public static string UpdateAvailable(string a0) => F("update_available", a0);
+    public static string OllamaOffer => F("ollama_offer");
+    public static string OllamaMissing => F("ollama_missing");
+    public static string OllamaDownload => F("ollama_download");
+    public static string OllamaPull(string a0) => F("ollama_pull", a0);
+    public static string OllamaNoModels(string a0) => F("ollama_no_models", a0);
+    public static string OllamaReady(string a0) => F("ollama_ready", a0);
+    public static string CheckAgain => F("check_again");
 }

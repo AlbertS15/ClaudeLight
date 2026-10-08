@@ -248,3 +248,26 @@ public sealed class Settings
         }
     }
 }
+
+/// Ollama's own API on this computer.
+public static class Ollama
+{
+    /// The installed models, or null when Ollama isn't running.
+    public static async System.Threading.Tasks.Task<List<string>?> ModelsAsync()
+    {
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            using var json = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync("http://localhost:11434/api/tags"));
+            var models = new List<string>();
+            if (json.RootElement.TryGetProperty("models", out var list))
+                foreach (var m in list.EnumerateArray())
+                    if (m.TryGetProperty("name", out var name) && name.GetString() is { } n) models.Add(n);
+            return models;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+}

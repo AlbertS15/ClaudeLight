@@ -1490,6 +1490,13 @@ final class WelcomeModel: ObservableObject {
         isAddingConnection = true
     }
 
+    /// The offline route: the add-connection form, already on Ollama.
+    func startAddingOllama() {
+        form.reset()
+        form.preset = .ollama
+        isAddingConnection = true
+    }
+
     func saveConnection() {
         let c = Connection(
             name: form.name.trimmingCharacters(in: .whitespaces),
@@ -1558,11 +1565,48 @@ final class WelcomeModel: ObservableObject {
 }
 
 /// The add-connection form's fields.
+/// Whether Ollama answers on this computer, and which models it has.
+enum OllamaStatus: Equatable {
+    case checking, missing, ready([String])
+
+    static let downloadPage = URL(string: "https://ollama.com/download")!
+    static let starterModel = "llama3.2"
+    static let pullCommand = "ollama pull \(starterModel)"
+
+    /// Asks Ollama's own API for its installed models; no answer within two seconds means it isn't running.
+    static func check(_ done: @escaping (OllamaStatus) -> Void) {
+        var request = URLRequest(url: URL(string: "http://localhost:11434/api/tags")!)
+        request.timeoutInterval = 2
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            let status: OllamaStatus
+            if let data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let models = (json["models"] as? [[String: Any]] ?? []).compactMap { $0["name"] as? String }
+                status = .ready(models)
+            } else {
+                status = .missing
+            }
+            DispatchQueue.main.async { done(status) }
+        }.resume()
+    }
+}
+
 final class ConnectionForm: ObservableObject {
     @Published var preset: ServicePreset = .openRouter {
         didSet {
             baseURL = preset.baseURL
             if name.isEmpty || ServicePreset.allCases.contains(where: { $0.title == name }) { name = preset.title }
+            if preset == .ollama { checkOllama() }
+        }
+    }
+    @Published var ollama: OllamaStatus = .checking
+
+    func checkOllama() {
+        ollama = .checking
+        OllamaStatus.check { [weak self] status in
+            guard let self else { return }
+            self.ollama = status
+            // Fill in the first installed model so the form is ready to save.
+            if case let .ready(models) = status, let first = models.first, self.model.isEmpty { self.model = first }
         }
     }
     @Published var name = ServicePreset.openRouter.title
@@ -1607,6 +1651,8 @@ struct ConnectionFormView: View {
             .formStyle(.columns)
             .font(.system(size: 13))
 
+            if form.preset == .ollama { ollamaHelp }
+
             HStack {
                 Spacer()
                 Button(S.cancel, action: onCancel).keyboardShortcut(.cancelAction)
@@ -1617,6 +1663,33 @@ struct ConnectionFormView: View {
         }
         .padding(22)
         .frame(width: 400)
+    }
+
+    /// Under the Ollama preset: whether it's installed, with a download link and the first command if not.
+    @ViewBuilder private var ollamaHelp: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            switch form.ollama {
+            case .checking:
+                HStack(spacing: 6) { ProgressView().controlSize(.mini); Text("Ollama…").foregroundStyle(.secondary) }
+            case .missing:
+                Text(S.ollamaMissing).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Link(S.ollamaDownload, destination: OllamaStatus.downloadPage)
+                        .buttonStyle(.borderedProminent).tint(.lumi).controlSize(.small)
+                    Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
+                }
+                Text(S.ollamaPull(OllamaStatus.pullCommand)).foregroundStyle(.secondary).textSelection(.enabled)
+            case let .ready(models) where models.isEmpty:
+                Text(S.ollamaNoModels(OllamaStatus.pullCommand)).textSelection(.enabled)
+                Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
+            case let .ready(models):
+                Label(S.ollamaReady(String(models.count)), systemImage: "checkmark.circle.fill").foregroundStyle(Color.lumi)
+            }
+        }
+        .font(.system(size: 12))
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.05)))
     }
 }
 
@@ -1701,6 +1774,17 @@ struct WelcomeView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
+                if !settings.connections.contains(where: { $0.baseURL.contains("localhost:11434") }) {
+                    Divider().padding(.leading, 14)
+                    HStack(spacing: 8) {
+                        Image(systemName: "airplane").foregroundStyle(.secondary)
+                        Button(S.ollamaOffer, action: model.startAddingOllama)
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(Color.lumi)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                }
                 Divider().padding(.leading, 14)
                 Toggle(S.launchAtLogin, isOn: Binding(
                     get: { model.launchesAtLogin },

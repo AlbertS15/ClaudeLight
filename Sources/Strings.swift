@@ -111,6 +111,13 @@ private let table: [String: [String]] = [
     "uninstall_text": ["The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.", "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.", "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.", "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.", "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion."],
     "uninstall_button": ["Uninstall", "Удалить", "Deinstallieren", "Desinstalar", "Désinstaller"],
     "update_available": ["Lumi {0} is available — download", "Доступна Lumi {0} — скачать", "Lumi {0} ist verfügbar – herunterladen", "Lumi {0} está disponible: descargar", "Lumi {0} est disponible — télécharger"],
+    "ollama_offer": ["Free and offline: Ollama", "Бесплатно и без интернета — Ollama", "Kostenlos und offline: Ollama", "Gratis y sin conexión: Ollama", "Gratuit et hors ligne : Ollama"],
+    "ollama_missing": ["Ollama isn't installed or running. It's free and works offline.", "Ollama не установлена или не запущена. Она бесплатная и работает без интернета.", "Ollama ist nicht installiert oder läuft nicht. Es ist kostenlos und funktioniert offline.", "Ollama no está instalado o no se está ejecutando. Es gratis y funciona sin conexión.", "Ollama n'est pas installé ou ne tourne pas. C'est gratuit et ça marche hors ligne."],
+    "ollama_download": ["Download Ollama", "Скачать Ollama", "Ollama herunterladen", "Descargar Ollama", "Télécharger Ollama"],
+    "ollama_pull": ["Then download a model in Terminal: {0}", "Потом скачайте модель в Терминале: {0}", "Dann ein Modell im Terminal laden: {0}", "Después descarga un modelo en la Terminal: {0}", "Puis téléchargez un modèle dans le Terminal : {0}"],
+    "ollama_no_models": ["Ollama is running but has no models yet. In Terminal: {0}", "Ollama запущена, но моделей пока нет. В Терминале: {0}", "Ollama läuft, hat aber noch keine Modelle. Im Terminal: {0}", "Ollama está en marcha, pero aún no tiene modelos. En la Terminal: {0}", "Ollama tourne mais n'a pas encore de modèle. Dans le Terminal : {0}"],
+    "ollama_ready": ["Ollama is running · models: {0}", "Ollama работает · моделей: {0}", "Ollama läuft · Modelle: {0}", "Ollama funciona · modelos: {0}", "Ollama fonctionne · modèles : {0}"],
+    "check_again": ["Check again", "Проверить снова", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau"],
 ]
 
 private func format(_ key: String, _ args: [String]) -> String {
@@ -208,4 +215,11 @@ enum S {
     static var uninstallText: String { format("uninstall_text", []) }
     static var uninstallButton: String { format("uninstall_button", []) }
     static func updateAvailable(_ a0: String) -> String { format("update_available", [a0]) }
+    static var ollamaOffer: String { format("ollama_offer", []) }
+    static var ollamaMissing: String { format("ollama_missing", []) }
+    static var ollamaDownload: String { format("ollama_download", []) }
+    static func ollamaPull(_ a0: String) -> String { format("ollama_pull", [a0]) }
+    static func ollamaNoModels(_ a0: String) -> String { format("ollama_no_models", [a0]) }
+    static func ollamaReady(_ a0: String) -> String { format("ollama_ready", [a0]) }
+    static var checkAgain: String { format("check_again", []) }
 }
