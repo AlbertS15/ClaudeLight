@@ -97,7 +97,7 @@ public sealed record ServicePreset(string Key, string BaseUrl, string Example, b
         new("Mistral", "https://api.mistral.ai/v1", "mistral-large-latest", true),
         new("YandexGPT", "https://ai.api.cloud.yandex.net/v1", "gpt://b1g…/yandexgpt", true),
         new("GigaChat", "https://api.giga.chat/v1", "GigaChat-2", true),
-        new("ollama", "http://localhost:11434/v1", "llama3.2", false),
+        new("ollama", "http://127.0.0.1:11434/v1", "llama3.2", false),
         new("lmstudio", "http://localhost:1234/v1", "", false),
         new("other", "", "", true),
     };
@@ -252,13 +252,17 @@ public sealed class Settings
 /// Ollama's own API on this computer.
 public static class Ollama
 {
-    /// The installed models, or null when Ollama isn't running.
+    /// Whether an address points at Ollama on this computer.
+    public static bool IsOllama(string address) => address.Contains("localhost:11434") || address.Contains("127.0.0.1:11434");
+
+    /// The installed models, or null when Ollama isn't running. 127.0.0.1 rather than localhost: Ollama listens on IPv4
+    /// only, and Windows spends about two seconds on a refused IPv6 connection before it tries IPv4.
     public static async System.Threading.Tasks.Task<List<string>?> ModelsAsync()
     {
         try
         {
-            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(2) };
-            using var json = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync("http://localhost:11434/api/tags"));
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            using var json = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync("http://127.0.0.1:11434/api/tags"));
             var models = new List<string>();
             if (json.RootElement.TryGetProperty("models", out var list))
                 foreach (var m in list.EnumerateArray())

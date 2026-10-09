@@ -129,6 +129,8 @@ public static class S
         ["ollama_no_models"] = new[] { "Ollama is running but has no models yet. In Terminal: {0}", "Ollama запущена, но моделей пока нет. В Терминале: {0}", "Ollama läuft, hat aber noch keine Modelle. Im Terminal: {0}", "Ollama está en marcha, pero aún no tiene modelos. En la Terminal: {0}", "Ollama tourne mais n'a pas encore de modèle. Dans le Terminal : {0}" },
         ["ollama_ready"] = new[] { "Ollama is running · models: {0}", "Ollama работает · моделей: {0}", "Ollama läuft · Modelle: {0}", "Ollama funciona · modelos: {0}", "Ollama fonctionne · modèles : {0}" },
         ["check_again"] = new[] { "Check again", "Проверить снова", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau" },
+        ["ollama_pick"] = new[] { "Pick an installed model:", "Выберите установленную модель:", "Installiertes Modell wählen:", "Elige un modelo instalado:", "Choisissez un modèle installé :" },
+        ["err_ollama_model"] = new[] { "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}", "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}", "Ollama hat kein Modell „{0}“. Installiert: {1}. Wählen Sie eines davon in der Verbindung oder laden Sie es: ollama pull {0}", "Ollama no tiene el modelo «{0}». Instalados: {1}. Elige uno de ellos en la conexión o descárgalo: ollama pull {0}", "Ollama n'a pas le modèle « {0} ». Installés : {1}. Choisissez-en un dans la connexion ou téléchargez-le : ollama pull {0}" },
     };
 
     private static string F(string key, params string[] args)
@@ -232,4 +234,6 @@ public static class S
     public static string OllamaNoModels(string a0) => F("ollama_no_models", a0);
     public static string OllamaReady(string a0) => F("ollama_ready", a0);
     public static string CheckAgain => F("check_again");
+    public static string OllamaPick => F("ollama_pick");
+    public static string ErrOllamaModel(string a0, string a1) => F("err_ollama_model", a0, a1);
 }

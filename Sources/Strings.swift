@@ -118,6 +118,8 @@ private let table: [String: [String]] = [
     "ollama_no_models": ["Ollama is running but has no models yet. In Terminal: {0}", "Ollama запущена, но моделей пока нет. В Терминале: {0}", "Ollama läuft, hat aber noch keine Modelle. Im Terminal: {0}", "Ollama está en marcha, pero aún no tiene modelos. En la Terminal: {0}", "Ollama tourne mais n'a pas encore de modèle. Dans le Terminal : {0}"],
     "ollama_ready": ["Ollama is running · models: {0}", "Ollama работает · моделей: {0}", "Ollama läuft · Modelle: {0}", "Ollama funciona · modelos: {0}", "Ollama fonctionne · modèles : {0}"],
     "check_again": ["Check again", "Проверить снова", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau"],
+    "ollama_pick": ["Pick an installed model:", "Выберите установленную модель:", "Installiertes Modell wählen:", "Elige un modelo instalado:", "Choisissez un modèle installé :"],
+    "err_ollama_model": ["Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}", "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}", "Ollama hat kein Modell „{0}“. Installiert: {1}. Wählen Sie eines davon in der Verbindung oder laden Sie es: ollama pull {0}", "Ollama no tiene el modelo «{0}». Instalados: {1}. Elige uno de ellos en la conexión o descárgalo: ollama pull {0}", "Ollama n'a pas le modèle « {0} ». Installés : {1}. Choisissez-en un dans la connexion ou téléchargez-le : ollama pull {0}"],
 ]
 
 private func format(_ key: String, _ args: [String]) -> String {
@@ -222,4 +224,6 @@ enum S {
     static func ollamaNoModels(_ a0: String) -> String { format("ollama_no_models", [a0]) }
     static func ollamaReady(_ a0: String) -> String { format("ollama_ready", [a0]) }
     static var checkAgain: String { format("check_again", []) }
+    static var ollamaPick: String { format("ollama_pick", []) }
+    static func errOllamaModel(_ a0: String, _ a1: String) -> String { format("err_ollama_model", [a0, a1]) }
 }

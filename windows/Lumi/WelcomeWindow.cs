@@ -80,7 +80,7 @@ public sealed class WelcomeWindow : Window
         foreach (var c in Settings.Shared.Connections) card.Children.Add(ConnectionRow(c));
         var add = LinkButton(S.ConnectModel, () => AddConnection());
         card.Children.Add(Row(null, add));
-        if (!Settings.Shared.Connections.Exists(c => c.BaseUrl.Contains("localhost:11434")))
+        if (!Settings.Shared.Connections.Exists(c => Ollama.IsOllama(c.BaseUrl)))
             card.Children.Add(Row(null, LinkButton("✈ " + S.OllamaOffer, () => AddConnection("ollama"))));
         card.Children.Add(Row(S.LaunchAtLogin, Check(Settings.LaunchesAtLogin, v => Settings.LaunchesAtLogin = v)));
         card.Children.Add(Row(S.ShowOnLaunch, Check(Settings.Shared.ShowWelcomeOnLaunch, v =>
@@ -409,6 +409,16 @@ public sealed class ConnectionDialog : Window
         {
             _ollamaHelp.Children.Add(Note("✓ " + S.OllamaReady(models.Count.ToString()), Theme.Accent));
             if (_model.Text.Trim().Length == 0) _model.Text = models[0];
+            // The exact installed names, so the model field can't hold a name Ollama doesn't have.
+            _ollamaHelp.Children.Add(Note(S.OllamaPick, Theme.Secondary));
+            var list = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
+            foreach (var m in models)
+            {
+                var pick = new Button { Content = m, Padding = new Thickness(10, 2, 10, 2), Margin = new Thickness(0, 0, 6, 6) };
+                pick.Click += (_, _) => _model.Text = m;
+                list.Children.Add(pick);
+            }
+            _ollamaHelp.Children.Add(list);
         }
     }
 

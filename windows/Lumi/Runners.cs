@@ -183,7 +183,8 @@ public sealed class ApiRunner
             var reply = new StringBuilder();
             try
             {
-                var url = c.BaseUrl.Trim().TrimEnd('/') + "/chat/completions";
+                // Ollama and LM Studio listen on IPv4 only; on Windows "localhost" tries IPv6 first and stalls.
+                var url = c.BaseUrl.Trim().TrimEnd('/').Replace("://localhost:", "://127.0.0.1:") + "/chat/completions";
                 using var request = new HttpRequestMessage(HttpMethod.Post, url)
                 {
                     Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
@@ -202,6 +203,10 @@ public sealed class ApiRunner
                 {
                     var text = await response.Content.ReadAsStringAsync(cts.Token);
                     var message = ErrorMessage(c, (int)response.StatusCode, text);
+                    // Ollama answers 404 for a model name it doesn't have; say which ones it does have.
+                    if ((int)response.StatusCode == 404 && Ollama.IsOllama(c.BaseUrl)
+                        && await Ollama.ModelsAsync() is { Count: > 0 } installed && !installed.Contains(c.Model))
+                        message = S.ErrOllamaModel(c.Model, string.Join(", ", installed));
                     post(() => onDone(message));
                     return;
                 }

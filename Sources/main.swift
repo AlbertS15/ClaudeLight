@@ -177,7 +177,7 @@ enum ServicePreset: String, CaseIterable, Identifiable {
         case .mistral: return "https://api.mistral.ai/v1"
         case .yandex: return "https://ai.api.cloud.yandex.net/v1"
         case .gigaChat: return "https://api.giga.chat/v1"
-        case .ollama: return "http://localhost:11434/v1"
+        case .ollama: return "http://127.0.0.1:11434/v1"
         case .lmStudio: return "http://localhost:1234/v1"
         case .other: return ""
         }
@@ -510,6 +510,12 @@ final class APIRunner {
             } catch let e as StreamError {
                 await MainActor.run { onDone(e.message) }
             } catch let e as APIError {
+                // Ollama answers 404 for a model name it doesn't have; say which ones it does have.
+                if e.status == 404, OllamaStatus.isOllama(c.baseURL), let installed = await OllamaStatus.models(),
+                   !installed.isEmpty, !installed.contains(c.model) {
+                    await MainActor.run { onDone(S.errOllamaModel(c.model, installed.joined(separator: ", "))) }
+                    return
+                }
                 await MainActor.run { onDone(e.message(for: c)) }
             } catch {
                 if (error as? URLError)?.code == .cancelled { return }
@@ -1612,20 +1618,27 @@ enum OllamaStatus: Equatable {
     static let starterModel = "llama3.2"
     static let pullCommand = "ollama pull \(starterModel)"
 
-    /// Asks Ollama's own API for its installed models; no answer within two seconds means it isn't running.
+    /// Whether an address points at Ollama on this computer.
+    static func isOllama(_ address: String) -> Bool {
+        address.contains("localhost:11434") || address.contains("127.0.0.1:11434")
+    }
+
+    /// Ollama's installed models, or nil when it doesn't answer. 127.0.0.1 rather than localhost: Ollama listens on
+    /// IPv4 only, and trying IPv6 first can eat the timeout.
+    static func models() async -> [String]? {
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:11434/api/tags")!)
+        request.timeoutInterval = 5
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return nil }
+        return (json["models"] as? [[String: Any]] ?? []).compactMap { $0["name"] as? String }
+    }
+
     static func check(_ done: @escaping (OllamaStatus) -> Void) {
-        var request = URLRequest(url: URL(string: "http://localhost:11434/api/tags")!)
-        request.timeoutInterval = 2
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            let status: OllamaStatus
-            if let data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                let models = (json["models"] as? [[String: Any]] ?? []).compactMap { $0["name"] as? String }
-                status = .ready(models)
-            } else {
-                status = .missing
-            }
-            DispatchQueue.main.async { done(status) }
-        }.resume()
+        Task {
+            let found = await models()
+            await MainActor.run { done(found.map { .ready($0) } ?? .missing) }
+        }
     }
 }
 
@@ -1723,6 +1736,9 @@ struct ConnectionFormView: View {
                 Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
             case let .ready(models):
                 Label(S.ollamaReady(String(models.count)), systemImage: "checkmark.circle.fill").foregroundStyle(Color.lumi)
+                Text(S.ollamaPick).foregroundStyle(.secondary)
+                // The exact installed names, so the model field can't hold a name Ollama doesn't have.
+                FlowButtons(items: models, selected: form.model) { form.model = $0 }
             }
         }
         .font(.system(size: 12))
@@ -1813,7 +1829,7 @@ struct WelcomeView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                if !settings.connections.contains(where: { $0.baseURL.contains("localhost:11434") }) {
+                if !settings.connections.contains(where: { OllamaStatus.isOllama($0.baseURL) }) {
                     Divider().padding(.leading, 14)
                     HStack(spacing: 8) {
                         Image(systemName: "airplane").foregroundStyle(.secondary)
@@ -1910,6 +1926,24 @@ struct WelcomeView: View {
         .font(.system(size: 13))
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+}
+
+/// A wrapping row of small buttons, one per item; the selected one is tinted.
+struct FlowButtons: View {
+    let items: [String]
+    let selected: String
+    let onPick: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(items, id: \.self) { item in
+                Button(item) { onPick(item) }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .tint(item == selected ? .lumi : nil)
+            }
+        }
     }
 }
 
