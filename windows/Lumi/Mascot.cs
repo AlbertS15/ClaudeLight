@@ -11,7 +11,27 @@ namespace Lumi;
 public static class Mascot
 {
     public const int Width = 14;
-    public const int Height = 12;
+    public static int Height => IsHalloween ? 12 + Hat.Length : 12;
+
+    /// From October 24 to November 1 Lumi wears a witch's hat and the accent turns pumpkin orange.
+    /// LUMI_HALLOWEEN=1 forces it on (and =0 off), to try it any day.
+    public static readonly bool IsHalloween = Environment.GetEnvironmentVariable("LUMI_HALLOWEEN") is { } forced
+        ? forced == "1"
+        : (DateTime.Now.Month == 10 && DateTime.Now.Day >= 24) || (DateTime.Now.Month == 11 && DateTime.Now.Day == 1);
+
+    /// The hat: H crown and brim, O the orange band.
+    private static readonly string[] Hat =
+    {
+        "........HH....",
+        ".......HHH....",
+        "......HHHH....",
+        ".....OOOOOO...",
+        "..HHHHHHHHHH..",
+    };
+
+    public static readonly Color Pumpkin = Color.FromRgb(255, 138, 40);
+    private static readonly Brush HatBrush = new SolidColorBrush(Color.FromRgb(92, 51, 133));
+    private static readonly Brush BandBrush = new SolidColorBrush(Pumpkin);
 
     private static readonly string[] Rows =
     {
@@ -32,13 +52,24 @@ public static class Mascot
     public static readonly Color Teal = Color.FromRgb(93, 202, 165);
 
     /// Lit pixels as (column, row, isEye); `step` 1 is the floating pose, risen a pixel with the hem rippled.
-    public static IEnumerable<(int X, int Y, bool IsEye)> Pixels(int step = 0)
+    public static IEnumerable<(int X, int Y, bool IsEye)> Pixels(int step = 0, bool withHat = true)
     {
         var lift = step == 1 ? 0 : 1;
+        var top = withHat && IsHalloween ? Hat.Length : 0;
         var lines = new List<string>(Rows) { Hems[step] };
         for (var r = 0; r < lines.Count; r++)
             for (var c = 0; c < lines[r].Length; c++)
-                if (lines[r][c] != '.') yield return (c, r + lift, lines[r][c] == 'E');
+                if (lines[r][c] != '.') yield return (c, r + lift + top, lines[r][c] == 'E');
+    }
+
+    /// The hat's pixels as (column, row, isBand); none outside the Halloween week. It bobs with the ghost.
+    public static IEnumerable<(int X, int Y, bool IsBand)> HatPixels(int step = 0)
+    {
+        if (!IsHalloween) yield break;
+        var lift = step == 1 ? 0 : 1;
+        for (var r = 0; r < Hat.Length; r++)
+            for (var c = 0; c < Hat[r].Length; c++)
+                if (Hat[r][c] != '.') yield return (c, r + lift, Hat[r][c] == 'O');
     }
 
     public static DrawingImage Image(int step, Brush body, Brush? eyes)
@@ -52,6 +83,12 @@ public static class Mascot
         group.Children.Add(new GeometryDrawing(Brushes.Transparent, null, new RectangleGeometry(new Rect(0, 0, Width, Height))));
         group.Children.Add(new GeometryDrawing(body, null, bodyGeometry));
         if (eyes != null) group.Children.Add(new GeometryDrawing(eyes, null, eyeGeometry));
+        var hat = new GeometryGroup();
+        var band = new GeometryGroup();
+        foreach (var (x, y, isBand) in HatPixels(step))
+            (isBand ? band : hat).Children.Add(new RectangleGeometry(new Rect(x, y, 1.02, 1.02)));
+        group.Children.Add(new GeometryDrawing(HatBrush, null, hat));
+        group.Children.Add(new GeometryDrawing(BandBrush, null, band));
         var image = new DrawingImage(group);
         image.Freeze();
         return image;
@@ -66,10 +103,10 @@ public static class Mascot
         {
             g.Clear(System.Drawing.Color.Transparent);
             var u = size / (float)Width;
-            var top = (size - u * Height) / 2;
+            var top = (size - u * 12) / 2;
             using var body = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(93, 202, 165));
             using var eye = new System.Drawing.SolidBrush(System.Drawing.Color.Black);
-            foreach (var (x, y, isEye) in Pixels())
+            foreach (var (x, y, isEye) in Pixels(withHat: false))
                 g.FillRectangle(isEye ? eye : body, x * u, top + y * u, u + 0.3f, u + 0.3f);
         }
         return System.Drawing.Icon.FromHandle(bitmap.GetHicon());

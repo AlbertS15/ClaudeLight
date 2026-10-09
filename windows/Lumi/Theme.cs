@@ -23,7 +23,7 @@ public static class Theme
     public static Brush Text => Brush(IsDark ? "#FFF2F2F2" : "#FF1A1A1A");
     public static Brush Secondary => Brush(IsDark ? "#FF9E9E9E" : "#FF6B6B6B");
     public static Brush Selection => Brush("#FF2F6FDB");
-    public static Brush Accent => new SolidColorBrush(Mascot.Teal);
+    public static Brush Accent => new SolidColorBrush(Mascot.IsHalloween ? Mascot.Pumpkin : Mascot.Teal);
     public static Brush Error => Brush("#FFE5484D");
 
     public static Brush Brush(string hex) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));

@@ -1250,7 +1250,7 @@ struct RowView: View {
         HStack(spacing: 10) {
             switch row {
             case .ask:
-                MascotView(color: isSelected ? .white : .lumi, eyes: isSelected ? nil : .black)
+                MascotView(color: isSelected ? .white : .ghost, eyes: isSelected ? nil : .black)
                     .frame(width: 28, height: 28)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(S.askRow(Settings.shared.title(of: Settings.shared.choice))).font(.system(size: 14, weight: .semibold))
@@ -1341,14 +1341,34 @@ struct AnswerView: View {
 }
 
 extension Color {
-    static let lumi = Color(red: 93 / 255, green: 202 / 255, blue: 165 / 255)
+    /// The ghost's own teal, all year round.
+    static let ghost = Color(red: 93 / 255, green: 202 / 255, blue: 165 / 255)
+    /// The accent for buttons and links: teal, or pumpkin orange in the Halloween week.
+    static var lumi: Color { Mascot.isHalloween ? Color(red: 1, green: 138 / 255, blue: 40 / 255) : ghost }
 }
 
 /// Lumi, the glowing ghost: B body, E eyes and mouth.
 /// `step` 1 is the floating pose: the ghost rises a pixel and its hem ripples the other way.
 enum Mascot {
     static let width = 14
-    static let height = 12
+    static var height: Int { isHalloween ? 12 + hat.count : 12 }
+
+    /// From October 24 to November 1 Lumi wears a witch's hat and the accent turns pumpkin orange.
+    /// LUMI_HALLOWEEN=1 forces it on (and =0 off), to try it any day.
+    static let isHalloween: Bool = {
+        if let forced = ProcessInfo.processInfo.environment["LUMI_HALLOWEEN"] { return forced == "1" }
+        let d = Calendar.current.dateComponents([.month, .day], from: Date())
+        return (d.month == 10 && d.day! >= 24) || (d.month == 11 && d.day! == 1)
+    }()
+
+    /// The hat: H crown and brim, O the orange band.
+    private static let hat = [
+        "........HH....",
+        ".......HHH....",
+        "......HHHH....",
+        ".....OOOOOO...",
+        "..HHHHHHHHHH..",
+    ]
 
     private static let rows = [
         "....BBBBBB....",
@@ -1364,13 +1384,27 @@ enum Mascot {
     ]
     private static let hems = ["BB..BBBBBB..BB", "..BBBB..BBBB.."]
 
-    /// Each lit pixel as (column, row, isEye), row 0 at the top.
-    static func pixels(step: Int = 0) -> [(x: Int, y: Int, isEye: Bool)] {
+    /// Each lit pixel as (column, row, isEye), row 0 at the top. With the hat on, the ghost sits below it.
+    static func pixels(step: Int = 0, withHat: Bool = true) -> [(x: Int, y: Int, isEye: Bool)] {
         let lift = step == 1 ? 0 : 1
+        let top = withHat && isHalloween ? hat.count : 0
         var out: [(x: Int, y: Int, isEye: Bool)] = []
         for (r, line) in (rows + [hems[step]]).enumerated() {
             for (c, ch) in line.enumerated() where ch != "." {
-                out.append((c, r + lift, ch == "E"))
+                out.append((c, r + lift + top, ch == "E"))
+            }
+        }
+        return out
+    }
+
+    /// The hat's pixels as (column, row, isBand); empty outside the Halloween week. It bobs with the ghost.
+    static func hatPixels(step: Int = 0) -> [(x: Int, y: Int, isBand: Bool)] {
+        guard isHalloween else { return [] }
+        let lift = step == 1 ? 0 : 1
+        var out: [(x: Int, y: Int, isBand: Bool)] = []
+        for (r, line) in hat.enumerated() {
+            for (c, ch) in line.enumerated() where ch != "." {
+                out.append((c, r + lift, ch == "O"))
             }
         }
         return out
@@ -1379,7 +1413,7 @@ enum Mascot {
 
 /// Lumi in the panel; it walks while `isWalking`. `eyes` nil cuts the eyes out instead.
 struct MascotView: View {
-    var color: Color = .lumi
+    var color: Color = .ghost
     var eyes: Color? = .black
     var isWalking = false
 
@@ -1396,6 +1430,11 @@ struct MascotView: View {
                     var layer = ctx
                     if p.isEye, eyes == nil { layer.blendMode = .destinationOut }
                     layer.fill(Path(rect), with: .color(p.isEye ? (eyes ?? color) : color))
+                }
+                for p in Mascot.hatPixels(step: step) {
+                    let rect = CGRect(x: x0 + CGFloat(p.x) * u, y: y0 + CGFloat(p.y) * u, width: u + 0.4, height: u + 0.4)
+                    let hat = Color(red: 0.36, green: 0.2, blue: 0.52), band = Color(red: 1, green: 138 / 255, blue: 40 / 255)
+                    ctx.fill(Path(rect), with: .color(p.isBand ? band : hat))
                 }
             }
             .compositingGroup()
@@ -2203,7 +2242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static func sparkImage() -> NSImage {
         let image = NSImage(size: NSSize(width: 18, height: 14), flipped: true) { _ in
             NSColor.black.setFill()
-            for p in Mascot.pixels() where !p.isEye {
+            for p in Mascot.pixels(withHat: false) where !p.isEye {
                 NSRect(x: 2 + CGFloat(p.x), y: 1 + CGFloat(p.y), width: 1, height: 1).fill()
             }
             return true
