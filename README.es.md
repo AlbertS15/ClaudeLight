@@ -2,17 +2,19 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · **Español** · [Français](README.fr.md)
 
-**Una barra al estilo de Spotlight para macOS y Windows que además responde preguntas.** Con un atajo abres una aplicación o un archivo, o preguntas a Claude, ChatGPT, Gemini, un modelo local o cualquier otra IA que conectes. Antes se llamaba ClaudeLight.
+**Una barra al estilo de Spotlight para macOS, Windows y Linux que además responde preguntas.** Con un atajo abres una aplicación o un archivo, o preguntas a Claude, ChatGPT, Gemini, un modelo local o cualquier otra IA que conectes. Antes se llamaba ClaudeLight.
 
 ![Lumi: la barra, la búsqueda, los idiomas y los modelos](docs/lumi-demo.gif)
 
 📢 **Novedades y actualizaciones — canal de Telegram (en ruso): [t.me/+3IU-_WIhrTU4MjAy](https://t.me/+3IU-_WIhrTU4MjAy)**
 
-| | macOS | Windows |
-|---|---|---|
-| Descargar | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` o `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) |
-| Atajo | **⌥ + la tecla a la izquierda del 1** | **Alt + la tecla a la izquierda del 1** (`` ` ``, º, Ё, ^ — cualquier distribución) |
-| Solo el código de esta plataforma | rama [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | rama [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) |
+| | macOS | Windows | Linux |
+|---|---|---|---|
+| Descargar | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` o `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-x86_64.AppImage`](https://github.com/AlbertS15/Lumi/releases/latest) |
+| Atajo | **⌥ + la tecla a la izquierda del 1** | **Alt + la tecla a la izquierda del 1** (`` ` ``, º, Ё, ^ — cualquier distribución) | **Ctrl+Espacio** (Alt + la tecla a la izquierda del 1 ya la usan GNOME y KDE) |
+| Solo el código de esta plataforma | rama [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | rama [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) | carpeta [`linux/`](linux) en `main` |
+
+El atajo se puede cambiar en la ventana de bienvenida de Lumi: «Cambiar» bajo las teclas.
 
 Interfaz en cinco idiomas: English, Русский, Deutsch, Español, Français (por defecto, el del sistema).
 
@@ -29,7 +31,7 @@ Interfaz en cinco idiomas: English, Русский, Deutsch, Español, Français
 - **Preguntar en ChatGPT** (⇧⌘↩ / Ctrl+Mayús+Intro) abre chatgpt.com con tu pregunta.
 - **Cualquier servicio compatible con OpenAI**: OpenRouter, OpenAI, DeepSeek, Groq, Mistral, YandexGPT, GigaChat.
 - **Modelos locales** con Ollama y LM Studio: gratis, sin conexión y en cualquier país.
-- Las claves se guardan en el Llavero de macOS o cifradas por Windows. Icono en la barra de menús o en la bandeja, ventana de bienvenida, inicio con la sesión y desinstalación en un clic.
+- Las claves se guardan en el Llavero de macOS o cifradas por Windows o, en Linux, en un archivo de ajustes que solo tú puedes leer. Icono en la barra de menús o en la bandeja, ventana de bienvenida, inicio con la sesión y desinstalación en un clic.
 
 ## macOS
 
@@ -62,6 +64,23 @@ dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -
 ```
 
 El instalador se genera con [Inno Setup](https://jrsoftware.org/isinfo.php) a partir de `windows/installer/Lumi.iss`. Código: `windows/Lumi/` (WPF, .NET 8).
+
+## Linux
+
+**Instalar.** Descarga `Lumi-x86_64.AppImage` de [Releases](https://github.com/AlbertS15/Lumi/releases/latest) y luego:
+
+```bash
+chmod +x Lumi-x86_64.AppImage
+./Lumi-x86_64.AppImage
+```
+
+Si se queja de FUSE, ábrelo con `--appimage-extract-and-run` o instala `libfuse2`.
+
+**Atajo.** Ctrl+Espacio por defecto. En X11 Lumi lo toma él mismo; en GNOME con Wayland añade un atajo en los ajustes de teclado de GNOME. En otros escritorios Wayland la ventana de bienvenida muestra el comando `lumi --toggle` para asignarlo a una tecla en los ajustes del sistema.
+
+**Modelos sin internet.** «Instalar Lumi» descomprime Ollama en `~/.local/share/lumi` (sin sudo) tras comprobar su SHA-256 y prepara el modelo.
+
+**Compilar.** Necesita el SDK de .NET 8: `./linux/package.sh` crea `dist/Lumi-x86_64.AppImage`. Código: `linux/Lumi/` (Avalonia, .NET 8).
 
 ## Teclas
 

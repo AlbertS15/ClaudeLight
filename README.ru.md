@@ -2,17 +2,19 @@
 
 [English](README.md) · **Русский** · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md)
 
-**Строка в стиле Spotlight для macOS и Windows, которая ещё и отвечает на вопросы.** Одна горячая клавиша — и вы открываете программу или файл либо спрашиваете Claude, ChatGPT, Gemini, локальную модель или любой другой подключённый ИИ. Раньше называлась ClaudeLight.
+**Строка в стиле Spotlight для macOS, Windows и Linux, которая ещё и отвечает на вопросы.** Одна горячая клавиша — и вы открываете программу или файл либо спрашиваете Claude, ChatGPT, Gemini, локальную модель или любой другой подключённый ИИ. Раньше называлась ClaudeLight.
 
 ![Lumi: строка, поиск, языки и модели](docs/lumi-demo.gif)
 
 📢 **Новости и обновления — в Telegram-канале: [t.me/+3IU-_WIhrTU4MjAy](https://t.me/+3IU-_WIhrTU4MjAy)**
 
-| | macOS | Windows |
-|---|---|---|
-| Скачать | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` или `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) |
-| Горячая клавиша | **⌥ Ё** — клавиша слева от 1 (на английской раскладке `` ` ``) | **Alt+Ё** — клавиша слева от 1, на любой раскладке |
-| Код только этой системы | ветка [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | ветка [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) |
+| | macOS | Windows | Linux |
+|---|---|---|---|
+| Скачать | [`Lumi-macOS.dmg`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-Setup.exe` или `Lumi-Portable.exe`](https://github.com/AlbertS15/Lumi/releases/latest) | [`Lumi-x86_64.AppImage`](https://github.com/AlbertS15/Lumi/releases/latest) |
+| Горячая клавиша | **⌥ Ё** — клавиша слева от 1 (на английской раскладке `` ` ``) | **Alt+Ё** — клавиша слева от 1, на любой раскладке | **Ctrl+Пробел** (Alt+Ё в GNOME и KDE занят системой) |
+| Код только этой системы | ветка [`macos`](https://github.com/AlbertS15/Lumi/tree/macos) | ветка [`windows`](https://github.com/AlbertS15/Lumi/tree/windows) | папка [`linux/`](linux) в `main` |
+
+Горячую клавишу можно поменять в стартовом окне Lumi: «Изменить» под клавишами.
 
 Интерфейс на пяти языках: English, Русский, Deutsch, Español, Français (по умолчанию — как в системе).
 
@@ -29,7 +31,7 @@
 - **Спросить в ChatGPT** (⇧⌘↩ / Ctrl+Shift+Enter) — открывает chatgpt.com с вашим вопросом.
 - **Любой OpenAI-совместимый сервис**: OpenRouter, OpenAI, DeepSeek, Groq, Mistral, YandexGPT, GigaChat.
 - **Локальные модели** через Ollama и LM Studio — бесплатно, без интернета, работают в любой стране.
-- Ключи хранятся в Связке ключей macOS / зашифрованы средствами Windows. Иконка в строке меню или в трее, стартовое окно, запуск при входе, удаление в один клик.
+- Ключи хранятся в Связке ключей macOS / зашифрованы средствами Windows / в файле настроек, доступном только вам, на Linux. Иконка в строке меню или в трее, стартовое окно, запуск при входе, удаление в один клик.
 
 ## macOS
 
@@ -62,6 +64,23 @@ dotnet publish windows/Lumi/Lumi.csproj -c Release -r win-x64 --self-contained -
 ```
 
 Установщик собирается [Inno Setup](https://jrsoftware.org/isinfo.php) из `windows/installer/Lumi.iss`. Код: `windows/Lumi/` (WPF, .NET 8).
+
+## Linux
+
+**Установка.** Скачайте `Lumi-x86_64.AppImage` со страницы [Releases](https://github.com/AlbertS15/Lumi/releases/latest), затем:
+
+```bash
+chmod +x Lumi-x86_64.AppImage
+./Lumi-x86_64.AppImage
+```
+
+Если ругается на FUSE, запустите с `--appimage-extract-and-run` или установите `libfuse2`.
+
+**Горячая клавиша.** По умолчанию Ctrl+Пробел. На X11 Lumi назначает её сама, в GNOME на Wayland добавляет сочетание в настройки клавиатуры GNOME. В других окружениях на Wayland стартовое окно покажет команду `lumi --toggle`, которую нужно назначить на клавишу в настройках системы.
+
+**Модели без интернета.** «Установить Lumi» распаковывает Ollama в `~/.local/share/lumi` (без sudo), проверив её SHA-256, и настраивает модель.
+
+**Сборка из исходников.** Нужен .NET 8 SDK: `./linux/package.sh` собирает `dist/Lumi-x86_64.AppImage`. Код: `linux/Lumi/` (Avalonia, .NET 8), общий с `windows/Lumi/` в части ИИ, настроек и строк.
 
 ## Клавиши
 
