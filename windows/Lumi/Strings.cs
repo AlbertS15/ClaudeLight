@@ -44,6 +44,11 @@ public static class S
         ["hint_done"] = new[] { "↩ follow up · retry   {0} copy answer   esc back", "↩ уточнить · повторить   {0} копировать ответ   esc назад", "↩ nachfragen · wiederholen   {0} Antwort kopieren   esc zurück", "↩ seguir · reintentar   {0} copiar respuesta   esc atrás", "↩ relancer · réessayer   {0} copier la réponse   esc retour" },
         ["welcome_subtitle"] = new[] { "Search your computer and ask AI in one bar", "Поиск по компьютеру и ответы ИИ в одной строке", "Computer durchsuchen und KI fragen in einer Leiste", "Busca en tu ordenador y pregunta a la IA en una barra", "Cherchez sur votre ordinateur et interrogez l'IA dans une barre" },
         ["hotkey_hint"] = new[] { "— open the bar from anywhere", "— открыть строку из любого места", "— Leiste überall öffnen", "— abrir la barra desde cualquier lugar", "— ouvrir la barre depuis n'importe où" },
+        ["hotkey_change"] = new[] { "Change", "Изменить", "Ändern", "Cambiar", "Modifier" },
+        ["hotkey_reset"] = new[] { "Reset", "Сбросить", "Zurücksetzen", "Restablecer", "Réinitialiser" },
+        ["hotkey_record"] = new[] { "Press the new shortcut, with Ctrl, Alt or another modifier. Esc to cancel.", "Нажмите новое сочетание, с Ctrl, Alt или другой клавишей-модификатором. Esc — отмена.", "Drücke das neue Tastenkürzel, mit Strg, Alt oder einer anderen Sondertaste. Esc bricht ab.", "Pulsa el nuevo atajo, con Ctrl, Alt u otra tecla modificadora. Esc para cancelar.", "Appuyez sur le nouveau raccourci, avec Ctrl, Alt ou une autre touche de modification. Échap pour annuler." },
+        ["hotkey_taken"] = new[] { "That shortcut is taken by another app. Try another one.", "Это сочетание уже занято другой программой. Попробуйте другое.", "Dieses Kürzel belegt schon ein anderes Programm. Versuch ein anderes.", "Ese atajo ya lo usa otro programa. Prueba otro.", "Ce raccourci est déjà pris par une autre application. Essayez-en un autre." },
+        ["key_space"] = new[] { "Space", "Пробел", "Leertaste", "Espacio", "Espace" },
         ["auth_checking"] = new[] { "Checking Claude…", "Проверяю Claude…", "Claude wird geprüft…", "Comprobando Claude…", "Vérification de Claude…" },
         ["auth_ok"] = new[] { "Claude connected", "Claude подключён", "Claude verbunden", "Claude conectado", "Claude connecté" },
         ["auth_signed_out"] = new[] { "Claude: sign-in needed", "Claude: нужен вход", "Claude: Anmeldung nötig", "Claude: inicia sesión", "Claude : connexion requise" },
@@ -161,6 +166,11 @@ public static class S
     public static string HintDone(string a0) => F("hint_done", a0);
     public static string WelcomeSubtitle => F("welcome_subtitle");
     public static string HotkeyHint => F("hotkey_hint");
+    public static string HotkeyChange => F("hotkey_change");
+    public static string HotkeyReset => F("hotkey_reset");
+    public static string HotkeyRecord => F("hotkey_record");
+    public static string HotkeyTaken => F("hotkey_taken");
+    public static string KeySpace => F("key_space");
     public static string AuthChecking => F("auth_checking");
     public static string AuthOk => F("auth_ok");
     public static string AuthSignedOut => F("auth_signed_out");

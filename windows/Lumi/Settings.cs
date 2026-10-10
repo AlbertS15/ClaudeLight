@@ -133,6 +133,9 @@ public sealed class Settings
     public bool ShowChatGpt { get; set; } = true;
     /// Interface language code, "" for the system's.
     public string Language { get; set; } = "";
+    /// The bar's shortcut as RegisterHotKey modifiers and virtual key; key 0 means the standard Alt + the key left of 1.
+    public uint HotkeyModifiers { get; set; }
+    public uint HotkeyKey { get; set; }
 
     public event Action? Changed;
 

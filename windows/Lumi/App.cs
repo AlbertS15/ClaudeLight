@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
@@ -61,10 +63,7 @@ public sealed class App : Application
         _launcher = new LauncherWindow();
         _welcome = new WelcomeWindow(() => _launcher.ShowBar());
 
-        // Alt + the key left of 1, on any keyboard layout; RegisterHotKey on VK_OEM_3 if the hook can't be set.
-        var leftOfOne = new LeftOfOneHotKey(() => _launcher.Toggle());
-        _hotKey = leftOfOne.IsInstalled ? leftOfOne : new HotKey(HotKey.ModAlt, 0xC0, () => _launcher.Toggle());
-        if (!leftOfOne.IsInstalled) leftOfOne.Dispose();
+        SetHotkey(new Shortcut(Settings.Shared.HotkeyModifiers, Settings.Shared.HotkeyKey));
 
         Updates.CheckDaily(version => Dispatcher.Invoke(() =>
         {
@@ -85,6 +84,28 @@ public sealed class App : Application
         if (Settings.Shared.ShowWelcomeOnLaunch && !_isStartup) ShowWelcome();
     }
 
+    /// Swaps the bar's shortcut; null just lets go of it. False when another app already holds the new one.
+    public bool SetHotkey(Shortcut? key)
+    {
+        _hotKey?.Dispose();
+        _hotKey = null;
+        if (key == null) return true;
+        if (key.IsStandard)
+        {
+            // Alt + the key left of 1, on any keyboard layout; RegisterHotKey on VK_OEM_3 if the hook can't be set.
+            var leftOfOne = new LeftOfOneHotKey(() => _launcher!.Toggle());
+            if (leftOfOne.IsInstalled)
+            {
+                _hotKey = leftOfOne;
+                return true;
+            }
+            leftOfOne.Dispose();
+        }
+        var hotKey = new HotKey(key.IsStandard ? HotKey.ModAlt : key.Modifiers, key.IsStandard ? 0xC0 : key.Key, () => _launcher!.Toggle());
+        _hotKey = hotKey;
+        return hotKey.IsRegistered;
+    }
+
     public void ShowWelcome(bool addConnection = false)
     {
         if (_welcome == null) return;
@@ -103,7 +124,7 @@ public sealed class App : Application
             menu.Items.Add("⬆ " + S.UpdateAvailable(version), null, (_, _) => Updates.OpenReleases());
             menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         }
-        menu.Items.Add(S.MenuOpenSearch("Alt+" + Theme.HotkeyKey), null, (_, _) => _launcher!.ShowBar());
+        menu.Items.Add(S.MenuOpenSearch(Shortcut.Current.Label), null, (_, _) => _launcher!.ShowBar());
         menu.Items.Add(S.MenuWindow, null, (_, _) => ShowWelcome());
 
         var models = new System.Windows.Forms.ToolStripMenuItem(S.Model);
@@ -303,6 +324,80 @@ public static class Updates
 
     public static void OpenReleases() =>
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ReleasesPage) { UseShellExecute = true });
+}
+
+/// The bar's shortcut: RegisterHotKey modifiers and a virtual key, where key 0 is the standard Alt + the key left of 1.
+public sealed record Shortcut(uint Modifiers, uint Key)
+{
+    public const uint Alt = 0x0001, Control = 0x0002, Shift = 0x0004, Win = 0x0008;
+
+    public static Shortcut Standard { get; } = new(0, 0);
+    public static Shortcut Current => new(Settings.Shared.HotkeyModifiers, Settings.Shared.HotkeyKey);
+    public bool IsStandard => Key == 0;
+
+    /// The shortcut a key press makes, or null when it can't be one: a plain letter would fire while typing,
+    /// so it needs Ctrl, Alt or Win, or has to be a function key.
+    public static Shortcut? From(System.Windows.Input.Key key, System.Windows.Input.ModifierKeys modifiers, bool win)
+    {
+        var vk = (uint)System.Windows.Input.KeyInterop.VirtualKeyFromKey(key);
+        if (vk == 0 || IsModifier(key)) return null;
+        uint mods = 0;
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Alt)) mods |= Alt;
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control)) mods |= Control;
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift)) mods |= Shift;
+        if (win) mods |= Win;
+        var isFunctionKey = key >= System.Windows.Input.Key.F1 && key <= System.Windows.Input.Key.F24;
+        if ((mods & (Alt | Control | Win)) == 0 && !isFunctionKey) return null;
+        return new Shortcut(mods, vk);
+    }
+
+    private static bool IsModifier(System.Windows.Input.Key key) => key is System.Windows.Input.Key.LeftCtrl or System.Windows.Input.Key.RightCtrl
+        or System.Windows.Input.Key.LeftAlt or System.Windows.Input.Key.RightAlt or System.Windows.Input.Key.LeftShift
+        or System.Windows.Input.Key.RightShift or System.Windows.Input.Key.LWin or System.Windows.Input.Key.RWin
+        or System.Windows.Input.Key.System;
+
+    /// Labels for key caps, modifiers first: Ctrl, Alt, Shift, Win.
+    public string[] Caps
+    {
+        get
+        {
+            if (IsStandard) return new[] { "Alt", Theme.HotkeyKey };
+            var caps = new List<string>();
+            if ((Modifiers & Control) != 0) caps.Add("Ctrl");
+            if ((Modifiers & Alt) != 0) caps.Add("Alt");
+            if ((Modifiers & Shift) != 0) caps.Add("Shift");
+            if ((Modifiers & Win) != 0) caps.Add("Win");
+            caps.Add(KeyName);
+            return caps.ToArray();
+        }
+    }
+
+    public string Label => string.Join("+", Caps);
+
+    private string KeyName
+    {
+        get
+        {
+            var key = System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)Key);
+            if (key == System.Windows.Input.Key.Space) return S.KeySpace;
+            if (key >= System.Windows.Input.Key.F1 && key <= System.Windows.Input.Key.F24) return key.ToString();
+            // The character the key types on the current layout, so a Russian layout shows Ж rather than ;.
+            var state = new byte[256];
+            var text = new StringBuilder(8);
+            var layout = GetKeyboardLayout(0);
+            var n = ToUnicodeEx(Key, MapVirtualKeyEx(Key, 0, layout), state, text, text.Capacity, 0, layout);
+            return n > 0 && !char.IsControl(text[0]) ? text.ToString(0, n).ToUpperInvariant() : key.ToString();
+        }
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetKeyboardLayout(uint thread);
+
+    [DllImport("user32.dll")]
+    private static extern uint MapVirtualKeyEx(uint code, uint mapType, IntPtr layout);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int ToUnicodeEx(uint vk, uint scan, byte[] state, StringBuilder text, int size, uint flags, IntPtr layout);
 }
 
 /// A system-wide hotkey through RegisterHotKey, delivered to a hidden message window.

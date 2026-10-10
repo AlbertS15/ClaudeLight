@@ -352,6 +352,105 @@ final class Settings: ObservableObject {
 /// The label of the hotkey's key: Ё on a Russian layout, ` elsewhere (the same physical key).
 var hotkeyKey: String { Lang.codes[Lang.index] == "ru" ? "Ё" : "`" }
 
+/// The shortcut that opens the bar: Option + the key left of 1, unless the user picked another one.
+struct Hotkey: Equatable {
+    var keyCode: UInt32
+    /// Carbon modifier mask (optionKey, cmdKey…).
+    var modifiers: UInt32
+
+    static let standard = Hotkey(keyCode: UInt32(kVK_ANSI_Grave), modifiers: UInt32(optionKey))
+
+    static var current: Hotkey {
+        get {
+            let d = UserDefaults.standard
+            guard d.object(forKey: "hotkeyCode") != nil else { return .standard }
+            return Hotkey(keyCode: UInt32(d.integer(forKey: "hotkeyCode")), modifiers: UInt32(d.integer(forKey: "hotkeyModifiers")))
+        }
+        set {
+            let d = UserDefaults.standard
+            if newValue == .standard {
+                d.removeObject(forKey: "hotkeyCode")
+                d.removeObject(forKey: "hotkeyModifiers")
+            } else {
+                d.set(Int(newValue.keyCode), forKey: "hotkeyCode")
+                d.set(Int(newValue.modifiers), forKey: "hotkeyModifiers")
+            }
+        }
+    }
+
+    private static let functionKeys: [Int: String] = [
+        kVK_F1: "F1", kVK_F2: "F2", kVK_F3: "F3", kVK_F4: "F4", kVK_F5: "F5", kVK_F6: "F6", kVK_F7: "F7", kVK_F8: "F8",
+        kVK_F9: "F9", kVK_F10: "F10", kVK_F11: "F11", kVK_F12: "F12", kVK_F13: "F13", kVK_F14: "F14", kVK_F15: "F15",
+        kVK_F16: "F16", kVK_F17: "F17", kVK_F18: "F18", kVK_F19: "F19", kVK_F20: "F20",
+    ]
+
+    /// The shortcut a key press makes, or nil when it can't be one: a plain letter would fire while typing,
+    /// so it needs Control, Option or Command, or has to be a function key.
+    init?(_ event: NSEvent) {
+        let flags = event.modifierFlags
+        var mods = 0
+        if flags.contains(.control) { mods |= controlKey }
+        if flags.contains(.option) { mods |= optionKey }
+        if flags.contains(.shift) { mods |= shiftKey }
+        if flags.contains(.command) { mods |= cmdKey }
+        let code = Int(event.keyCode)
+        guard mods & (controlKey | optionKey | cmdKey) != 0 || Self.functionKeys[code] != nil else { return nil }
+        self.init(keyCode: UInt32(code), modifiers: UInt32(mods))
+    }
+
+    init(keyCode: UInt32, modifiers: UInt32) {
+        self.keyCode = keyCode
+        self.modifiers = modifiers
+    }
+
+    /// Labels for key caps, modifiers first, in the order the Mac shows them: ⌃ ⌥ ⇧ ⌘.
+    var caps: [String] {
+        var caps: [String] = []
+        let m = Int(modifiers)
+        if m & controlKey != 0 { caps.append("⌃") }
+        if m & optionKey != 0 { caps.append("⌥") }
+        if m & shiftKey != 0 { caps.append("⇧") }
+        if m & cmdKey != 0 { caps.append("⌘") }
+        return caps + [keyName]
+    }
+
+    var label: String { caps.joined(separator: " ") }
+
+    private var keyName: String {
+        let code = Int(keyCode)
+        if code == kVK_ANSI_Grave || code == kVK_ISO_Section { return hotkeyKey }
+        if let name = Self.functionKeys[code] { return name }
+        switch code {
+        case kVK_Space: return S.keySpace
+        case kVK_Return: return "↩"
+        case kVK_Tab: return "⇥"
+        case kVK_Delete: return "⌫"
+        case kVK_LeftArrow: return "←"
+        case kVK_RightArrow: return "→"
+        case kVK_UpArrow: return "↑"
+        case kVK_DownArrow: return "↓"
+        default: return Self.character(for: UInt16(code)) ?? "?"
+        }
+    }
+
+    /// The character the key types on the current keyboard layout, so a Russian layout shows Ж, not ;.
+    private static func character(for keyCode: UInt16) -> String? {
+        guard let source = TISCopyCurrentKeyboardLayoutInputSource()?.takeRetainedValue(),
+              let raw = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else { return nil }
+        let data = Unmanaged<CFData>.fromOpaque(raw).takeUnretainedValue() as Data
+        var dead: UInt32 = 0
+        var chars = [UniChar](repeating: 0, count: 4)
+        var length = 0
+        let status = data.withUnsafeBytes { bytes -> OSStatus in
+            guard let layout = bytes.baseAddress?.assumingMemoryBound(to: UCKeyboardLayout.self) else { return -1 }
+            return UCKeyTranslate(layout, keyCode, UInt16(kUCKeyActionDisplay), 0, UInt32(LMGetKbdType()),
+                                  OptionBits(kUCKeyTranslateNoDeadKeysBit), &dead, chars.count, &length, &chars)
+        }
+        guard status == noErr, length > 0 else { return nil }
+        return String(utf16CodeUnits: chars, count: length).uppercased()
+    }
+}
+
 /// Picks the interface language, "As in system" first.
 struct LanguagePicker: View {
     @ObservedObject var settings = Settings.shared
@@ -1564,6 +1663,58 @@ final class WelcomeModel: ObservableObject {
     var openSearch: () -> Void = {}
     var onLoginItemChange: () -> Void = {}
 
+    @Published var hotkey = Hotkey.current
+    @Published var isRecordingHotkey = false
+    @Published var isHotkeyTaken = false
+    /// Registers a shortcut (nil lets go of it while a new one is recorded); false when another app holds it.
+    var applyHotkey: (Hotkey?) -> Bool = { _ in true }
+    private var recorder: Any?
+
+    /// Waits for the next shortcut pressed in the window and makes it the hotkey.
+    func recordHotkey() {
+        isHotkeyTaken = false
+        isRecordingHotkey = true
+        // Let go of the current one, so pressing it now records it instead of opening the bar.
+        _ = applyHotkey(nil)
+        recorder = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            if event.keyCode == UInt16(kVK_Escape) {
+                self.finishRecording(nil)
+            } else if let key = Hotkey(event) {
+                self.finishRecording(key)
+            } else {
+                NSSound.beep()
+            }
+            return nil
+        }
+    }
+
+    func resetHotkey() {
+        if isRecordingHotkey { finishRecording(nil) }
+        isHotkeyTaken = false
+        if applyHotkey(.standard) {
+            Hotkey.current = .standard
+            hotkey = .standard
+        } else {
+            _ = applyHotkey(hotkey)
+        }
+    }
+
+    func resetHotkeyRecording() { finishRecording(nil) }
+
+    private func finishRecording(_ key: Hotkey?) {
+        if let recorder { NSEvent.removeMonitor(recorder) }
+        recorder = nil
+        isRecordingHotkey = false
+        if let key, applyHotkey(key) {
+            Hotkey.current = key
+            hotkey = key
+        } else {
+            isHotkeyTaken = key != nil
+            _ = applyHotkey(hotkey)
+        }
+    }
+
     init() {
         showsOnLaunch = UserDefaults.standard.object(forKey: "showsWelcomeOnLaunch") as? Bool ?? true
     }
@@ -1998,14 +2149,7 @@ struct WelcomeView: View {
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
-            HStack(spacing: 6) {
-                KeyCap("⌥")
-                KeyCap(hotkeyKey)
-                Text(S.hotkeyHint)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, 22)
+            hotkeyRow.padding(.top, 22)
 
             if let version = updates.newVersion {
                 Link(destination: UpdateChecker.releasesPage) {
@@ -2172,6 +2316,41 @@ struct FlowButtons: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .tint(item == selected ? .lumi : nil)
+            }
+        }
+    }
+}
+
+extension WelcomeView {
+    /// The shortcut as key caps, with a way to pick another one.
+    @ViewBuilder var hotkeyRow: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                if model.isRecordingHotkey {
+                    Text(S.hotkeyRecord)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.lumi)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 300)
+                } else {
+                    ForEach(Array(model.hotkey.caps.enumerated()), id: \.offset) { KeyCap($0.element) }
+                    Text(S.hotkeyHint)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            HStack(spacing: 10) {
+                Button(model.isRecordingHotkey ? S.cancel : S.hotkeyChange) {
+                    model.isRecordingHotkey ? model.resetHotkeyRecording() : model.recordHotkey()
+                }
+                if model.hotkey != .standard && !model.isRecordingHotkey {
+                    Button(S.hotkeyReset, action: model.resetHotkey)
+                }
+            }
+            .buttonStyle(.link)
+            .font(.system(size: 11))
+            if model.isHotkeyTaken {
+                Text(S.hotkeyTaken).font(.system(size: 11)).foregroundStyle(.red)
             }
         }
     }
@@ -2484,7 +2663,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(withTitle: "⬆︎ " + S.updateAvailable(version), action: #selector(openReleases), keyEquivalent: "")
             menu.addItem(.separator())
         }
-        menu.addItem(withTitle: S.menuOpenSearch("⌥ " + hotkeyKey), action: #selector(togglePanel), keyEquivalent: "")
+        menu.addItem(withTitle: S.menuOpenSearch(Hotkey.current.label), action: #selector(togglePanel), keyEquivalent: "")
         menu.addItem(withTitle: S.menuWindow, action: #selector(showWelcome), keyEquivalent: "")
         let login = NSMenuItem(title: S.menuLaunchAtLogin, action: #selector(toggleLogin(_:)), keyEquivalent: "")
         login.state = SMAppService.mainApp.status == .enabled ? .on : .off
@@ -2547,11 +2726,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return noErr
         }, 1, &spec, Unmanaged.passUnretained(self).toOpaque(), nil)
 
+        welcome.applyHotkey = { [weak self] key in
+            guard let self else { return false }
+            let ok = self.setHotkey(key)
+            self.rebuildMenu()
+            return ok
+        }
+        _ = setHotkey(Hotkey.current)
+    }
+
+    /// Swaps the registered shortcut; nil just lets go of it. False when another app already holds the new one.
+    private func setHotkey(_ key: Hotkey?) -> Bool {
+        if let hotKey { UnregisterEventHotKey(hotKey) }
+        if let isoHotKey { UnregisterEventHotKey(isoHotKey) }
+        hotKey = nil
+        isoHotKey = nil
+        guard let key else { return true }
         let id = EventHotKeyID(signature: OSType(0x434C4C54), id: 1) // 'CLLT'
+        let status = RegisterEventHotKey(key.keyCode, key.modifiers, id, GetApplicationEventTarget(), 0, &hotKey)
         // Option + the key left of 1: ANSI keyboards report it as Grave, ISO (European) ones as Section.
-        let status = RegisterEventHotKey(UInt32(kVK_ANSI_Grave), UInt32(optionKey), id, GetApplicationEventTarget(), 0, &hotKey)
-        let isoStatus = RegisterEventHotKey(UInt32(kVK_ISO_Section), UInt32(optionKey), id, GetApplicationEventTarget(), 0, &isoHotKey)
-        debugLog("hotkey registered, status \(status), iso \(isoStatus)")
+        if key == .standard {
+            RegisterEventHotKey(UInt32(kVK_ISO_Section), key.modifiers, id, GetApplicationEventTarget(), 0, &isoHotKey)
+        }
+        debugLog("hotkey \(key.label), status \(status)")
+        return status == noErr
     }
 
     @objc func togglePanel() {

@@ -85,6 +85,41 @@
       "— abrir la barra desde cualquier lugar",
       "— ouvrir la barre depuis n'importe où"
     ],
+    "hotkey_change": [
+      "Change",
+      "Изменить",
+      "Ändern",
+      "Cambiar",
+      "Modifier"
+    ],
+    "hotkey_reset": [
+      "Reset",
+      "Сбросить",
+      "Zurücksetzen",
+      "Restablecer",
+      "Réinitialiser"
+    ],
+    "hotkey_record": [
+      "Press the new shortcut, with Ctrl, Alt or another modifier. Esc to cancel.",
+      "Нажмите новое сочетание, с Ctrl, Alt или другой клавишей-модификатором. Esc — отмена.",
+      "Drücke das neue Tastenkürzel, mit Strg, Alt oder einer anderen Sondertaste. Esc bricht ab.",
+      "Pulsa el nuevo atajo, con Ctrl, Alt u otra tecla modificadora. Esc para cancelar.",
+      "Appuyez sur le nouveau raccourci, avec Ctrl, Alt ou une autre touche de modification. Échap pour annuler."
+    ],
+    "hotkey_taken": [
+      "That shortcut is taken by another app. Try another one.",
+      "Это сочетание уже занято другой программой. Попробуйте другое.",
+      "Dieses Kürzel belegt schon ein anderes Programm. Versuch ein anderes.",
+      "Ese atajo ya lo usa otro programa. Prueba otro.",
+      "Ce raccourci est déjà pris par une autre application. Essayez-en un autre."
+    ],
+    "key_space": [
+      "Space",
+      "Пробел",
+      "Leertaste",
+      "Espacio",
+      "Espace"
+    ],
     "auth_checking": [
       "Checking Claude…",
       "Проверяю Claude…",

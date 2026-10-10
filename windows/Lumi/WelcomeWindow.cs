@@ -59,11 +59,7 @@ public sealed class WelcomeWindow : Window
         subtitle.Margin = new Thickness(0, 4, 0, 0);
         stack.Children.Add(subtitle);
 
-        var hotkey = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 0) };
-        hotkey.Children.Add(KeyCap("Alt"));
-        hotkey.Children.Add(KeyCap(Theme.HotkeyKey));
-        hotkey.Children.Add(Theme.Label(" " + S.HotkeyHint, 13, Theme.Secondary));
-        stack.Children.Add(hotkey);
+        stack.Children.Add(HotkeyRow());
 
         if (Updates.NewVersion is { } version)
         {
@@ -265,6 +261,97 @@ public sealed class WelcomeWindow : Window
         };
         button.Click += (_, _) => onClick();
         return button;
+    }
+
+    private bool _recordingHotkey;
+    private bool _hotkeyTaken;
+
+    /// The shortcut as key caps, with a way to pick another one.
+    private UIElement HotkeyRow()
+    {
+        var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 0) };
+        var keys = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+        if (_recordingHotkey)
+        {
+            var prompt = Theme.Label(S.HotkeyRecord, 12, Theme.Accent);
+            prompt.TextWrapping = TextWrapping.Wrap;
+            prompt.TextAlignment = TextAlignment.Center;
+            prompt.MaxWidth = 320;
+            keys.Children.Add(prompt);
+        }
+        else
+        {
+            foreach (var cap in Shortcut.Current.Caps) keys.Children.Add(KeyCap(cap));
+            keys.Children.Add(Theme.Label(" " + S.HotkeyHint, 13, Theme.Secondary));
+        }
+        panel.Children.Add(keys);
+
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 4, 0, 0) };
+        var change = LinkButton(_recordingHotkey ? S.Cancel : S.HotkeyChange, () =>
+        {
+            if (_recordingHotkey) FinishRecording(null);
+            else StartRecording();
+        });
+        change.FontSize = 11;
+        actions.Children.Add(change);
+        if (!Shortcut.Current.IsStandard && !_recordingHotkey)
+        {
+            var reset = LinkButton(S.HotkeyReset, () => FinishRecording(Shortcut.Standard));
+            reset.FontSize = 11;
+            reset.Margin = new Thickness(12, 0, 0, 0);
+            actions.Children.Add(reset);
+        }
+        panel.Children.Add(actions);
+        if (_hotkeyTaken)
+        {
+            var taken = Theme.Label(S.HotkeyTaken, 11, Theme.Error);
+            taken.HorizontalAlignment = HorizontalAlignment.Center;
+            panel.Children.Add(taken);
+        }
+        return panel;
+    }
+
+    private void StartRecording()
+    {
+        _recordingHotkey = true;
+        _hotkeyTaken = false;
+        // Let go of the current shortcut, so pressing it now records it instead of opening the bar.
+        App.Current.SetHotkey(null);
+        PreviewKeyDown += OnRecordKey;
+        Build();
+    }
+
+    private void OnRecordKey(object sender, KeyEventArgs e)
+    {
+        e.Handled = true;
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Escape)
+        {
+            FinishRecording(null);
+            return;
+        }
+        var win = Keyboard.IsKeyDown(Key.LWin) || Keyboard.IsKeyDown(Key.RWin);
+        if (Shortcut.From(key, Keyboard.Modifiers, win) is { } shortcut) FinishRecording(shortcut);
+    }
+
+    /// Applies the new shortcut (null keeps the old one); an app already holding it brings the old one back.
+    private void FinishRecording(Shortcut? key)
+    {
+        PreviewKeyDown -= OnRecordKey;
+        _recordingHotkey = false;
+        _hotkeyTaken = false;
+        if (key != null && App.Current.SetHotkey(key))
+        {
+            Settings.Shared.HotkeyModifiers = key.Modifiers;
+            Settings.Shared.HotkeyKey = key.Key;
+            Settings.Shared.Save();
+        }
+        else
+        {
+            _hotkeyTaken = key != null;
+            App.Current.SetHotkey(Shortcut.Current);
+        }
+        Build();
     }
 
     private static UIElement KeyCap(string label) => new Border
