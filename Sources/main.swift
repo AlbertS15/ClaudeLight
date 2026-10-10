@@ -447,7 +447,10 @@ final class APIRunner {
             return
         }
         // The question joins the history only with its answer, so a failed try never repeats in it.
-        let messages = [["role": "system", "content": ClaudeRunner.systemPrompt]] + history + [["role": "user", "content": question]]
+        // Lumi's own Ollama models carry their own prompt; sending ours would replace it.
+        let ownModel = OllamaStatus.isOllama(c.baseURL) && c.model.lowercased().hasPrefix("lumi")
+        let system = ownModel ? [] : [["role": "system", "content": ClaudeRunner.systemPrompt]]
+        let messages = system + history + [["role": "user", "content": question]]
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

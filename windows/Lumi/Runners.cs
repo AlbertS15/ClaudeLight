@@ -173,7 +173,10 @@ public sealed class ApiRunner
         var cts = new CancellationTokenSource();
         _cts = cts;
         // The question joins the history only with its answer, so a failed try never repeats in it.
-        var messages = new JsonArray { new JsonObject { ["role"] = "system", ["content"] = ClaudeRunner.SystemPrompt } };
+        var messages = new JsonArray();
+        // Lumi's own Ollama models carry their own prompt; sending ours would replace it.
+        var ownModel = Ollama.IsOllama(c.BaseUrl) && c.Model.StartsWith("lumi", StringComparison.OrdinalIgnoreCase);
+        if (!ownModel) messages.Add(new JsonObject { ["role"] = "system", ["content"] = ClaudeRunner.SystemPrompt });
         foreach (var (role, content) in _history) messages.Add(new JsonObject { ["role"] = role, ["content"] = content });
         messages.Add(new JsonObject { ["role"] = "user", ["content"] = question });
         var body = new JsonObject { ["model"] = c.Model, ["messages"] = messages, ["stream"] = true };
