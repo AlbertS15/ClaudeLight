@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lumi
+Comment=Spotlight-style bar with AI: open apps, ask Claude or a model running on your computer
+Exec=lumi
+Icon=lumi
+Categories=Utility;
+Keywords=launcher;search;ai;assistant;
+StartupWMClass=lumi

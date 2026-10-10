@@ -51,7 +51,8 @@ public sealed record GeminiModel(string Id, string Title)
     };
 }
 
-/// A model on any OpenAI-compatible service. The key is stored encrypted for this Windows user (DPAPI).
+/// A model on any OpenAI-compatible service. On Windows the key is stored encrypted for this user (DPAPI); on Linux
+/// it sits in the settings file, which only its owner can read.
 public sealed class Connection
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -60,12 +61,15 @@ public sealed class Connection
     public string Model { get; set; } = "";
     public string ProtectedKey { get; set; } = "";
 
+    private const string PlainPrefix = "plain:";
+
     [JsonIgnore]
     public string? Key
     {
         get
         {
             if (string.IsNullOrEmpty(ProtectedKey)) return null;
+            if (!OperatingSystem.IsWindows()) return ProtectedKey.StartsWith(PlainPrefix) ? ProtectedKey[PlainPrefix.Length..] : null;
             try
             {
                 var bytes = ProtectedData.Unprotect(Convert.FromBase64String(ProtectedKey), null, DataProtectionScope.CurrentUser);
@@ -78,8 +82,8 @@ public sealed class Connection
         }
         set
         {
-            ProtectedKey = string.IsNullOrEmpty(value)
-                ? ""
+            ProtectedKey = string.IsNullOrEmpty(value) ? ""
+                : !OperatingSystem.IsWindows() ? PlainPrefix + value
                 : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
         }
     }
@@ -120,7 +124,7 @@ public sealed record ServicePreset(string Key, string BaseUrl, string Example, b
     public override string ToString() => Title;
 }
 
-/// Choices kept across launches in %APPDATA%\Lumi\settings.json.
+/// Choices kept across launches in %APPDATA%\Lumi\settings.json (~/.config/Lumi/settings.json on Linux).
 public sealed class Settings
 {
     public static Settings Shared { get; } = Load();
@@ -180,6 +184,8 @@ public sealed class Settings
     {
         Directory.CreateDirectory(Folder);
         File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        // On Linux the file holds the API keys, so only its owner may read it.
+        if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(FilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         Changed?.Invoke();
     }
 
@@ -228,6 +234,7 @@ public sealed class Settings
     /// Moves a ClaudeLight start-with-Windows entry over to Lumi, once.
     public static void MigrateLaunchAtLogin()
     {
+        if (!OperatingSystem.IsWindows()) return;
         using var key = Registry.CurrentUser.OpenSubKey(RunKey);
         if (key?.GetValue("ClaudeLight") != null) LaunchesAtLogin = true;
     }
@@ -235,15 +242,35 @@ public sealed class Settings
     // Start with Windows: a value under the current user's Run key.
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
 
+    // Start with Linux: a desktop entry in ~/.config/autostart.
+    private static string AutostartFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "autostart", "lumi.desktop");
+
+    /// The file to start: the AppImage itself when running from one, else this executable.
+    public static string LaunchPath => Environment.GetEnvironmentVariable("APPIMAGE") ?? Environment.ProcessPath ?? "lumi";
+
     public static bool LaunchesAtLogin
     {
         get
         {
+            if (!OperatingSystem.IsWindows()) return File.Exists(AutostartFile);
             using var key = Registry.CurrentUser.OpenSubKey(RunKey);
             return key?.GetValue("Lumi") != null;
         }
         set
         {
+            if (!OperatingSystem.IsWindows())
+            {
+                if (value)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(AutostartFile)!);
+                    File.WriteAllText(AutostartFile, $"[Desktop Entry]\nType=Application\nName=Lumi\nExec=\"{LaunchPath}\" --startup\nX-GNOME-Autostart-enabled=true\n");
+                }
+                else
+                {
+                    File.Delete(AutostartFile);
+                }
+                return;
+            }
             using var key = Registry.CurrentUser.CreateSubKey(RunKey);
             if (value) key.SetValue("Lumi", $"\"{Environment.ProcessPath}\" --startup");
             else key.DeleteValue("Lumi", false);

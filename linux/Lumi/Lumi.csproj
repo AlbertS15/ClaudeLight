@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>lumi</AssemblyName>
+    <RootNamespace>Lumi</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>Lumi</Product>
+    <Description>Spotlight-style launcher for Linux: open apps, ask Claude or any OpenAI-compatible model</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The shared files call Windows APIs behind OperatingSystem.IsWindows() checks. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Shared with the Windows app: models, AI runners, settings, strings. -->
+    <Compile Include="../../windows/Lumi/Runners.cs" Link="Shared/Runners.cs" />
+    <Compile Include="../../windows/Lumi/Settings.cs" Link="Shared/Settings.cs" />
+    <Compile Include="../../windows/Lumi/Strings.cs" Link="Shared/Strings.cs" />
+    <Compile Include="../../windows/Lumi/LumiModels.cs" Link="Shared/LumiModels.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="ZstdSharp.Port" Version="0.8.8" />
+  </ItemGroup>
+
+</Project>

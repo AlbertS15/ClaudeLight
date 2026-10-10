@@ -38,6 +38,8 @@ private let table: [String: [String]] = [
     "hotkey_record": ["Press the new shortcut, with Ctrl, Alt or another modifier. Esc to cancel.", "Нажмите новое сочетание, с Ctrl, Alt или другой клавишей-модификатором. Esc — отмена.", "Drücke das neue Tastenkürzel, mit Strg, Alt oder einer anderen Sondertaste. Esc bricht ab.", "Pulsa el nuevo atajo, con Ctrl, Alt u otra tecla modificadora. Esc para cancelar.", "Appuyez sur le nouveau raccourci, avec Ctrl, Alt ou une autre touche de modification. Échap pour annuler."],
     "hotkey_taken": ["That shortcut is taken by another app. Try another one.", "Это сочетание уже занято другой программой. Попробуйте другое.", "Dieses Kürzel belegt schon ein anderes Programm. Versuch ein anderes.", "Ese atajo ya lo usa otro programa. Prueba otro.", "Ce raccourci est déjà pris par une autre application. Essayez-en un autre."],
     "key_space": ["Space", "Пробел", "Leertaste", "Espacio", "Espace"],
+    "hotkey_manual": ["To open Lumi with a key, add a keyboard shortcut in the system settings with this command:", "Чтобы открывать Lumi клавишей, добавьте сочетание клавиш в настройках системы с этой командой:", "Um Lumi per Taste zu öffnen, lege in den Systemeinstellungen ein Tastenkürzel mit diesem Befehl an:", "Para abrir Lumi con una tecla, añade un atajo de teclado en los ajustes del sistema con este comando:", "Pour ouvrir Lumi avec une touche, ajoutez un raccourci clavier dans les paramètres du système avec cette commande :"],
+    "copy": ["Copy", "Копировать", "Kopieren", "Copiar", "Copier"],
     "auth_checking": ["Checking Claude…", "Проверяю Claude…", "Claude wird geprüft…", "Comprobando Claude…", "Vérification de Claude…"],
     "auth_ok": ["Claude connected", "Claude подключён", "Claude verbunden", "Claude conectado", "Claude connecté"],
     "auth_signed_out": ["Claude: sign-in needed", "Claude: нужен вход", "Claude: Anmeldung nötig", "Claude: inicia sesión", "Claude : connexion requise"],
@@ -161,6 +163,8 @@ enum S {
     static var hotkeyRecord: String { format("hotkey_record", []) }
     static var hotkeyTaken: String { format("hotkey_taken", []) }
     static var keySpace: String { format("key_space", []) }
+    static var hotkeyManual: String { format("hotkey_manual", []) }
+    static var copy: String { format("copy", []) }
     static var authChecking: String { format("auth_checking", []) }
     static var authOk: String { format("auth_ok", []) }
     static var authSignedOut: String { format("auth_signed_out", []) }

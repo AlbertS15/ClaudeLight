@@ -120,6 +120,20 @@
       "Espacio",
       "Espace"
     ],
+    "hotkey_manual": [
+      "To open Lumi with a key, add a keyboard shortcut in the system settings with this command:",
+      "Чтобы открывать Lumi клавишей, добавьте сочетание клавиш в настройках системы с этой командой:",
+      "Um Lumi per Taste zu öffnen, lege in den Systemeinstellungen ein Tastenkürzel mit diesem Befehl an:",
+      "Para abrir Lumi con una tecla, añade un atajo de teclado en los ajustes del sistema con este comando:",
+      "Pour ouvrir Lumi avec une touche, ajoutez un raccourci clavier dans les paramètres du système avec cette commande :"
+    ],
+    "copy": [
+      "Copy",
+      "Копировать",
+      "Kopieren",
+      "Copiar",
+      "Copier"
+    ],
     "auth_checking": [
       "Checking Claude…",
       "Проверяю Claude…",

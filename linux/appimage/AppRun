@@ -1,0 +1,4 @@
+#!/bin/sh
+# Starts the bundled Lumi; APPIMAGE (set by the runtime) lets it point autostart and shortcuts at the AppImage itself.
+HERE="$(dirname "$(readlink -f "$0")")"
+exec "$HERE/usr/bin/lumi" "$@"

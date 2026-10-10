@@ -78,9 +78,44 @@ jobs:
           name: Lumi-macOS
           path: dist/Lumi-macOS.dmg
 
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF#refs/tags/v}"; else v="0.0.${GITHUB_RUN_NUMBER}"; fi
+          echo "APP_VERSION=$v" >> "$GITHUB_ENV"
+
+      - name: Build AppImage
+        run: ./linux/package.sh
+
+      - name: Smoke test (launch, toggle, search)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb xdotool imagemagick dbus-x11 > /dev/null
+          xvfb-run -a -s "-screen 0 1280x800x24" dbus-run-session ./linux/ci/smoke.sh
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-screenshots
+          path: dist/screenshots
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lumi-Linux
+          path: dist/Lumi-x86_64.AppImage
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, macos]
+    needs: [windows, macos, linux]
     runs-on: ubuntu-latest
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

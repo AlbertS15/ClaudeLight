@@ -49,6 +49,8 @@ public static class S
         ["hotkey_record"] = new[] { "Press the new shortcut, with Ctrl, Alt or another modifier. Esc to cancel.", "Нажмите новое сочетание, с Ctrl, Alt или другой клавишей-модификатором. Esc — отмена.", "Drücke das neue Tastenkürzel, mit Strg, Alt oder einer anderen Sondertaste. Esc bricht ab.", "Pulsa el nuevo atajo, con Ctrl, Alt u otra tecla modificadora. Esc para cancelar.", "Appuyez sur le nouveau raccourci, avec Ctrl, Alt ou une autre touche de modification. Échap pour annuler." },
         ["hotkey_taken"] = new[] { "That shortcut is taken by another app. Try another one.", "Это сочетание уже занято другой программой. Попробуйте другое.", "Dieses Kürzel belegt schon ein anderes Programm. Versuch ein anderes.", "Ese atajo ya lo usa otro programa. Prueba otro.", "Ce raccourci est déjà pris par une autre application. Essayez-en un autre." },
         ["key_space"] = new[] { "Space", "Пробел", "Leertaste", "Espacio", "Espace" },
+        ["hotkey_manual"] = new[] { "To open Lumi with a key, add a keyboard shortcut in the system settings with this command:", "Чтобы открывать Lumi клавишей, добавьте сочетание клавиш в настройках системы с этой командой:", "Um Lumi per Taste zu öffnen, lege in den Systemeinstellungen ein Tastenkürzel mit diesem Befehl an:", "Para abrir Lumi con una tecla, añade un atajo de teclado en los ajustes del sistema con este comando:", "Pour ouvrir Lumi avec une touche, ajoutez un raccourci clavier dans les paramètres du système avec cette commande :" },
+        ["copy"] = new[] { "Copy", "Копировать", "Kopieren", "Copiar", "Copier" },
         ["auth_checking"] = new[] { "Checking Claude…", "Проверяю Claude…", "Claude wird geprüft…", "Comprobando Claude…", "Vérification de Claude…" },
         ["auth_ok"] = new[] { "Claude connected", "Claude подключён", "Claude verbunden", "Claude conectado", "Claude connecté" },
         ["auth_signed_out"] = new[] { "Claude: sign-in needed", "Claude: нужен вход", "Claude: Anmeldung nötig", "Claude: inicia sesión", "Claude : connexion requise" },
@@ -171,6 +173,8 @@ public static class S
     public static string HotkeyRecord => F("hotkey_record");
     public static string HotkeyTaken => F("hotkey_taken");
     public static string KeySpace => F("key_space");
+    public static string HotkeyManual => F("hotkey_manual");
+    public static string Copy => F("copy");
     public static string AuthChecking => F("auth_checking");
     public static string AuthOk => F("auth_ok");
     public static string AuthSignedOut => F("auth_signed_out");

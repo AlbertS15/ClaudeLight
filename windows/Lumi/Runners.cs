@@ -13,31 +13,80 @@ using System.Threading.Tasks;
 
 namespace Lumi;
 
+/// Finds a command-line tool: on Windows its .exe or npm's .cmd, elsewhere the plain name.
+public static class Tools
+{
+    public static string? Find(string name, params string[] extra)
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var candidates = new List<string>(extra);
+        if (OperatingSystem.IsWindows())
+        {
+            candidates.Add(Path.Combine(home, ".local", "bin", name + ".exe"));
+            candidates.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", name + ".cmd"));
+        }
+        else
+        {
+            // An app started from the desktop doesn't get the shell's PATH, so look where installers put tools.
+            candidates.Add(Path.Combine(home, ".local", "bin", name));
+            candidates.Add(Path.Combine(home, ".npm-global", "bin", name));
+            candidates.Add(Path.Combine(home, ".bun", "bin", name));
+            candidates.Add("/usr/local/bin/" + name);
+            candidates.Add("/usr/bin/" + name);
+        }
+        foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(dir)) continue;
+            if (OperatingSystem.IsWindows())
+            {
+                candidates.Add(Path.Combine(dir.Trim(), name + ".exe"));
+                candidates.Add(Path.Combine(dir.Trim(), name + ".cmd"));
+            }
+            else
+            {
+                candidates.Add(Path.Combine(dir.Trim(), name));
+            }
+        }
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    /// Opens a terminal window running a command: cmd on Windows, the desktop's own terminal on Linux.
+    public static void OpenTerminal(string binary, string arguments)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Process.Start(new ProcessStartInfo("cmd.exe", $"/k \"\"{binary}\" {arguments}\"") { UseShellExecute = true });
+            return;
+        }
+        var command = $"'{binary}' {arguments}; echo; read -p 'Enter…' _";
+        foreach (var (terminal, flag) in new[] { ("x-terminal-emulator", "-e"), ("gnome-terminal", "--"), ("konsole", "-e"),
+                     ("xfce4-terminal", "-x"), ("kgx", "--"), ("ptyxis", "--"), ("xterm", "-e") })
+        {
+            var path = Find(terminal);
+            if (path == null) continue;
+            var psi = new ProcessStartInfo(path) { UseShellExecute = false };
+            foreach (var part in flag.Split(' ')) psi.ArgumentList.Add(part);
+            psi.ArgumentList.Add("bash");
+            psi.ArgumentList.Add("-c");
+            psi.ArgumentList.Add(command);
+            Process.Start(psi);
+            return;
+        }
+    }
+}
+
 /// Runs the local `claude` CLI in print mode and streams the reply text.
 public sealed class ClaudeRunner
 {
-    public const string SystemPrompt =
-        "You were called from a Spotlight-style quick bar on Windows. Answer briefly and to the point, " +
-        "in the language of the question. Use Markdown only for lists, bold and code.";
+    public static readonly string SystemPrompt =
+        $"You were called from a Spotlight-style quick bar on {(OperatingSystem.IsWindows() ? "Windows" : "Linux")}. " +
+        "Answer briefly and to the point, in the language of the question. Use Markdown only for lists, bold and code.";
 
     private Process? _process;
     private string? _sessionId;
 
-    /// claude.exe from the native installer, else whatever `claude` PATH finds (npm installs a .cmd).
-    public static string? Binary { get; } = Find();
-
-    private static string? Find()
-    {
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var candidates = new List<string> { Path.Combine(home, ".local", "bin", "claude.exe") };
-        foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
-        {
-            if (string.IsNullOrWhiteSpace(dir)) continue;
-            candidates.Add(Path.Combine(dir.Trim(), "claude.exe"));
-            candidates.Add(Path.Combine(dir.Trim(), "claude.cmd"));
-        }
-        return candidates.FirstOrDefault(File.Exists);
-    }
+    /// The native installer's claude(.exe) in ~/.local/bin, else whatever PATH finds (npm installs a .cmd on Windows).
+    public static string? Binary { get; } = Tools.Find("claude");
 
     public void Reset()
     {
@@ -362,24 +411,8 @@ public sealed class CodexRunner
     private Process? _process;
     private readonly List<(string Question, string Answer)> _history = new();
 
-    /// npm puts codex.cmd in %APPDATA%\npm; otherwise whatever PATH finds.
-    public static string? Binary
-    {
-        get
-        {
-            var candidates = new List<string>
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "codex.cmd"),
-            };
-            foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
-            {
-                if (string.IsNullOrWhiteSpace(dir)) continue;
-                candidates.Add(Path.Combine(dir.Trim(), "codex.exe"));
-                candidates.Add(Path.Combine(dir.Trim(), "codex.cmd"));
-            }
-            return candidates.FirstOrDefault(File.Exists);
-        }
-    }
+    /// npm puts codex.cmd in %APPDATA%\npm on Windows; otherwise wherever Tools.Find looks.
+    public static string? Binary => Tools.Find("codex");
 
     private static string WorkFolder
     {
@@ -503,24 +536,8 @@ public sealed class GeminiRunner
     private Process? _process;
     private readonly List<(string Question, string Answer)> _history = new();
 
-    /// npm puts gemini.cmd in %APPDATA%\npm; otherwise whatever PATH finds.
-    public static string? Binary
-    {
-        get
-        {
-            var candidates = new List<string>
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "gemini.cmd"),
-            };
-            foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
-            {
-                if (string.IsNullOrWhiteSpace(dir)) continue;
-                candidates.Add(Path.Combine(dir.Trim(), "gemini.cmd"));
-                candidates.Add(Path.Combine(dir.Trim(), "gemini.exe"));
-            }
-            return candidates.FirstOrDefault(File.Exists);
-        }
-    }
+    /// npm puts gemini.cmd in %APPDATA%\npm on Windows; otherwise wherever Tools.Find looks.
+    public static string? Binary => Tools.Find("gemini");
 
     /// An empty folder to run in, so Gemini never reads or indexes the home folder.
     private static string WorkFolder
@@ -672,6 +689,6 @@ public static class ClaudeAuth
     public static void SignIn()
     {
         if (ClaudeRunner.Binary == null) return;
-        Process.Start(new ProcessStartInfo("cmd.exe", $"/k \"\"{ClaudeRunner.Binary}\" auth login\"") { UseShellExecute = true });
+        Tools.OpenTerminal(ClaudeRunner.Binary, "auth login");
     }
 }
