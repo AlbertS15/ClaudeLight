@@ -138,6 +138,10 @@ public static class S
         ["lumi_downloading"] = new[] { "Downloading {0}… {1}%", "Скачиваю {0}… {1}%", "Lade {0}… {1} %", "Descargando {0}… {1} %", "Téléchargement de {0}… {1} %" },
         ["lumi_building"] = new[] { "Setting up {0}…", "Настраиваю {0}…", "Richte {0} ein…", "Preparando {0}…", "Configuration de {0}…" },
         ["lumi_failed"] = new[] { "The download stopped: {0}. Press the button again to continue where it left off.", "Загрузка прервалась: {0}. Нажмите кнопку ещё раз, и я продолжу с того же места.", "Der Download wurde unterbrochen: {0}. Drücke die Taste erneut, um dort weiterzumachen.", "La descarga se detuvo: {0}. Pulsa el botón otra vez para seguir donde se quedó.", "Le téléchargement s'est arrêté : {0}. Appuyez de nouveau pour reprendre où il s'est arrêté." },
+        ["ollama_auto"] = new[] { "Lumi will first install Ollama ({0} GB), the free program that runs the model on your computer.", "Сначала Lumi установит Ollama ({0} ГБ), бесплатную программу, которая запускает модель на вашем компьютере.", "Lumi installiert zuerst Ollama ({0} GB), das kostenlose Programm, das das Modell auf deinem Computer ausführt.", "Primero Lumi instalará Ollama ({0} GB), el programa gratuito que ejecuta el modelo en tu ordenador.", "Lumi installera d'abord Ollama ({0} Go), le programme gratuit qui fait tourner le modèle sur votre ordinateur." },
+        ["ollama_downloading"] = new[] { "Downloading Ollama… {0}%", "Скачиваю Ollama… {0}%", "Lade Ollama… {0} %", "Descargando Ollama… {0} %", "Téléchargement d'Ollama… {0} %" },
+        ["ollama_starting"] = new[] { "Installing and starting Ollama…", "Устанавливаю и запускаю Ollama…", "Installiere und starte Ollama…", "Instalando e iniciando Ollama…", "Installation et démarrage d'Ollama…" },
+        ["ollama_not_started"] = new[] { "Ollama didn't start", "Ollama не запустилась", "Ollama ist nicht gestartet", "Ollama no se inició", "Ollama n'a pas démarré" },
         ["err_ollama_model"] = new[] { "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}", "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}", "Ollama hat kein Modell „{0}“. Installiert: {1}. Wählen Sie eines davon in der Verbindung oder laden Sie es: ollama pull {0}", "Ollama no tiene el modelo «{0}». Instalados: {1}. Elige uno de ellos en la conexión o descárgalo: ollama pull {0}", "Ollama n'a pas le modèle « {0} ». Installés : {1}. Choisissez-en un dans la connexion ou téléchargez-le : ollama pull {0}" },
     };
 
@@ -251,5 +255,9 @@ public static class S
     public static string LumiDownloading(string a0, string a1) => F("lumi_downloading", a0, a1);
     public static string LumiBuilding(string a0) => F("lumi_building", a0);
     public static string LumiFailed(string a0) => F("lumi_failed", a0);
+    public static string OllamaAuto(string a0) => F("ollama_auto", a0);
+    public static string OllamaDownloading(string a0) => F("ollama_downloading", a0);
+    public static string OllamaStarting => F("ollama_starting");
+    public static string OllamaNotStarted => F("ollama_not_started");
     public static string ErrOllamaModel(string a0, string a1) => F("err_ollama_model", a0, a1);
 }

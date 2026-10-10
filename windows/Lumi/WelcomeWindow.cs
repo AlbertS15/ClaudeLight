@@ -374,6 +374,9 @@ public sealed class ConnectionDialog : Window
     private System.Threading.CancellationTokenSource? _install;
     private double _installed = -1;
     private bool _building;
+    private bool _ollamaMissing;
+    private double _ollamaDownload = -1;
+    private bool _ollamaStarting;
     private string? _installError;
     private List<string> _models = new();
 
@@ -392,11 +395,16 @@ public sealed class ConnectionDialog : Window
             label.TextTrimming = TextTrimming.None;
             return label;
         }
+        _ollamaMissing = models == null;
         if (models == null)
         {
+            _models = new();
             _ollamaHelp.Children.Add(Note(S.OllamaMissing));
+            _ollamaHelp.Children.Remove(_lumiPanel);
+            _ollamaHelp.Children.Add(_lumiPanel);
+            RenderLumi();
             var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 6) };
-            var download = new Button { Content = S.OllamaDownload, Padding = new Thickness(12, 3, 12, 3), Foreground = Brushes.White, Background = Theme.Accent, BorderThickness = new Thickness(0) };
+            var download = new Button { Content = S.OllamaDownload, Padding = new Thickness(12, 3, 12, 3) };
             download.Click += (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(OllamaDownload) { UseShellExecute = true });
             var again = new Button { Content = S.CheckAgain, Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(8, 0, 0, 0) };
             again.Click += (_, _) => CheckOllama();
@@ -453,10 +461,17 @@ public sealed class ConnectionDialog : Window
 
         if (busy)
         {
-            _lumiPanel.Children.Add(Note(_building ? S.LumiBuilding(_recipe.Title) : S.LumiDownloading(_recipe.Title, ((int)(Math.Max(0, _installed) * 100)).ToString())));
-            _lumiPanel.Children.Add(new ProgressBar { Height = 6, Maximum = 1, Value = Math.Max(0, _installed), IsIndeterminate = _building, Foreground = Theme.Accent, Margin = new Thickness(0, 2, 0, 0) });
+            var part = _ollamaDownload >= 0 ? _ollamaDownload : Math.Max(0, _installed);
+            var waiting = _building || _ollamaStarting;
+            var label = _ollamaStarting ? S.OllamaStarting
+                : _ollamaDownload >= 0 ? S.OllamaDownloading(((int)(part * 100)).ToString())
+                : _building ? S.LumiBuilding(_recipe.Title)
+                : S.LumiDownloading(_recipe.Title, ((int)(part * 100)).ToString());
+            _lumiPanel.Children.Add(Note(label));
+            _lumiPanel.Children.Add(new ProgressBar { Height = 6, Maximum = 1, Value = part, IsIndeterminate = waiting, Foreground = Theme.Accent, Margin = new Thickness(0, 2, 0, 0) });
             return;
         }
+        if (_ollamaMissing && _installError == null) _lumiPanel.Children.Add(Note(S.OllamaAuto(OllamaSetup.SizeGB), Theme.Secondary));
         if (_installError != null) _lumiPanel.Children.Add(Note(S.LumiFailed(_installError), Theme.Error));
         if (Ollama.IsInstalled(_recipe, _models))
         {
@@ -484,6 +499,25 @@ public sealed class ConnectionDialog : Window
         RenderLumi();
         try
         {
+            if (_ollamaMissing)
+            {
+                _ollamaDownload = 0;
+                RenderLumi();
+                var shown = -1;
+                await OllamaSetup.InstallAsync(
+                    part => Dispatcher.InvokeAsync(() =>
+                    {
+                        _ollamaDownload = part;
+                        var percent = (int)(part * 100);
+                        if (percent != shown) { shown = percent; RenderLumi(); }
+                    }),
+                    () => Dispatcher.InvokeAsync(() => { _ollamaDownload = -1; _ollamaStarting = true; RenderLumi(); }),
+                    _install.Token);
+                _ollamaStarting = false;
+                _ollamaMissing = false;
+                _models = await Ollama.ModelsAsync() ?? new();
+                RenderLumi();
+            }
             var last = -1;
             await Ollama.PullAsync(recipe.Base, part => Dispatcher.InvokeAsync(() =>
             {
@@ -502,6 +536,8 @@ public sealed class ConnectionDialog : Window
         catch (Exception e)
         {
             _install = null;
+            _ollamaDownload = -1;
+            _ollamaStarting = false;
             if (IsVisible) { _installError = e is OperationCanceledException ? "timeout" : e.Message; RenderLumi(); }
         }
     }

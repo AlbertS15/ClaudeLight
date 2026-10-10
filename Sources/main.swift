@@ -1710,7 +1710,95 @@ extension LumiRecipe {
 
 /// Where the download and setup of one of Lumi's models stands.
 enum LumiInstall: Equatable {
-    case idle, downloading(Double), building, failed(String)
+    case idle, ollamaDownloading(Double), ollamaStarting, downloading(Double), building, failed(String)
+
+    var isBusy: Bool {
+        switch self {
+        case .idle, .failed: false
+        default: true
+        }
+    }
+}
+
+/// Installs Ollama itself, so the offline route needs no trip to a website.
+enum OllamaSetup {
+    static let archive = URL(string: "https://ollama.com/download/Ollama-darwin.zip")!
+    static let sizeGB = "0.2"
+    /// Ollama's Developer ID team: the app is installed only if it's signed by them.
+    private static let requirement = "anchor apple generic and certificate leaf[subject.OU] = \"3MU9H2V9Y9\""
+
+    private static var installed: URL? {
+        ["/Applications/Ollama.app", NSHomeDirectory() + "/Applications/Ollama.app"]
+            .map { URL(fileURLWithPath: $0) }
+            .first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    /// Downloads Ollama when it isn't on this Mac, checks its signature, moves it to Applications,
+    /// starts it and waits until it answers.
+    static func install(stage: @escaping @MainActor (LumiInstall) -> Void) async throws {
+        var app = installed
+        if app == nil {
+            await stage(.ollamaDownloading(0))
+            let zip = try await download(archive) { part in await stage(.ollamaDownloading(part)) }
+            await stage(.ollamaStarting)
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("lumi-ollama-" + UUID().uuidString)
+            try await run("/usr/bin/ditto", ["-x", "-k", zip.path, folder.path])
+            try? FileManager.default.removeItem(at: zip)
+            let unpacked = folder.appendingPathComponent("Ollama.app")
+            try await run("/usr/bin/codesign", ["--verify", "--deep", "--strict", "-R=" + requirement, unpacked.path])
+            let applications = FileManager.default.isWritableFile(atPath: "/Applications")
+                ? URL(fileURLWithPath: "/Applications")
+                : URL(fileURLWithPath: NSHomeDirectory() + "/Applications")
+            try FileManager.default.createDirectory(at: applications, withIntermediateDirectories: true)
+            let target = applications.appendingPathComponent("Ollama.app")
+            try FileManager.default.moveItem(at: unpacked, to: target)
+            try? FileManager.default.removeItem(at: folder)
+            app = target
+        }
+        await stage(.ollamaStarting)
+        guard let app else { return }
+        _ = try? await NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+        for _ in 0..<90 {
+            if await OllamaStatus.models() != nil { return }
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+        }
+        throw OllamaStatus.Failure(errorDescription: S.ollamaNotStarted)
+    }
+
+    private static func download(_ url: URL, progress: @escaping (Double) async -> Void) async throws -> URL {
+        try await withCheckedThrowingContinuation { done in
+            var watch: NSKeyValueObservation?
+            let task = URLSession.shared.downloadTask(with: url) { file, response, error in
+                watch?.invalidate()
+                guard let file, error == nil, (response as? HTTPURLResponse)?.statusCode == 200 else {
+                    return done.resume(throwing: error ?? OllamaStatus.Failure(errorDescription: "ollama.com"))
+                }
+                // The system deletes `file` when this returns, so keep it under a name of our own.
+                let kept = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".zip")
+                do {
+                    try FileManager.default.moveItem(at: file, to: kept)
+                    done.resume(returning: kept)
+                } catch {
+                    done.resume(throwing: error)
+                }
+            }
+            watch = task.progress.observe(\.fractionCompleted) { p, _ in Task { await progress(p.fractionCompleted) } }
+            task.resume()
+        }
+    }
+
+    private static func run(_ tool: String, _ arguments: [String]) async throws {
+        try await Task.detached {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: tool)
+            p.arguments = arguments
+            p.standardOutput = FileHandle.nullDevice
+            p.standardError = FileHandle.nullDevice
+            try p.run()
+            p.waitUntilExit()
+            if p.terminationStatus != 0 { throw OllamaStatus.Failure(errorDescription: "Ollama") }
+        }.value
+    }
 }
 
 final class ConnectionForm: ObservableObject {
@@ -1726,13 +1814,19 @@ final class ConnectionForm: ObservableObject {
     @Published var lumiInstall = LumiInstall.idle
     private var installTask: Task<Void, Never>?
 
-    /// Downloads the chosen model's base, builds the Lumi model on it and fills it in.
+    /// Installs Ollama if needed, then downloads the chosen model's base, builds the Lumi model on it and fills it in.
     func installLumi() {
         let recipe = lumiRecipe
+        let needsOllama = ollama == .missing
         installTask?.cancel()
-        lumiInstall = .downloading(0)
+        lumiInstall = needsOllama ? .ollamaDownloading(0) : .downloading(0)
         installTask = Task { @MainActor in
             do {
+                if needsOllama {
+                    try await OllamaSetup.install { [weak self] in self?.lumiInstall = $0 }
+                    ollama = .ready(await OllamaStatus.models() ?? [])
+                    lumiInstall = .downloading(0)
+                }
                 try await OllamaStatus.pull(recipe.base) { [weak self] in self?.lumiInstall = .downloading($0) }
                 lumiInstall = .building
                 try await OllamaStatus.create(recipe)
@@ -1822,10 +1916,13 @@ struct ConnectionFormView: View {
                 HStack(spacing: 6) { ProgressView().controlSize(.mini); Text("Ollama…").foregroundStyle(.secondary) }
             case .missing:
                 Text(S.ollamaMissing).fixedSize(horizontal: false, vertical: true)
-                HStack {
-                    Link(S.ollamaDownload, destination: OllamaStatus.downloadPage)
-                        .buttonStyle(.borderedProminent).tint(.lumi).controlSize(.small)
-                    Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
+                lumiSetup([])
+                if !form.lumiInstall.isBusy {
+                    Text(S.ollamaAuto(OllamaSetup.sizeGB)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    HStack {
+                        Link(S.ollamaDownload, destination: OllamaStatus.downloadPage).controlSize(.small)
+                        Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
+                    }
                 }
             case let .ready(models):
                 Label(S.ollamaReady(String(models.count)), systemImage: "checkmark.circle.fill").foregroundStyle(Color.lumi)
@@ -1847,7 +1944,7 @@ struct ConnectionFormView: View {
     /// Lumi's own models: pick a size, then download and set it up in one press.
     @ViewBuilder private func lumiSetup(_ models: [String]) -> some View {
         let recipe = form.lumiRecipe
-        let busy = form.lumiInstall != .idle && { if case .failed = form.lumiInstall { false } else { true } }()
+        let busy = form.lumiInstall.isBusy
         Text(S.lumiOwn).fixedSize(horizontal: false, vertical: true)
         Picker("", selection: $form.lumiRecipe) {
             ForEach(LumiModels.all, id: \.self) { Text($0.title).tag($0) }
@@ -1857,6 +1954,11 @@ struct ConnectionFormView: View {
              + (recipe.memoryGB > LumiRecipe.memoryGB ? " " + S.lumiSlow : ""))
             .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         switch form.lumiInstall {
+        case let .ollamaDownloading(part):
+            ProgressView(value: part) { Text(S.ollamaDownloading(String(Int(part * 100)))) }
+                .tint(.lumi)
+        case .ollamaStarting:
+            HStack(spacing: 6) { ProgressView().controlSize(.mini); Text(S.ollamaStarting) }
         case let .downloading(part):
             ProgressView(value: part) { Text(S.lumiDownloading(recipe.title, String(Int(part * 100)))) }
                 .tint(.lumi)

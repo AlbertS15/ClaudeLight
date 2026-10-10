@@ -743,6 +743,34 @@
       "La descarga se detuvo: {0}. Pulsa el botón otra vez para seguir donde se quedó.",
       "Le téléchargement s'est arrêté : {0}. Appuyez de nouveau pour reprendre où il s'est arrêté."
     ],
+    "ollama_auto": [
+      "Lumi will first install Ollama ({0} GB), the free program that runs the model on your computer.",
+      "Сначала Lumi установит Ollama ({0} ГБ), бесплатную программу, которая запускает модель на вашем компьютере.",
+      "Lumi installiert zuerst Ollama ({0} GB), das kostenlose Programm, das das Modell auf deinem Computer ausführt.",
+      "Primero Lumi instalará Ollama ({0} GB), el programa gratuito que ejecuta el modelo en tu ordenador.",
+      "Lumi installera d'abord Ollama ({0} Go), le programme gratuit qui fait tourner le modèle sur votre ordinateur."
+    ],
+    "ollama_downloading": [
+      "Downloading Ollama… {0}%",
+      "Скачиваю Ollama… {0}%",
+      "Lade Ollama… {0} %",
+      "Descargando Ollama… {0} %",
+      "Téléchargement d'Ollama… {0} %"
+    ],
+    "ollama_starting": [
+      "Installing and starting Ollama…",
+      "Устанавливаю и запускаю Ollama…",
+      "Installiere und starte Ollama…",
+      "Instalando e iniciando Ollama…",
+      "Installation et démarrage d'Ollama…"
+    ],
+    "ollama_not_started": [
+      "Ollama didn't start",
+      "Ollama не запустилась",
+      "Ollama ist nicht gestartet",
+      "Ollama no se inició",
+      "Ollama n'a pas démarré"
+    ],
     "err_ollama_model": [
       "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}",
       "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}",
