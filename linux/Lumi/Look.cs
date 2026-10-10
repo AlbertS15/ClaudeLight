@@ -6,8 +6,8 @@ using Avalonia.Styling;
 
 namespace Lumi;
 
-/// Light or dark colours, following the desktop's theme as Avalonia sees it.
-public static class Theme
+/// Light or dark colours (not "Theme": every Avalonia control has a Theme property that would hide it), following the desktop's theme as Avalonia sees it.
+public static class Look
 {
     public static bool IsDark => Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
 

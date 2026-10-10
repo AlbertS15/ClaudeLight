@@ -59,7 +59,7 @@ public sealed record Shortcut(uint Modifiers, uint Key)
             caps.Add(Key switch
             {
                 0x20 => S.KeySpace,
-                Grave => Theme.HotkeyKey,
+                Grave => Look.HotkeyKey,
                 >= 0xFFBE => "F" + (Key - 0xFFBE + 1),
                 _ => ((char)Key).ToString().ToUpperInvariant(),
             });

@@ -58,7 +58,7 @@ public sealed class WelcomeWindow : Window
 
     private void Build()
     {
-        Background = Theme.Background;
+        Background = Look.Background;
         var stack = new StackPanel { Margin = new Thickness(24) };
 
         var mascot = new MascotView { Width = 84, Height = 72, Margin = new Thickness(0, 10, 0, 0), HorizontalAlignment = HorizontalAlignment.Center };
@@ -66,11 +66,11 @@ public sealed class WelcomeWindow : Window
         mascot.PointerExited += (_, _) => mascot.IsWalking = false;
         stack.Children.Add(mascot);
 
-        var title = Theme.Label("Lumi", 26, null, FontWeight.Bold);
+        var title = Look.Label("Lumi", 26, null, FontWeight.Bold);
         title.HorizontalAlignment = HorizontalAlignment.Center;
         title.Margin = new Thickness(0, 14, 0, 0);
         stack.Children.Add(title);
-        var subtitle = Theme.Label(S.WelcomeSubtitle, 13, Theme.Secondary);
+        var subtitle = Look.Label(S.WelcomeSubtitle, 13, Look.Secondary);
         subtitle.HorizontalAlignment = HorizontalAlignment.Center;
         subtitle.Margin = new Thickness(0, 4, 0, 0);
         stack.Children.Add(subtitle);
@@ -108,7 +108,7 @@ public sealed class WelcomeWindow : Window
         stack.Children.Add(new Border
         {
             Child = card,
-            Background = Theme.Card,
+            Background = Look.Card,
             CornerRadius = new CornerRadius(12),
             Margin = new Thickness(0, 22, 0, 0),
         });
@@ -119,7 +119,7 @@ public sealed class WelcomeWindow : Window
             FontSize = 14,
             FontWeight = FontWeight.SemiBold,
             Foreground = Brushes.White,
-            Background = Theme.Accent,
+            Background = Look.Accent,
             BorderThickness = new Thickness(0),
             Padding = new Thickness(0, 10, 0, 10),
             Margin = new Thickness(0, 22, 0, 0),
@@ -135,7 +135,7 @@ public sealed class WelcomeWindow : Window
         };
         stack.Children.Add(open);
         var quit = LinkButton(S.QuitApp, () => App.Current.Quit());
-        quit.Foreground = Theme.Secondary;
+        quit.Foreground = Look.Secondary;
         quit.HorizontalAlignment = HorizontalAlignment.Center;
         quit.Margin = new Thickness(0, 12, 0, 0);
         stack.Children.Add(quit);
@@ -150,7 +150,7 @@ public sealed class WelcomeWindow : Window
         var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 20, 0, 0) };
         if (Hotkeys.Mode == HotkeyMode.Manual)
         {
-            var note = Theme.Label(S.HotkeyManual, 12, Theme.Secondary);
+            var note = Look.Label(S.HotkeyManual, 12, Look.Secondary);
             note.TextWrapping = TextWrapping.Wrap;
             note.TextAlignment = TextAlignment.Center;
             note.MaxWidth = 360;
@@ -160,7 +160,7 @@ public sealed class WelcomeWindow : Window
                 Text = Hotkeys.ToggleCommand,
                 FontFamily = new FontFamily("monospace"),
                 FontSize = 12,
-                Foreground = Theme.Text,
+                Foreground = Look.Text,
                 TextWrapping = TextWrapping.Wrap,
                 TextAlignment = TextAlignment.Center,
                 MaxWidth = 360,
@@ -177,7 +177,7 @@ public sealed class WelcomeWindow : Window
         var keys = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
         if (_recordingHotkey)
         {
-            var prompt = Theme.Label(S.HotkeyRecord, 12, Theme.Accent);
+            var prompt = Look.Label(S.HotkeyRecord, 12, Look.Accent);
             prompt.TextWrapping = TextWrapping.Wrap;
             prompt.TextAlignment = TextAlignment.Center;
             prompt.MaxWidth = 320;
@@ -186,7 +186,7 @@ public sealed class WelcomeWindow : Window
         else
         {
             foreach (var cap in Shortcut.Current.Caps) keys.Children.Add(KeyCap(cap));
-            keys.Children.Add(Theme.Label(" " + S.HotkeyHint, 13, Theme.Secondary));
+            keys.Children.Add(Look.Label(" " + S.HotkeyHint, 13, Look.Secondary));
         }
         panel.Children.Add(keys);
 
@@ -208,7 +208,7 @@ public sealed class WelcomeWindow : Window
         panel.Children.Add(actions);
         if (_hotkeyTaken)
         {
-            var taken = Theme.Label(S.HotkeyTaken, 11, Theme.Error);
+            var taken = Look.Label(S.HotkeyTaken, 11, Look.Error);
             taken.HorizontalAlignment = HorizontalAlignment.Center;
             panel.Children.Add(taken);
         }
@@ -275,7 +275,7 @@ public sealed class WelcomeWindow : Window
         };
         var left = new StackPanel { Orientation = Orientation.Horizontal };
         left.Children.Add(new Ellipse { Width = 8, Height = 8, Fill = color, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center });
-        left.Children.Add(Theme.Label(text));
+        left.Children.Add(Look.Label(text));
         Control? action = _auth switch
         {
             ClaudeAuth.State.SignedOut => LinkButton(S.SignIn, ClaudeAuth.SignIn),
@@ -295,14 +295,14 @@ public sealed class WelcomeWindow : Window
     private Control ConnectionRow(Connection c)
     {
         var texts = new StackPanel();
-        texts.Children.Add(Theme.Label(c.Name));
-        texts.Children.Add(Theme.Label(c.Model, 11, Theme.Secondary));
+        texts.Children.Add(Look.Label(c.Name));
+        texts.Children.Add(Look.Label(c.Model, 11, Look.Secondary));
         var remove = new Button
         {
             Content = "✕",
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            Foreground = Theme.Secondary,
+            Foreground = Look.Secondary,
             Cursor = new Cursor(StandardCursorType.Hand),
             Padding = new Thickness(6, 2, 6, 2),
         };
@@ -322,7 +322,7 @@ public sealed class WelcomeWindow : Window
         {
             DockPanel.SetDock(control, Dock.Right);
             dock.Children.Add(control);
-            dock.Children.Add(Theme.Label(label));
+            dock.Children.Add(Look.Label(label));
         }
         else
         {
@@ -335,7 +335,7 @@ public sealed class WelcomeWindow : Window
     {
         var panel = new StackPanel();
         panel.Children.Add(content);
-        if (!last) panel.Children.Add(new Border { Height = 1, Background = Theme.Border, Margin = new Thickness(14, 0, 0, 0) });
+        if (!last) panel.Children.Add(new Border { Height = 1, Background = Look.Border, Margin = new Thickness(14, 0, 0, 0) });
         return panel;
     }
 
@@ -346,7 +346,7 @@ public sealed class WelcomeWindow : Window
             Content = Settings.Shared.ChoiceTitle + "  ▾",
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            Foreground = Theme.Text,
+            Foreground = Look.Text,
             Cursor = new Cursor(StandardCursorType.Hand),
         };
         button.Click += (_, _) =>
@@ -388,7 +388,7 @@ public sealed class WelcomeWindow : Window
             Content = text,
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            Foreground = Theme.Accent,
+            Foreground = Look.Accent,
             Cursor = new Cursor(StandardCursorType.Hand),
             HorizontalAlignment = HorizontalAlignment.Left,
             Padding = new Thickness(0),
@@ -399,12 +399,12 @@ public sealed class WelcomeWindow : Window
 
     private static Control KeyCap(string label) => new Border
     {
-        Child = Theme.Label(label, 13, null, FontWeight.Medium),
+        Child = Look.Label(label, 13, null, FontWeight.Medium),
         Padding = new Thickness(8, 2, 8, 2),
         Margin = new Thickness(0, 0, 6, 0),
         CornerRadius = new CornerRadius(6),
-        Background = Theme.Card,
-        BorderBrush = Theme.Border,
+        Background = Look.Card,
+        BorderBrush = Look.Border,
         BorderThickness = new Thickness(1),
     };
 }
@@ -442,16 +442,16 @@ public sealed class ConnectionDialog : Window
         SizeToContent = SizeToContent.Height;
         CanResize = false;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
-        Background = Theme.Background;
+        Background = Look.Background;
 
         _preset.ItemsSource = ServicePreset.All;
         _preset.HorizontalAlignment = HorizontalAlignment.Stretch;
-        _modelHint = Theme.Label("", 11, Theme.Secondary);
-        _keyHint = Theme.Label("", 11, Theme.Secondary);
+        _modelHint = Look.Label("", 11, Look.Secondary);
+        _keyHint = Look.Label("", 11, Look.Secondary);
 
         var stack = new StackPanel { Margin = new Thickness(22) };
-        stack.Children.Add(Theme.Label(S.FormTitle, 17, null, FontWeight.SemiBold));
-        var sub = Theme.Label(S.FormSubtitle, 12, Theme.Secondary);
+        stack.Children.Add(Look.Label(S.FormTitle, 17, null, FontWeight.SemiBold));
+        var sub = Look.Label(S.FormSubtitle, 12, Look.Secondary);
         sub.TextWrapping = TextWrapping.Wrap;
         sub.Margin = new Thickness(0, 4, 0, 10);
         stack.Children.Add(sub);
@@ -482,7 +482,7 @@ public sealed class ConnectionDialog : Window
     private static Control Field(string label, Control control, TextBlock? hint = null)
     {
         var panel = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
-        panel.Children.Add(Theme.Label(label, 12, Theme.Secondary));
+        panel.Children.Add(Look.Label(label, 12, Look.Secondary));
         control.Margin = new Thickness(0, 2, 0, 0);
         panel.Children.Add(control);
         if (hint != null) panel.Children.Add(hint);
@@ -507,7 +507,7 @@ public sealed class ConnectionDialog : Window
 
     private static TextBlock Note(string s, IBrush? color = null)
     {
-        var label = Theme.Label(s, 12, color ?? Theme.Text);
+        var label = Look.Label(s, 12, color ?? Look.Text);
         label.TextWrapping = TextWrapping.Wrap;
         label.TextTrimming = TextTrimming.None;
         label.Margin = new Thickness(0, 2, 0, 2);
@@ -518,13 +518,13 @@ public sealed class ConnectionDialog : Window
     private async void CheckOllama()
     {
         _ollamaHelp.Children.Clear();
-        _ollamaHelp.Children.Add(Theme.Label("Ollama…", 12, Theme.Secondary));
+        _ollamaHelp.Children.Add(Look.Label("Ollama…", 12, Look.Secondary));
         var models = await Ollama.ModelsAsync();
         if (_preset.SelectedItem is not ServicePreset { Key: "ollama" }) return;
         _ollamaHelp.Children.Clear();
         _ollamaMissing = models == null;
         _models = models ?? new();
-        _ollamaHelp.Children.Add(models == null ? Note(S.OllamaMissing) : Note("✓ " + S.OllamaReady(models.Count.ToString()), Theme.Accent));
+        _ollamaHelp.Children.Add(models == null ? Note(S.OllamaMissing) : Note("✓ " + S.OllamaReady(models.Count.ToString()), Look.Accent));
         _ollamaHelp.Children.Add(_lumiPanel);
         RenderLumi();
         if (models == null)
@@ -542,7 +542,7 @@ public sealed class ConnectionDialog : Window
         if (models.Count == 0) return;
         if ((_model.Text ?? "").Trim().Length == 0) _model.Text = models[0];
         // The exact installed names, so the model field can't hold a name Ollama doesn't have.
-        _ollamaHelp.Children.Add(Note(S.OllamaPick, Theme.Secondary));
+        _ollamaHelp.Children.Add(Note(S.OllamaPick, Look.Secondary));
         var list = new WrapPanel { Margin = new Thickness(0, 4, 0, 0) };
         foreach (var m in models)
         {
@@ -575,7 +575,7 @@ public sealed class ConnectionDialog : Window
         _lumiPanel.Children.Add(sizes);
         var fit = S.LumiFit(_recipe.Title, _recipe.MemoryGB.ToString(), Ollama.MemoryGB.ToString());
         if (_recipe.MemoryGB > Ollama.MemoryGB) fit += " " + S.LumiSlow;
-        _lumiPanel.Children.Add(Note(fit, Theme.Secondary));
+        _lumiPanel.Children.Add(Note(fit, Look.Secondary));
 
         if (busy)
         {
@@ -586,11 +586,11 @@ public sealed class ConnectionDialog : Window
                 : _building ? S.LumiBuilding(_recipe.Title)
                 : S.LumiDownloading(_recipe.Title, ((int)(part * 100)).ToString());
             _lumiPanel.Children.Add(Note(label));
-            _lumiPanel.Children.Add(new ProgressBar { Height = 6, Minimum = 0, Maximum = 1, Value = part, IsIndeterminate = waiting, Foreground = Theme.Accent, Margin = new Thickness(0, 2, 0, 0) });
+            _lumiPanel.Children.Add(new ProgressBar { Height = 6, Minimum = 0, Maximum = 1, Value = part, IsIndeterminate = waiting, Foreground = Look.Accent, Margin = new Thickness(0, 2, 0, 0) });
             return;
         }
-        if (_ollamaMissing && _installError == null) _lumiPanel.Children.Add(Note(S.OllamaAuto(OllamaSetup.SizeGB), Theme.Secondary));
-        if (_installError != null) _lumiPanel.Children.Add(Note(S.LumiFailed(_installError), Theme.Error));
+        if (_ollamaMissing && _installError == null) _lumiPanel.Children.Add(Note(S.OllamaAuto(OllamaSetup.SizeGB), Look.Secondary));
+        if (_installError != null) _lumiPanel.Children.Add(Note(S.LumiFailed(_installError), Look.Error));
         if (Ollama.IsInstalled(_recipe, _models))
         {
             var use = new Button { Content = S.LumiUse(_recipe.Title), Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 4, 0, 0) };
@@ -600,7 +600,7 @@ public sealed class ConnectionDialog : Window
         else
         {
             var size = _recipe.SizeGB.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture);
-            var install = new Button { Content = S.LumiInstall(_recipe.Title, size), Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 4, 0, 0), Foreground = Brushes.White, Background = Theme.Accent };
+            var install = new Button { Content = S.LumiInstall(_recipe.Title, size), Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 4, 0, 0), Foreground = Brushes.White, Background = Look.Accent };
             install.Click += (_, _) => InstallLumi();
             _lumiPanel.Children.Add(install);
         }

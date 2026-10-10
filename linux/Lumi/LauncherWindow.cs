@@ -97,12 +97,12 @@ public sealed class LauncherWindow : Window
             Padding = new Thickness(8),
         };
 
-        _asked = Theme.Label("", 13, null, FontWeight.SemiBold);
+        _asked = Look.Label("", 13, null, FontWeight.SemiBold);
         _asked.TextWrapping = TextWrapping.Wrap;
         _answer.TextWrapping = TextWrapping.Wrap;
         _answer.FontSize = 15;
         _answer.Margin = new Thickness(0, 8, 0, 0);
-        _error = Theme.Label("", 13, Theme.Error);
+        _error = Look.Label("", 13, Look.Error);
         _error.TextWrapping = TextWrapping.Wrap;
         _answerPanel = new StackPanel { Margin = new Thickness(18, 14, 18, 10) };
         _answerPanel.Children.Add(_asked);
@@ -115,7 +115,7 @@ public sealed class LauncherWindow : Window
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             IsVisible = false,
         };
-        _footer = Theme.Label("", 11);
+        _footer = Look.Label("", 11);
         _footer.Margin = new Thickness(18, 0, 18, 10);
         _footer.IsVisible = false;
 
@@ -148,18 +148,18 @@ public sealed class LauncherWindow : Window
     /// Re-applies colours and texts: theme, language and model may have changed.
     private void Refresh()
     {
-        _frame.Background = Theme.Background;
-        _frame.BorderBrush = Theme.Border;
-        _divider.Background = Theme.Border;
-        _input.Foreground = Theme.Text;
-        _input.CaretBrush = Theme.Text;
-        _answer.Foreground = Theme.Text;
-        _asked.Foreground = Theme.Secondary;
-        _footer.Foreground = Theme.Secondary;
+        _frame.Background = Look.Background;
+        _frame.BorderBrush = Look.Border;
+        _divider.Background = Look.Border;
+        _input.Foreground = Look.Text;
+        _input.CaretBrush = Look.Text;
+        _answer.Foreground = Look.Text;
+        _asked.Foreground = Look.Secondary;
+        _footer.Foreground = Look.Secondary;
         _input.Watermark = _hasAnswer ? S.FollowupPlaceholder : S.SearchPlaceholder;
         _modelButton.Content = Settings.Shared.ChoiceTitle;
-        _modelButton.Background = Theme.Card;
-        _modelButton.Foreground = Theme.Text;
+        _modelButton.Background = Look.Card;
+        _modelButton.Foreground = Look.Text;
         _footer.Text = _isAnswering ? S.HintStop : S.HintDone("Ctrl+C");
         RenderResults();
     }
@@ -274,23 +274,23 @@ public sealed class LauncherWindow : Window
             var row = new DockPanel { Margin = new Thickness(10, 6, 10, 6) };
             Control icon;
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            var fg = selected ? Brushes.White : Theme.Text;
-            var sub = selected ? Theme.Brush("#DDFFFFFF") : Theme.Secondary;
+            var fg = selected ? Brushes.White : Look.Text;
+            var sub = selected ? Look.Brush("#DDFFFFFF") : Look.Secondary;
             if (i == 0)
             {
-                icon = new MascotView(selected ? Brushes.White : null, selected ? Theme.Selection : null) { Width = 24, Height = 22 };
-                texts.Children.Add(Theme.Label(S.AskRow(Settings.Shared.ChoiceTitle), 14, fg, FontWeight.SemiBold));
-                texts.Children.Add(Theme.Label(_input.Text ?? "", 12, sub));
-                var hint = Theme.Label("Ctrl+↩", 12, sub);
+                icon = new MascotView(selected ? Brushes.White : null, selected ? Look.Selection : null) { Width = 24, Height = 22 };
+                texts.Children.Add(Look.Label(S.AskRow(Settings.Shared.ChoiceTitle), 14, fg, FontWeight.SemiBold));
+                texts.Children.Add(Look.Label(_input.Text ?? "", 12, sub));
+                var hint = Look.Label("Ctrl+↩", 12, sub);
                 DockPanel.SetDock(hint, Dock.Right);
                 row.Children.Add(hint);
             }
             else if (IsChatGptRow(i))
             {
-                icon = Theme.Label("💬", 18, fg);
-                texts.Children.Add(Theme.Label(S.AskChatgpt, 14, fg, FontWeight.SemiBold));
-                texts.Children.Add(Theme.Label(S.ChatgptNote, 12, sub));
-                var hint = Theme.Label("Ctrl+Shift+↩", 12, sub);
+                icon = Look.Label("💬", 18, fg);
+                texts.Children.Add(Look.Label(S.AskChatgpt, 14, fg, FontWeight.SemiBold));
+                texts.Children.Add(Look.Label(S.ChatgptNote, 12, sub));
+                var hint = Look.Label("Ctrl+Shift+↩", 12, sub);
                 DockPanel.SetDock(hint, Dock.Right);
                 row.Children.Add(hint);
             }
@@ -298,8 +298,8 @@ public sealed class LauncherWindow : Window
             {
                 var hit = _hits[i - FirstHit];
                 icon = Initial(hit);
-                texts.Children.Add(Theme.Label(hit.Name, 14, fg, FontWeight.Medium));
-                texts.Children.Add(Theme.Label(hit.Subtitle, 11, sub));
+                texts.Children.Add(Look.Label(hit.Name, 14, fg, FontWeight.Medium));
+                texts.Children.Add(Look.Label(hit.Subtitle, 11, sub));
             }
             icon.Margin = new Thickness(0, 0, 10, 0);
             DockPanel.SetDock(icon, Dock.Left);
@@ -310,7 +310,7 @@ public sealed class LauncherWindow : Window
             {
                 Child = row,
                 CornerRadius = new CornerRadius(8),
-                Background = selected ? Theme.Selection : Brushes.Transparent,
+                Background = selected ? Look.Selection : Brushes.Transparent,
                 Cursor = new Cursor(StandardCursorType.Hand),
             };
             item.PointerReleased += (_, _) =>
@@ -331,13 +331,13 @@ public sealed class LauncherWindow : Window
             Width = 28,
             Height = 28,
             CornerRadius = new CornerRadius(7),
-            Background = hit.IsApp ? Theme.Accent : Theme.Card,
+            Background = hit.IsApp ? Look.Accent : Look.Card,
             Child = new TextBlock
             {
                 Text = letter,
                 FontSize = 14,
                 FontWeight = FontWeight.Bold,
-                Foreground = hit.IsApp ? Brushes.White : Theme.Text,
+                Foreground = hit.IsApp ? Brushes.White : Look.Text,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
             },
