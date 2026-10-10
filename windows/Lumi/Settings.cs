@@ -1,0 +1,370 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Win32;
+
+namespace Lumi;
+
+/// The Claude models the picker offers; Auto ("") leaves the choice to Claude Code's own default.
+public sealed record ClaudeModel(string Id)
+{
+    public static readonly ClaudeModel[] All = { new(""), new("haiku"), new("sonnet"), new("opus"), new("fable") };
+
+    public string Title => Id switch
+    {
+        "" => S.ModelAuto,
+        _ => char.ToUpperInvariant(Id[0]) + Id.Substring(1),
+    };
+
+    public string Note => Id switch
+    {
+        "haiku" => S.NoteHaiku,
+        "sonnet" => S.NoteSonnet,
+        "opus" => S.NoteOpus,
+        "fable" => S.NoteFable,
+        _ => S.NoteAuto,
+    };
+}
+
+/// Gemini models through the person's own Google login in Gemini CLI; "" leaves the choice to the CLI.
+public sealed record GeminiModel(string Id, string Title)
+{
+    public static readonly GeminiModel[] All =
+    {
+        new("", "Gemini"),
+        new("gemini-3.1-pro-preview", "Gemini 3.1 Pro"),
+        new("gemini-3.8-flash", "Gemini 3.8 Flash"),
+        new("gemini-3.1-flash-lite", "Gemini 3.1 Flash-Lite"),
+    };
+
+    public string Note => Id switch
+    {
+        "gemini-3.1-pro-preview" => S.NoteOpus,
+        "gemini-3.8-flash" => S.NoteSonnet,
+        "gemini-3.1-flash-lite" => S.NoteHaiku,
+        _ => S.NoteGeminiAuto,
+    };
+}
+
+/// A model on any OpenAI-compatible service. On Windows the key is stored encrypted for this user (DPAPI); on Linux
+/// it sits in the settings file, which only its owner can read.
+public sealed class Connection
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = "";
+    public string BaseUrl { get; set; } = "";
+    public string Model { get; set; } = "";
+    public string ProtectedKey { get; set; } = "";
+
+    private const string PlainPrefix = "plain:";
+
+    [JsonIgnore]
+    public string? Key
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(ProtectedKey)) return null;
+            if (!OperatingSystem.IsWindows()) return ProtectedKey.StartsWith(PlainPrefix) ? ProtectedKey[PlainPrefix.Length..] : null;
+            try
+            {
+                var bytes = ProtectedData.Unprotect(Convert.FromBase64String(ProtectedKey), null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(bytes);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        set
+        {
+            ProtectedKey = string.IsNullOrEmpty(value) ? ""
+                : !OperatingSystem.IsWindows() ? PlainPrefix + value
+                : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
+        }
+    }
+}
+
+/// Ready-made addresses for the add-connection form.
+public sealed record ServicePreset(string Key, string BaseUrl, string Example, bool NeedsKey)
+{
+    public static readonly ServicePreset[] All =
+    {
+        new("OpenRouter", "https://openrouter.ai/api/v1", "openai/gpt-4o", true),
+        new("OpenAI", "https://api.openai.com/v1", "gpt-4o", true),
+        new("DeepSeek", "https://api.deepseek.com", "deepseek-flash", true),
+        new("Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", true),
+        new("Mistral", "https://api.mistral.ai/v1", "mistral-large-latest", true),
+        new("YandexGPT", "https://ai.api.cloud.yandex.net/v1", "gpt://b1g…/yandexgpt", true),
+        new("GigaChat", "https://api.giga.chat/v1", "GigaChat-2", true),
+        new("ollama", "http://127.0.0.1:11434/v1", "llama3.2", false),
+        new("lmstudio", "http://localhost:1234/v1", "", false),
+        new("other", "", "", true),
+    };
+
+    public string Title => Key switch
+    {
+        "ollama" => S.PresetOllama,
+        "lmstudio" => S.PresetLmstudio,
+        "other" => S.PresetOther,
+        _ => Key,
+    };
+
+    public string ModelHint => Key switch
+    {
+        "lmstudio" => S.HintLoadedModel,
+        "other" => S.HintModelName,
+        _ => S.HintExample(Example),
+    };
+
+    public override string ToString() => Title;
+}
+
+/// Choices kept across launches in %APPDATA%\Lumi\settings.json (~/.config/Lumi/settings.json on Linux).
+public sealed class Settings
+{
+    public static Settings Shared { get; } = Load();
+
+    /// "claude:<id>" or "custom:<guid>".
+    public string Choice { get; set; } = "claude:";
+    public List<Connection> Connections { get; set; } = new();
+    public bool ShowWelcomeOnLaunch { get; set; } = true;
+    /// Whether results offer "Ask in ChatGPT" (opens chatgpt.com on the person's own login).
+    public bool ShowChatGpt { get; set; } = true;
+    /// Interface language code, "" for the system's.
+    public string Language { get; set; } = "";
+    /// The bar's shortcut as RegisterHotKey modifiers and virtual key; key 0 means the standard Alt + the key left of 1.
+    public uint HotkeyModifiers { get; set; }
+    public uint HotkeyKey { get; set; }
+
+    public event Action? Changed;
+
+    private static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Lumi");
+    private static string FilePath => Path.Combine(Folder, "settings.json");
+
+    private static Settings Load()
+    {
+        // Lumi used to be called ClaudeLight: bring its settings (and their encrypted keys) along once.
+        var oldFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ClaudeLight", "settings.json");
+        try
+        {
+            if (!File.Exists(FilePath) && File.Exists(oldFile))
+            {
+                Directory.CreateDirectory(Folder);
+                File.Copy(oldFile, FilePath);
+            }
+        }
+        catch
+        {
+        }
+        try
+        {
+            if (File.Exists(FilePath))
+            {
+                var s = JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath));
+                if (s != null)
+                {
+                    if (s.Choice.StartsWith("custom:") && s.Connection == null) s.Choice = "claude:";
+                    return s;
+                }
+            }
+        }
+        catch
+        {
+            // A broken file starts over with defaults.
+        }
+        return new Settings();
+    }
+
+    public void Save()
+    {
+        Directory.CreateDirectory(Folder);
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        // On Linux the file holds the API keys, so only its owner may read it.
+        if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(FilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        Changed?.Invoke();
+    }
+
+    [JsonIgnore]
+    public Connection? Connection =>
+        Choice.StartsWith("custom:") && Guid.TryParse(Choice.Substring(7), out var id)
+            ? Connections.FirstOrDefault(c => c.Id == id)
+            : null;
+
+    [JsonIgnore]
+    public ClaudeModel ClaudeModel =>
+        System.Array.Find(ClaudeModel.All, m => "claude:" + m.Id == Choice) ?? ClaudeModel.All[0];
+
+    [JsonIgnore]
+    public string ChoiceTitle => Connection?.Name ?? GeminiModel?.Title ?? (IsCodex ? S.CodexTitle : ClaudeModel.Title);
+
+    /// "codex:" = ChatGPT through Codex CLI on the person's own login.
+    [JsonIgnore]
+    public bool IsCodex => Choice == "codex:";
+
+    /// The Gemini model when the choice is "gemini:<id>", else null.
+    [JsonIgnore]
+    public GeminiModel? GeminiModel =>
+        Choice.StartsWith("gemini:") ? System.Array.Find(GeminiModel.All, m => "gemini:" + m.Id == Choice) ?? GeminiModel.All[0] : null;
+
+    public void Select(string choice)
+    {
+        Choice = choice;
+        Save();
+    }
+
+    public void Add(Connection c)
+    {
+        Connections.Add(c);
+        Choice = "custom:" + c.Id;
+        Save();
+    }
+
+    public void Remove(Connection c)
+    {
+        Connections.RemoveAll(x => x.Id == c.Id);
+        if (Choice == "custom:" + c.Id) Choice = "claude:";
+        Save();
+    }
+
+    /// Moves a ClaudeLight start-with-Windows entry over to Lumi, once.
+    public static void MigrateLaunchAtLogin()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        using var key = Registry.CurrentUser.OpenSubKey(RunKey);
+        if (key?.GetValue("ClaudeLight") != null) LaunchesAtLogin = true;
+    }
+
+    // Start with Windows: a value under the current user's Run key.
+    private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+
+    // Start with Linux: a desktop entry in ~/.config/autostart.
+    private static string AutostartFile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "autostart", "lumi.desktop");
+
+    /// The file to start: the AppImage itself when running from one, else this executable.
+    public static string LaunchPath => Environment.GetEnvironmentVariable("APPIMAGE") ?? Environment.ProcessPath ?? "lumi";
+
+    public static bool LaunchesAtLogin
+    {
+        get
+        {
+            if (!OperatingSystem.IsWindows()) return File.Exists(AutostartFile);
+            using var key = Registry.CurrentUser.OpenSubKey(RunKey);
+            return key?.GetValue("Lumi") != null;
+        }
+        set
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                if (value)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(AutostartFile)!);
+                    File.WriteAllText(AutostartFile, $"[Desktop Entry]\nType=Application\nName=Lumi\nExec=\"{LaunchPath}\" --startup\nX-GNOME-Autostart-enabled=true\n");
+                }
+                else
+                {
+                    File.Delete(AutostartFile);
+                }
+                return;
+            }
+            using var key = Registry.CurrentUser.CreateSubKey(RunKey);
+            if (value) key.SetValue("Lumi", $"\"{Environment.ProcessPath}\" --startup");
+            else key.DeleteValue("Lumi", false);
+            key.DeleteValue("ClaudeLight", false);
+        }
+    }
+}
+
+/// Ollama's own API on this computer.
+public static class Ollama
+{
+    /// Whether an address points at Ollama on this computer.
+    public static bool IsOllama(string address) => address.Contains("localhost:11434") || address.Contains("127.0.0.1:11434");
+
+    /// The installed models, or null when Ollama isn't running. 127.0.0.1 rather than localhost: Ollama listens on IPv4
+    /// only, and Windows spends about two seconds on a refused IPv6 connection before it tries IPv4.
+    public static async System.Threading.Tasks.Task<List<string>?> ModelsAsync()
+    {
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            using var json = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync("http://127.0.0.1:11434/api/tags"));
+            var models = new List<string>();
+            if (json.RootElement.TryGetProperty("models", out var list))
+                foreach (var m in list.EnumerateArray())
+                    if (m.TryGetProperty("name", out var name) && name.GetString() is { } n) models.Add(n);
+            return models;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static System.Net.Http.StringContent Json(System.Text.Json.Nodes.JsonObject body) =>
+        new(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
+
+    /// Downloads a model, reporting progress from 0 to 1. Ollama keeps the finished parts, so a retry resumes.
+    public static async System.Threading.Tasks.Task PullAsync(string model, Action<double> progress, System.Threading.CancellationToken cancel)
+    {
+        using var http = new System.Net.Http.HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, "http://127.0.0.1:11434/api/pull")
+        {
+            Content = Json(new() { ["model"] = model, ["stream"] = true }),
+        };
+        using var response = await http.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancel);
+        using var reader = new System.IO.StreamReader(await response.Content.ReadAsStreamAsync(cancel));
+        var layers = new Dictionary<string, (double Total, double Done)>();
+        while (true)
+        {
+            // A minute without a word means the download stalled: fail, and the next press resumes it.
+            using var stall = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            stall.CancelAfter(TimeSpan.FromSeconds(60));
+            var line = await reader.ReadLineAsync(stall.Token);
+            if (line == null) throw new Exception("Ollama");
+            if (line.Trim().Length == 0) continue;
+            using var json = System.Text.Json.JsonDocument.Parse(line);
+            var root = json.RootElement;
+            if (root.TryGetProperty("error", out var error)) throw new Exception(error.GetString());
+            if (root.TryGetProperty("digest", out var digest) && root.TryGetProperty("total", out var total) && total.GetDouble() > 0)
+            {
+                layers[digest.GetString() ?? ""] = (total.GetDouble(), root.TryGetProperty("completed", out var done) ? done.GetDouble() : 0);
+                progress(layers.Values.Sum(l => l.Done) / layers.Values.Sum(l => l.Total));
+            }
+            if (root.TryGetProperty("status", out var status) && status.GetString() == "success") return;
+        }
+    }
+
+    /// Builds one of Lumi's models on top of its downloaded base: the prompt, settings and sample dialogs.
+    public static async System.Threading.Tasks.Task CreateAsync(LumiRecipe recipe, System.Threading.CancellationToken cancel)
+    {
+        var messages = new System.Text.Json.Nodes.JsonArray();
+        foreach (var (question, answer) in LumiModels.Examples)
+        {
+            messages.Add(new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["content"] = question });
+            messages.Add(new System.Text.Json.Nodes.JsonObject { ["role"] = "assistant", ["content"] = answer });
+        }
+        using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        using var response = await http.PostAsync("http://127.0.0.1:11434/api/create", Json(new()
+        {
+            ["model"] = recipe.Name, ["from"] = recipe.Base, ["system"] = LumiModels.System, ["messages"] = messages,
+            ["parameters"] = new System.Text.Json.Nodes.JsonObject { ["temperature"] = recipe.Temperature, ["num_ctx"] = 8192 },
+            ["stream"] = false,
+        }), cancel);
+        using var json = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancel));
+        if (json.RootElement.TryGetProperty("error", out var error)) throw new Exception(error.GetString());
+    }
+
+    /// This computer's memory, in whole gigabytes.
+    public static int MemoryGB => (int)Math.Round(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1073741824.0);
+
+    /// The largest of Lumi's models that fits this computer.
+    public static LumiRecipe Recommended => LumiModels.All.LastOrDefault(r => r.MemoryGB <= MemoryGB) ?? LumiModels.All[0];
+
+    public static bool IsInstalled(LumiRecipe recipe, List<string> models) =>
+        models.Contains(recipe.Name) || models.Contains(recipe.Name + ":latest");
+}

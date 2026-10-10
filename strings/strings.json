@@ -1,0 +1,922 @@
+{
+  "languages": [
+    [
+      "en",
+      "English"
+    ],
+    [
+      "ru",
+      "Русский"
+    ],
+    [
+      "de",
+      "Deutsch"
+    ],
+    [
+      "es",
+      "Español"
+    ],
+    [
+      "fr",
+      "Français"
+    ]
+  ],
+  "strings": {
+    "search_placeholder": [
+      "Search or ask a question",
+      "Поиск или вопрос",
+      "Suchen oder fragen",
+      "Buscar o preguntar",
+      "Rechercher ou poser une question"
+    ],
+    "followup_placeholder": [
+      "Ask a follow-up…",
+      "Задайте уточняющий вопрос…",
+      "Rückfrage stellen…",
+      "Haz una pregunta de seguimiento…",
+      "Posez une question de suivi…"
+    ],
+    "ask_row": [
+      "Ask {0}",
+      "Спросить {0}",
+      "{0} fragen",
+      "Preguntar a {0}",
+      "Demander à {0}"
+    ],
+    "application": [
+      "Application",
+      "Программа",
+      "Programm",
+      "Aplicación",
+      "Application"
+    ],
+    "thinking": [
+      "Thinking…",
+      "Думает…",
+      "Denkt nach…",
+      "Pensando…",
+      "Réflexion…"
+    ],
+    "hint_stop": [
+      "esc — stop",
+      "esc — остановить",
+      "esc — anhalten",
+      "esc — detener",
+      "esc — arrêter"
+    ],
+    "hint_done": [
+      "↩ follow up · retry   {0} copy answer   esc back",
+      "↩ уточнить · повторить   {0} копировать ответ   esc назад",
+      "↩ nachfragen · wiederholen   {0} Antwort kopieren   esc zurück",
+      "↩ seguir · reintentar   {0} copiar respuesta   esc atrás",
+      "↩ relancer · réessayer   {0} copier la réponse   esc retour"
+    ],
+    "welcome_subtitle": [
+      "Search your computer and ask AI in one bar",
+      "Поиск по компьютеру и ответы ИИ в одной строке",
+      "Computer durchsuchen und KI fragen in einer Leiste",
+      "Busca en tu ordenador y pregunta a la IA en una barra",
+      "Cherchez sur votre ordinateur et interrogez l'IA dans une barre"
+    ],
+    "hotkey_hint": [
+      "— open the bar from anywhere",
+      "— открыть строку из любого места",
+      "— Leiste überall öffnen",
+      "— abrir la barra desde cualquier lugar",
+      "— ouvrir la barre depuis n'importe où"
+    ],
+    "hotkey_change": [
+      "Change",
+      "Изменить",
+      "Ändern",
+      "Cambiar",
+      "Modifier"
+    ],
+    "hotkey_reset": [
+      "Reset",
+      "Сбросить",
+      "Zurücksetzen",
+      "Restablecer",
+      "Réinitialiser"
+    ],
+    "hotkey_record": [
+      "Press the new shortcut, with Ctrl, Alt or another modifier. Esc to cancel.",
+      "Нажмите новое сочетание, с Ctrl, Alt или другой клавишей-модификатором. Esc — отмена.",
+      "Drücke das neue Tastenkürzel, mit Strg, Alt oder einer anderen Sondertaste. Esc bricht ab.",
+      "Pulsa el nuevo atajo, con Ctrl, Alt u otra tecla modificadora. Esc para cancelar.",
+      "Appuyez sur le nouveau raccourci, avec Ctrl, Alt ou une autre touche de modification. Échap pour annuler."
+    ],
+    "hotkey_taken": [
+      "That shortcut is taken by another app. Try another one.",
+      "Это сочетание уже занято другой программой. Попробуйте другое.",
+      "Dieses Kürzel belegt schon ein anderes Programm. Versuch ein anderes.",
+      "Ese atajo ya lo usa otro programa. Prueba otro.",
+      "Ce raccourci est déjà pris par une autre application. Essayez-en un autre."
+    ],
+    "key_space": [
+      "Space",
+      "Пробел",
+      "Leertaste",
+      "Espacio",
+      "Espace"
+    ],
+    "hotkey_manual": [
+      "To open Lumi with a key, add a keyboard shortcut in the system settings with this command:",
+      "Чтобы открывать Lumi клавишей, добавьте сочетание клавиш в настройках системы с этой командой:",
+      "Um Lumi per Taste zu öffnen, lege in den Systemeinstellungen ein Tastenkürzel mit diesem Befehl an:",
+      "Para abrir Lumi con una tecla, añade un atajo de teclado en los ajustes del sistema con este comando:",
+      "Pour ouvrir Lumi avec une touche, ajoutez un raccourci clavier dans les paramètres du système avec cette commande :"
+    ],
+    "copy": [
+      "Copy",
+      "Копировать",
+      "Kopieren",
+      "Copiar",
+      "Copier"
+    ],
+    "auth_checking": [
+      "Checking Claude…",
+      "Проверяю Claude…",
+      "Claude wird geprüft…",
+      "Comprobando Claude…",
+      "Vérification de Claude…"
+    ],
+    "auth_ok": [
+      "Claude connected",
+      "Claude подключён",
+      "Claude verbunden",
+      "Claude conectado",
+      "Claude connecté"
+    ],
+    "auth_signed_out": [
+      "Claude: sign-in needed",
+      "Claude: нужен вход",
+      "Claude: Anmeldung nötig",
+      "Claude: inicia sesión",
+      "Claude : connexion requise"
+    ],
+    "auth_missing": [
+      "Claude Code is not installed",
+      "Claude Code не установлен",
+      "Claude Code ist nicht installiert",
+      "Claude Code no está instalado",
+      "Claude Code n'est pas installé"
+    ],
+    "sign_in": [
+      "Sign in",
+      "Войти",
+      "Anmelden",
+      "Iniciar sesión",
+      "Se connecter"
+    ],
+    "download": [
+      "Download",
+      "Скачать",
+      "Herunterladen",
+      "Descargar",
+      "Télécharger"
+    ],
+    "model": [
+      "Model",
+      "Модель",
+      "Modell",
+      "Modelo",
+      "Modèle"
+    ],
+    "language": [
+      "Language",
+      "Язык",
+      "Sprache",
+      "Idioma",
+      "Langue"
+    ],
+    "language_system": [
+      "System",
+      "Как в системе",
+      "System",
+      "Sistema",
+      "Système"
+    ],
+    "connect_model": [
+      "Connect a model…",
+      "Подключить модель…",
+      "Modell verbinden…",
+      "Conectar un modelo…",
+      "Connecter un modèle…"
+    ],
+    "delete_connection": [
+      "Remove connection",
+      "Удалить подключение",
+      "Verbindung entfernen",
+      "Eliminar conexión",
+      "Supprimer la connexion"
+    ],
+    "launch_at_login": [
+      "Open at login",
+      "Запускать при входе в систему",
+      "Beim Anmelden öffnen",
+      "Abrir al iniciar sesión",
+      "Ouvrir à la connexion"
+    ],
+    "show_on_launch": [
+      "Show this window on launch",
+      "Показывать это окно при запуске",
+      "Dieses Fenster beim Start zeigen",
+      "Mostrar esta ventana al abrir",
+      "Afficher cette fenêtre au démarrage"
+    ],
+    "open_search": [
+      "Open search",
+      "Открыть поиск",
+      "Suche öffnen",
+      "Abrir búsqueda",
+      "Ouvrir la recherche"
+    ],
+    "menu_open_search": [
+      "Open search  ({0})",
+      "Открыть поиск  ({0})",
+      "Suche öffnen  ({0})",
+      "Abrir búsqueda  ({0})",
+      "Ouvrir la recherche  ({0})"
+    ],
+    "menu_window": [
+      "Lumi window…",
+      "Окно Lumi…",
+      "Lumi-Fenster…",
+      "Ventana de Lumi…",
+      "Fenêtre Lumi…"
+    ],
+    "menu_launch_at_login": [
+      "Open at login",
+      "Запускать при входе",
+      "Beim Anmelden öffnen",
+      "Abrir al iniciar sesión",
+      "Ouvrir à la connexion"
+    ],
+    "menu_quit": [
+      "Quit",
+      "Выйти",
+      "Beenden",
+      "Salir",
+      "Quitter"
+    ],
+    "model_auto": [
+      "Claude",
+      "Claude",
+      "Claude",
+      "Claude",
+      "Claude"
+    ],
+    "note_auto": [
+      "as in Claude Code",
+      "как в Claude Code",
+      "wie in Claude Code",
+      "como en Claude Code",
+      "comme dans Claude Code"
+    ],
+    "note_haiku": [
+      "fastest",
+      "самый быстрый",
+      "am schnellsten",
+      "el más rápido",
+      "le plus rapide"
+    ],
+    "note_sonnet": [
+      "fast and smart",
+      "быстрый и умный",
+      "schnell und klug",
+      "rápido e inteligente",
+      "rapide et intelligent"
+    ],
+    "note_opus": [
+      "smartest",
+      "самый умный",
+      "am klügsten",
+      "el más inteligente",
+      "le plus intelligent"
+    ],
+    "note_fable": [
+      "needs credits",
+      "нужны кредиты",
+      "braucht Guthaben",
+      "requiere créditos",
+      "nécessite des crédits"
+    ],
+    "connections": [
+      "Connections",
+      "Подключения",
+      "Verbindungen",
+      "Conexiones",
+      "Connexions"
+    ],
+    "form_title": [
+      "Connect a model",
+      "Подключить модель",
+      "Modell verbinden",
+      "Conectar un modelo",
+      "Connecter un modèle"
+    ],
+    "form_subtitle": [
+      "Any service with an OpenAI-compatible API: address, model and key.",
+      "Любой сервис с OpenAI-совместимым API: адрес, модель и ключ.",
+      "Jeder Dienst mit OpenAI-kompatibler API: Adresse, Modell und Schlüssel.",
+      "Cualquier servicio con API compatible con OpenAI: dirección, modelo y clave.",
+      "Tout service avec une API compatible OpenAI : adresse, modèle et clé."
+    ],
+    "service": [
+      "Service",
+      "Сервис",
+      "Dienst",
+      "Servicio",
+      "Service"
+    ],
+    "name": [
+      "Name",
+      "Название",
+      "Name",
+      "Nombre",
+      "Nom"
+    ],
+    "address": [
+      "Address",
+      "Адрес",
+      "Adresse",
+      "Dirección",
+      "Adresse"
+    ],
+    "api_key": [
+      "API key",
+      "API-ключ",
+      "API-Schlüssel",
+      "Clave API",
+      "Clé API"
+    ],
+    "key_stored": [
+      "stored securely",
+      "хранится в защищённом хранилище",
+      "wird sicher gespeichert",
+      "se guarda de forma segura",
+      "stockée de façon sécurisée"
+    ],
+    "key_not_needed": [
+      "not needed",
+      "не нужен",
+      "nicht nötig",
+      "no es necesaria",
+      "inutile"
+    ],
+    "cancel": [
+      "Cancel",
+      "Отмена",
+      "Abbrechen",
+      "Cancelar",
+      "Annuler"
+    ],
+    "connect": [
+      "Connect",
+      "Подключить",
+      "Verbinden",
+      "Conectar",
+      "Connecter"
+    ],
+    "preset_ollama": [
+      "Ollama (this computer)",
+      "Ollama (на этом компьютере)",
+      "Ollama (dieser Computer)",
+      "Ollama (este ordenador)",
+      "Ollama (cet ordinateur)"
+    ],
+    "preset_lmstudio": [
+      "LM Studio (this computer)",
+      "LM Studio (на этом компьютере)",
+      "LM Studio (dieser Computer)",
+      "LM Studio (este ordenador)",
+      "LM Studio (cet ordinateur)"
+    ],
+    "preset_other": [
+      "Other address",
+      "Другой адрес",
+      "Andere Adresse",
+      "Otra dirección",
+      "Autre adresse"
+    ],
+    "hint_example": [
+      "e.g. {0}",
+      "например, {0}",
+      "z. B. {0}",
+      "p. ej., {0}",
+      "p. ex. {0}"
+    ],
+    "hint_loaded_model": [
+      "name of the loaded model",
+      "имя загруженной модели",
+      "Name des geladenen Modells",
+      "nombre del modelo cargado",
+      "nom du modèle chargé"
+    ],
+    "hint_model_name": [
+      "model name",
+      "имя модели",
+      "Modellname",
+      "nombre del modelo",
+      "nom du modèle"
+    ],
+    "err_no_claude": [
+      "Claude Code not found. Pick another model at the top right, or install Claude Code: https://claude.com/claude-code",
+      "Claude Code не найден. Выберите другую модель справа вверху или установите Claude Code: https://claude.com/claude-code",
+      "Claude Code nicht gefunden. Wählen Sie oben rechts ein anderes Modell oder installieren Sie Claude Code: https://claude.com/claude-code",
+      "No se encontró Claude Code. Elige otro modelo arriba a la derecha o instala Claude Code: https://claude.com/claude-code",
+      "Claude Code introuvable. Choisissez un autre modèle en haut à droite ou installez Claude Code : https://claude.com/claude-code"
+    ],
+    "err_not_logged_in": [
+      "Claude is not signed in. Press “Sign in” in the Lumi window, or run `claude` and then `/login`.",
+      "Claude не залогинен. Нажмите «Войти» в окне Lumi или выполните `claude`, затем `/login`.",
+      "Claude ist nicht angemeldet. Klicken Sie im Lumi-Fenster auf „Anmelden“ oder führen Sie `claude` und dann `/login` aus.",
+      "Claude no ha iniciado sesión. Pulsa «Iniciar sesión» en la ventana de Lumi o ejecuta `claude` y luego `/login`.",
+      "Claude n'est pas connecté. Cliquez sur « Se connecter » dans la fenêtre Lumi ou lancez `claude` puis `/login`."
+    ],
+    "err_start": [
+      "Couldn't start claude: {0}",
+      "Не удалось запустить claude: {0}",
+      "claude konnte nicht starten: {0}",
+      "No se pudo iniciar claude: {0}",
+      "Impossible de lancer claude : {0}"
+    ],
+    "err_claude": [
+      "Claude returned an error.",
+      "Claude вернул ошибку.",
+      "Claude hat einen Fehler gemeldet.",
+      "Claude devolvió un error.",
+      "Claude a renvoyé une erreur."
+    ],
+    "err_bad_url": [
+      "The address of “{0}” is invalid.",
+      "Неверный адрес подключения «{0}».",
+      "Die Adresse von „{0}“ ist ungültig.",
+      "La dirección de «{0}» no es válida.",
+      "L'adresse de « {0} » est invalide."
+    ],
+    "err_key": [
+      "“{0}” rejected the key ({1}). Check the API key. {2}",
+      "«{0}» не принял ключ ({1}). Проверьте API-ключ. {2}",
+      "„{0}“ hat den Schlüssel abgelehnt ({1}). Prüfen Sie den API-Schlüssel. {2}",
+      "«{0}» rechazó la clave ({1}). Revisa la clave API. {2}",
+      "« {0} » a refusé la clé ({1}). Vérifiez la clé API. {2}"
+    ],
+    "err_404": [
+      "“{0}”: model or address not found (404). {1}",
+      "«{0}»: модель или адрес не найдены (404). {1}",
+      "„{0}“: Modell oder Adresse nicht gefunden (404). {1}",
+      "«{0}»: modelo o dirección no encontrados (404). {1}",
+      "« {0} » : modèle ou adresse introuvable (404). {1}"
+    ],
+    "err_429": [
+      "“{0}”: rate limit reached or out of funds (429). {1}",
+      "«{0}»: превышен лимит запросов или закончились средства (429). {1}",
+      "„{0}“: Ratenlimit erreicht oder kein Guthaben (429). {1}",
+      "«{0}»: límite de peticiones o sin saldo (429). {1}",
+      "« {0} » : limite atteinte ou crédit épuisé (429). {1}"
+    ],
+    "err_status": [
+      "“{0}” returned error {1}. {2}",
+      "«{0}» вернул ошибку {1}. {2}",
+      "„{0}“ meldete Fehler {1}. {2}",
+      "«{0}» devolvió el error {1}. {2}",
+      "« {0} » a renvoyé l'erreur {1}. {2}"
+    ],
+    "err_connect": [
+      "Couldn't reach “{0}”: {1}.",
+      "Не удалось связаться с «{0}»: {1}.",
+      "„{0}“ nicht erreichbar: {1}.",
+      "No se pudo conectar con «{0}»: {1}.",
+      "Impossible de joindre « {0} » : {1}."
+    ],
+    "err_local_hint": [
+      " Is the model server running on this computer?",
+      " Запущен ли сервер модели на этом компьютере?",
+      " Läuft der Modellserver auf diesem Computer?",
+      " ¿Está el servidor del modelo en marcha en este ordenador?",
+      " Le serveur du modèle tourne-t-il sur cet ordinateur ?"
+    ],
+    "login_done": [
+      "Done — you can close this window.",
+      "Готово — можно закрыть это окно.",
+      "Fertig — Sie können dieses Fenster schließen.",
+      "Listo — puedes cerrar esta ventana.",
+      "Terminé — vous pouvez fermer cette fenêtre."
+    ],
+    "ask_chatgpt": [
+      "Ask in ChatGPT",
+      "Спросить в ChatGPT",
+      "In ChatGPT fragen",
+      "Preguntar en ChatGPT",
+      "Demander dans ChatGPT"
+    ],
+    "chatgpt_note": [
+      "opens chatgpt.com with your subscription",
+      "откроется chatgpt.com с вашей подпиской",
+      "öffnet chatgpt.com mit Ihrem Abo",
+      "abre chatgpt.com con tu suscripción",
+      "ouvre chatgpt.com avec votre abonnement"
+    ],
+    "show_chatgpt": [
+      "Show “Ask in ChatGPT”",
+      "Показывать «Спросить в ChatGPT»",
+      "„In ChatGPT fragen“ zeigen",
+      "Mostrar «Preguntar en ChatGPT»",
+      "Afficher « Demander dans ChatGPT »"
+    ],
+    "err_stream": [
+      "“{0}” stopped answering: {1}",
+      "«{0}» прервал ответ: {1}",
+      "„{0}“ hat die Antwort abgebrochen: {1}",
+      "«{0}» interrumpió la respuesta: {1}",
+      "« {0} » a interrompu la réponse : {1}"
+    ],
+    "err_empty": [
+      "“{0}” sent an empty answer — the free model may be busy. Press ↩ to retry or pick another model.",
+      "«{0}» прислал пустой ответ — возможно, бесплатная модель перегружена. Нажмите ↩, чтобы повторить, или выберите другую модель.",
+      "„{0}“ hat eine leere Antwort gesendet — das kostenlose Modell ist evtl. ausgelastet. ↩ zum Wiederholen oder anderes Modell wählen.",
+      "«{0}» envió una respuesta vacía; puede que el modelo gratuito esté saturado. Pulsa ↩ para reintentar o elige otro modelo.",
+      "« {0} » a renvoyé une réponse vide — le modèle gratuit est peut-être saturé. ↩ pour réessayer ou choisissez un autre modèle."
+    ],
+    "gemini_section": [
+      "Gemini (Google subscription)",
+      "Gemini (подписка Google)",
+      "Gemini (Google-Abo)",
+      "Gemini (suscripción de Google)",
+      "Gemini (abonnement Google)"
+    ],
+    "note_gemini_auto": [
+      "as in Gemini CLI",
+      "как в Gemini CLI",
+      "wie in Gemini CLI",
+      "como en Gemini CLI",
+      "comme dans Gemini CLI"
+    ],
+    "err_no_gemini": [
+      "Gemini CLI not found. Install it: `brew install gemini-cli` (or `npm install -g @google/gemini-cli`), then run `gemini` once and sign in with Google.",
+      "Gemini CLI не найден. Установите его: `brew install gemini-cli` (или `npm install -g @google/gemini-cli`), затем один раз запустите `gemini` и войдите через Google.",
+      "Gemini CLI nicht gefunden. Installieren: `brew install gemini-cli` (oder `npm install -g @google/gemini-cli`), dann einmal `gemini` starten und mit Google anmelden.",
+      "No se encontró Gemini CLI. Instálalo: `brew install gemini-cli` (o `npm install -g @google/gemini-cli`), ejecuta `gemini` una vez e inicia sesión con Google.",
+      "Gemini CLI introuvable. Installez-le : `brew install gemini-cli` (ou `npm install -g @google/gemini-cli`), puis lancez `gemini` une fois et connectez-vous avec Google."
+    ],
+    "err_gemini_login": [
+      "Gemini CLI is not signed in. Run `gemini` in a terminal and choose “Sign in with Google”.",
+      "Gemini CLI не вошёл в аккаунт. Запустите `gemini` в терминале и выберите «Sign in with Google».",
+      "Gemini CLI ist nicht angemeldet. Starten Sie `gemini` im Terminal und wählen Sie „Sign in with Google“.",
+      "Gemini CLI no ha iniciado sesión. Ejecuta `gemini` en la terminal y elige «Sign in with Google».",
+      "Gemini CLI n'est pas connecté. Lancez `gemini` dans un terminal et choisissez « Sign in with Google »."
+    ],
+    "err_gemini": [
+      "Gemini returned an error: {0}",
+      "Gemini вернул ошибку: {0}",
+      "Gemini meldete einen Fehler: {0}",
+      "Gemini devolvió un error: {0}",
+      "Gemini a renvoyé une erreur : {0}"
+    ],
+    "err_blocked": [
+      "“{0}” refused the connection before checking the key (403: {1}). The service doesn't accept requests from your country or network — the key is probably fine. A model running on this computer (Ollama, LM Studio) works anywhere.",
+      "«{0}» отклонил соединение ещё до проверки ключа (403: {1}). Сервис не принимает запросы из вашей страны или сети — ключ, скорее всего, в порядке. Модель на этом компьютере (Ollama, LM Studio) работает везде.",
+      "„{0}“ hat die Verbindung vor der Schlüsselprüfung abgelehnt (403: {1}). Der Dienst nimmt keine Anfragen aus Ihrem Land oder Netz an — der Schlüssel ist vermutlich in Ordnung. Ein Modell auf diesem Computer (Ollama, LM Studio) funktioniert überall.",
+      "«{0}» rechazó la conexión antes de comprobar la clave (403: {1}). El servicio no acepta peticiones desde tu país o red; la clave probablemente está bien. Un modelo en este ordenador (Ollama, LM Studio) funciona en cualquier lugar.",
+      "« {0} » a refusé la connexion avant de vérifier la clé (403 : {1}). Le service n'accepte pas les requêtes de votre pays ou réseau — la clé est sans doute correcte. Un modèle sur cet ordinateur (Ollama, LM Studio) fonctionne partout."
+    ],
+    "err_cert": [
+      "“{0}”: this computer doesn't trust the service's certificate. GigaChat needs the Russian Trusted Root CA — install it following the official guide: https://www.gosuslugi.ru/crt",
+      "«{0}»: компьютер не доверяет сертификату сервиса. Для GigaChat нужен сертификат НУЦ Минцифры — установите его по официальной инструкции: https://www.gosuslugi.ru/crt",
+      "„{0}“: Dieser Computer vertraut dem Zertifikat des Dienstes nicht. GigaChat braucht das Russian Trusted Root CA — Anleitung: https://www.gosuslugi.ru/crt",
+      "«{0}»: este ordenador no confía en el certificado del servicio. GigaChat necesita el Russian Trusted Root CA; instálalo según la guía oficial: https://www.gosuslugi.ru/crt",
+      "« {0} » : cet ordinateur ne fait pas confiance au certificat du service. GigaChat nécessite le Russian Trusted Root CA — guide officiel : https://www.gosuslugi.ru/crt"
+    ],
+    "hint_gigachat_key": [
+      "authorization key from developers.sber.ru",
+      "ключ авторизации из developers.sber.ru",
+      "Autorisierungsschlüssel von developers.sber.ru",
+      "clave de autorización de developers.sber.ru",
+      "clé d'autorisation de developers.sber.ru"
+    ],
+    "codex_title": [
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)",
+      "ChatGPT (Codex)"
+    ],
+    "note_codex": [
+      "ChatGPT Plus subscription",
+      "подписка ChatGPT Plus",
+      "ChatGPT-Plus-Abo",
+      "suscripción ChatGPT Plus",
+      "abonnement ChatGPT Plus"
+    ],
+    "codex_section": [
+      "ChatGPT (subscription)",
+      "ChatGPT (подписка)",
+      "ChatGPT (Abo)",
+      "ChatGPT (suscripción)",
+      "ChatGPT (abonnement)"
+    ],
+    "err_no_codex": [
+      "Codex CLI not found. Install it: `brew install codex` (or `npm install -g @openai/codex`), then run `codex login` and sign in with ChatGPT.",
+      "Codex не найден. Установите его: `brew install codex` (или `npm install -g @openai/codex`), затем выполните `codex login` и войдите через ChatGPT.",
+      "Codex CLI nicht gefunden. Installieren: `brew install codex` (oder `npm install -g @openai/codex`), dann `codex login` ausführen und mit ChatGPT anmelden.",
+      "No se encontró Codex CLI. Instálalo: `brew install codex` (o `npm install -g @openai/codex`), luego ejecuta `codex login` e inicia sesión con ChatGPT.",
+      "Codex CLI introuvable. Installez-le : `brew install codex` (ou `npm install -g @openai/codex`), puis lancez `codex login` et connectez-vous avec ChatGPT."
+    ],
+    "err_codex_login": [
+      "Codex is not signed in. Run `codex login` in a terminal and sign in with ChatGPT (Plus or higher).",
+      "Codex не вошёл в аккаунт. Выполните `codex login` в терминале и войдите через ChatGPT (тариф Plus или выше).",
+      "Codex ist nicht angemeldet. Führen Sie `codex login` im Terminal aus und melden Sie sich mit ChatGPT an (Plus oder höher).",
+      "Codex no ha iniciado sesión. Ejecuta `codex login` en la terminal e inicia sesión con ChatGPT (Plus o superior).",
+      "Codex n'est pas connecté. Lancez `codex login` dans un terminal et connectez-vous avec ChatGPT (Plus ou plus)."
+    ],
+    "err_codex": [
+      "Codex returned an error: {0}",
+      "Codex вернул ошибку: {0}",
+      "Codex meldete einen Fehler: {0}",
+      "Codex devolvió un error: {0}",
+      "Codex a renvoyé une erreur : {0}"
+    ],
+    "quit_app": [
+      "Quit Lumi",
+      "Выйти из Lumi",
+      "Lumi beenden",
+      "Salir de Lumi",
+      "Quitter Lumi"
+    ],
+    "uninstall": [
+      "Uninstall Lumi…",
+      "Удалить Lumi…",
+      "Lumi deinstallieren…",
+      "Desinstalar Lumi…",
+      "Désinstaller Lumi…"
+    ],
+    "uninstall_title": [
+      "Uninstall Lumi?",
+      "Удалить Lumi?",
+      "Lumi deinstallieren?",
+      "¿Desinstalar Lumi?",
+      "Désinstaller Lumi ?"
+    ],
+    "uninstall_text": [
+      "The app moves to the Trash and quits; its settings, connections and saved keys are deleted, and it no longer opens at login.",
+      "Приложение переместится в Корзину и закроется, а его настройки, подключения и сохранённые ключи будут удалены. Автозапуск тоже отключится.",
+      "Die App wird in den Papierkorb gelegt und beendet; Einstellungen, Verbindungen und gespeicherte Schlüssel werden gelöscht, der Autostart wird deaktiviert.",
+      "La app se moverá a la Papelera y se cerrará; se borrarán sus ajustes, conexiones y claves guardadas, y dejará de abrirse al iniciar sesión.",
+      "L'app est placée dans la Corbeille et se ferme ; ses réglages, connexions et clés enregistrées sont supprimés, et elle ne s'ouvre plus à la connexion."
+    ],
+    "uninstall_button": [
+      "Uninstall",
+      "Удалить",
+      "Deinstallieren",
+      "Desinstalar",
+      "Désinstaller"
+    ],
+    "update_available": [
+      "Lumi {0} is available — download",
+      "Доступна Lumi {0} — скачать",
+      "Lumi {0} ist verfügbar – herunterladen",
+      "Lumi {0} está disponible: descargar",
+      "Lumi {0} est disponible — télécharger"
+    ],
+    "ollama_offer": [
+      "Free and offline: Ollama",
+      "Бесплатно и без интернета — Ollama",
+      "Kostenlos und offline: Ollama",
+      "Gratis y sin conexión: Ollama",
+      "Gratuit et hors ligne : Ollama"
+    ],
+    "ollama_missing": [
+      "Ollama isn't installed or running. It's free and works offline.",
+      "Ollama не установлена или не запущена. Она бесплатная и работает без интернета.",
+      "Ollama ist nicht installiert oder läuft nicht. Es ist kostenlos und funktioniert offline.",
+      "Ollama no está instalado o no se está ejecutando. Es gratis y funciona sin conexión.",
+      "Ollama n'est pas installé ou ne tourne pas. C'est gratuit et ça marche hors ligne."
+    ],
+    "ollama_download": [
+      "Download Ollama",
+      "Скачать Ollama",
+      "Ollama herunterladen",
+      "Descargar Ollama",
+      "Télécharger Ollama"
+    ],
+    "ollama_pull": [
+      "Then download a model in Terminal: {0}",
+      "Потом скачайте модель в Терминале: {0}",
+      "Dann ein Modell im Terminal laden: {0}",
+      "Después descarga un modelo en la Terminal: {0}",
+      "Puis téléchargez un modèle dans le Terminal : {0}"
+    ],
+    "ollama_no_models": [
+      "Ollama is running but has no models yet. In Terminal: {0}",
+      "Ollama запущена, но моделей пока нет. В Терминале: {0}",
+      "Ollama läuft, hat aber noch keine Modelle. Im Terminal: {0}",
+      "Ollama está en marcha, pero aún no tiene modelos. En la Terminal: {0}",
+      "Ollama tourne mais n'a pas encore de modèle. Dans le Terminal : {0}"
+    ],
+    "ollama_ready": [
+      "Ollama is running · models: {0}",
+      "Ollama работает · моделей: {0}",
+      "Ollama läuft · Modelle: {0}",
+      "Ollama funciona · modelos: {0}",
+      "Ollama fonctionne · modèles : {0}"
+    ],
+    "check_again": [
+      "Check again",
+      "Проверить снова",
+      "Erneut prüfen",
+      "Comprobar de nuevo",
+      "Vérifier à nouveau"
+    ],
+    "ollama_pick": [
+      "Pick an installed model:",
+      "Выберите установленную модель:",
+      "Installiertes Modell wählen:",
+      "Elige un modelo instalado:",
+      "Choisissez un modèle installé :"
+    ],
+    "lumi_own": [
+      "Lumi's own model: works offline, tuned for this bar.",
+      "Своя модель Lumi: работает без интернета, настроена для этой строки.",
+      "Lumis eigenes Modell: läuft offline, gemacht für diese Leiste.",
+      "El modelo propio de Lumi: funciona sin internet, hecho para esta barra.",
+      "Le modèle de Lumi : fonctionne hors ligne, conçu pour cette barre."
+    ],
+    "lumi_fit": [
+      "{0} wants about {1} GB of memory; this computer has {2} GB.",
+      "{0} нужно около {1} ГБ памяти, у этого компьютера {2} ГБ.",
+      "{0} braucht etwa {1} GB Arbeitsspeicher, dieser Computer hat {2} GB.",
+      "{0} necesita unos {1} GB de memoria; este ordenador tiene {2} GB.",
+      "{0} demande environ {1} Go de mémoire ; cet ordinateur en a {2} Go."
+    ],
+    "lumi_slow": [
+      "It may be slow on this computer.",
+      "На этом компьютере может работать медленно.",
+      "Auf diesem Computer kann es langsam sein.",
+      "Puede ir lento en este ordenador.",
+      "Il peut être lent sur cet ordinateur."
+    ],
+    "lumi_install": [
+      "Install {0} · {1} GB",
+      "Установить {0} · {1} ГБ",
+      "{0} installieren · {1} GB",
+      "Instalar {0} · {1} GB",
+      "Installer {0} · {1} Go"
+    ],
+    "lumi_use": [
+      "Use {0}",
+      "Выбрать {0}",
+      "{0} verwenden",
+      "Usar {0}",
+      "Utiliser {0}"
+    ],
+    "lumi_downloading": [
+      "Downloading {0}… {1}%",
+      "Скачиваю {0}… {1}%",
+      "Lade {0}… {1} %",
+      "Descargando {0}… {1} %",
+      "Téléchargement de {0}… {1} %"
+    ],
+    "lumi_building": [
+      "Setting up {0}…",
+      "Настраиваю {0}…",
+      "Richte {0} ein…",
+      "Preparando {0}…",
+      "Configuration de {0}…"
+    ],
+    "lumi_failed": [
+      "The download stopped: {0}. Press the button again to continue where it left off.",
+      "Загрузка прервалась: {0}. Нажмите кнопку ещё раз, и я продолжу с того же места.",
+      "Der Download wurde unterbrochen: {0}. Drücke die Taste erneut, um dort weiterzumachen.",
+      "La descarga se detuvo: {0}. Pulsa el botón otra vez para seguir donde se quedó.",
+      "Le téléchargement s'est arrêté : {0}. Appuyez de nouveau pour reprendre où il s'est arrêté."
+    ],
+    "ollama_auto": [
+      "Lumi will first install Ollama ({0} GB), the free program that runs the model on your computer.",
+      "Сначала Lumi установит Ollama ({0} ГБ), бесплатную программу, которая запускает модель на вашем компьютере.",
+      "Lumi installiert zuerst Ollama ({0} GB), das kostenlose Programm, das das Modell auf deinem Computer ausführt.",
+      "Primero Lumi instalará Ollama ({0} GB), el programa gratuito que ejecuta el modelo en tu ordenador.",
+      "Lumi installera d'abord Ollama ({0} Go), le programme gratuit qui fait tourner le modèle sur votre ordinateur."
+    ],
+    "ollama_downloading": [
+      "Downloading Ollama… {0}%",
+      "Скачиваю Ollama… {0}%",
+      "Lade Ollama… {0} %",
+      "Descargando Ollama… {0} %",
+      "Téléchargement d'Ollama… {0} %"
+    ],
+    "ollama_starting": [
+      "Installing and starting Ollama…",
+      "Устанавливаю и запускаю Ollama…",
+      "Installiere und starte Ollama…",
+      "Instalando e iniciando Ollama…",
+      "Installation et démarrage d'Ollama…"
+    ],
+    "ollama_not_started": [
+      "Ollama didn't start",
+      "Ollama не запустилась",
+      "Ollama ist nicht gestartet",
+      "Ollama no se inició",
+      "Ollama n'a pas démarré"
+    ],
+    "err_ollama_model": [
+      "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}",
+      "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}",
+      "Ollama hat kein Modell „{0}“. Installiert: {1}. Wählen Sie eines davon in der Verbindung oder laden Sie es: ollama pull {0}",
+      "Ollama no tiene el modelo «{0}». Instalados: {1}. Elige uno de ellos en la conexión o descárgalo: ollama pull {0}",
+      "Ollama n'a pas le modèle « {0} ». Installés : {1}. Choisissez-en un dans la connexion ou téléchargez-le : ollama pull {0}"
+    ]
+  },
+  "question_words": {
+    "en": [
+      "what",
+      "how",
+      "why",
+      "when",
+      "where",
+      "who",
+      "which",
+      "explain",
+      "write",
+      "translate",
+      "can",
+      "is",
+      "are",
+      "should",
+      "does",
+      "do"
+    ],
+    "ru": [
+      "что",
+      "как",
+      "почему",
+      "зачем",
+      "когда",
+      "где",
+      "кто",
+      "сколько",
+      "какой",
+      "какая",
+      "какие",
+      "какое",
+      "можно",
+      "объясни",
+      "напиши",
+      "переведи",
+      "посчитай",
+      "расскажи",
+      "придумай",
+      "сравни",
+      "чем"
+    ],
+    "de": [
+      "was",
+      "wie",
+      "warum",
+      "wann",
+      "wo",
+      "wer",
+      "welche",
+      "welcher",
+      "erkläre",
+      "schreibe",
+      "übersetze",
+      "kann",
+      "ist",
+      "sind"
+    ],
+    "es": [
+      "qué",
+      "que",
+      "cómo",
+      "como",
+      "por",
+      "cuándo",
+      "dónde",
+      "quién",
+      "cuál",
+      "explica",
+      "escribe",
+      "traduce",
+      "puedo",
+      "es"
+    ],
+    "fr": [
+      "quoi",
+      "que",
+      "comment",
+      "pourquoi",
+      "quand",
+      "où",
+      "qui",
+      "quel",
+      "quelle",
+      "explique",
+      "écris",
+      "traduis",
+      "peut",
+      "est"
+    ]
+  }
+}
