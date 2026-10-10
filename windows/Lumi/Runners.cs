@@ -177,6 +177,9 @@ public sealed class ApiRunner
         foreach (var (role, content) in _history) messages.Add(new JsonObject { ["role"] = role, ["content"] = content });
         messages.Add(new JsonObject { ["role"] = "user", ["content"] = question });
         var body = new JsonObject { ["model"] = c.Model, ["messages"] = messages, ["stream"] = true };
+        // Thinking models in Ollama (Qwen 3.5 and the like) think first and answer 20–30 seconds later;
+        // a quick bar wants the answer, so local Ollama models skip it.
+        if (Ollama.IsOllama(c.BaseUrl)) body["reasoning_effort"] = "none";
 
         Task.Run(async () =>
         {

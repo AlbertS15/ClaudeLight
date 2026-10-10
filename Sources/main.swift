@@ -461,9 +461,11 @@ final class APIRunner {
         if c.model.hasPrefix("gpt://"), let folder = c.model.dropFirst(6).split(separator: "/").first {
             request.setValue(String(folder), forHTTPHeaderField: "OpenAI-Project")
         }
-        request.httpBody = try? JSONSerialization.data(withJSONObject: [
-            "model": c.model, "messages": messages, "stream": true,
-        ] as [String: Any])
+        var body: [String: Any] = ["model": c.model, "messages": messages, "stream": true]
+        // Thinking models in Ollama (Qwen 3.5 and the like) think first and answer 20–30 seconds later;
+        // a quick bar wants the answer, so local Ollama models skip it.
+        if OllamaStatus.isOllama(c.baseURL) { body["reasoning_effort"] = "none" }
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         task = Task { [weak self] in
             var reply = ""
