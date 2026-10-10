@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumi — нейросеть одной клавишей</title>
+<meta name="description" content="Lumi — бесплатная строка в стиле Spotlight для Mac, Windows и Linux: открывает программы и файлы и отвечает на вопросы с помощью ИИ. Может работать без интернета.">
+<meta property="og:title" content="Lumi — нейросеть одной клавишей">
+<meta property="og:description" content="Бесплатная строка с ИИ для Mac, Windows и Linux. Может работать без интернета.">
+<meta property="og:image" content="https://alberts15.github.io/Lumi/og.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0c12">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c12;
+  --card: #131724;
+  --card2: #181d2c;
+  --line: #232939;
+  --line2: #2e3549;
+  --text: #eef1f7;
+  --muted: #9aa3b8;
+  --dim: #646d84;
+  --teal: #5dcaa5;
+  --teal-hi: #7fe3c0;
+  --radius: 24px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.6 Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+a { color: inherit; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+h1, h2, h3 { font-family: Unbounded, Manrope, sans-serif; line-height: 1.12; margin: 0; letter-spacing: -0.015em; }
+
+/* pixel grid that fades out, sparks that drift up, a glow that follows the cursor */
+.backdrop { position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%); }
+#sparks { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.glow-cursor { position: fixed; left: -999px; width: 520px; height: 520px; border-radius: 50%; pointer-events: none; z-index: -1;
+  background: radial-gradient(circle, rgba(93,202,165,0.09), transparent 65%); transform: translate(-50%, -50%); }
+
+/* ---------- nav */
+.nav { position: sticky; top: 0; z-index: 30; backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(10,12,18,0.7); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.nav .wrap { display: flex; align-items: center; gap: 18px; height: 66px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 800 20px Unbounded, sans-serif; text-decoration: none; }
+.brand canvas { width: 28px; height: 26px; image-rendering: pixelated; }
+.nav .links { margin-left: auto; display: flex; gap: 22px; align-items: center; }
+.nav .links a { color: var(--muted); text-decoration: none; font-weight: 600; font-size: 15px; transition: color .2s; }
+.nav .links a:hover { color: var(--text); }
+.nav .links a.dl { background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 12px; font-weight: 800; }
+.lang { border: 1px solid var(--line2); background: transparent; color: var(--text); border-radius: 999px; padding: 6px 12px; font: 800 12px Manrope, sans-serif; cursor: pointer; }
+@media (max-width: 760px) { .nav .links a.hide-sm { display: none; } }
+
+/* ---------- hero */
+.hero { position: relative; padding: 70px 0 40px; }
+.hero::before { content: ""; position: absolute; inset: -260px -10% auto; height: 1000px; z-index: -1; pointer-events: none;
+  background: radial-gradient(520px 360px at 72% 38%, rgba(93,202,165,0.20), transparent 70%),
+              radial-gradient(420px 280px at 20% 10%, rgba(106,168,255,0.10), transparent 70%),
+              radial-gradient(380px 240px at 88% 85%, rgba(255,122,168,0.08), transparent 70%); }
+.hero .wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; }
+@media (max-width: 980px) { .hero .wrap { grid-template-columns: 1fr; gap: 44px; } .hero-copy { text-align: center; } .hero-copy .cta, .hero-copy .trust { justify-content: center; } }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 8px; border-radius: 999px; background: rgba(93,202,165,0.1);
+  border: 1px solid rgba(93,202,165,0.3); color: var(--teal-hi); font-weight: 700; font-size: 14px; text-decoration: none; }
+.pill b { background: var(--teal); color: #052a1e; border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.hero h1 { font-size: clamp(40px, 5.2vw, 72px); margin-top: 22px; }
+.hero h1 .accent { white-space: nowrap; }
+.accent { background: linear-gradient(92deg, var(--teal-hi), var(--teal) 45%, #9ad8ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p.lead { max-width: 540px; margin: 22px 0 0; color: var(--muted); font-size: clamp(17px, 2vw, 20px); }
+@media (max-width: 980px) { .hero p.lead { margin: 22px auto 0; } }
+.cta { margin-top: 34px; display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 26px; border-radius: 16px; font: 800 17px Manrope, sans-serif;
+  text-decoration: none; border: 0; cursor: pointer; transition: transform .15s, box-shadow .2s, background .2s; white-space: nowrap; }
+.btn.primary { background: var(--teal); color: #05271c; box-shadow: 0 10px 40px rgba(93,202,165,0.35), inset 0 -3px 0 rgba(0,0,0,0.15); }
+.btn.primary:hover { transform: translateY(-2px); box-shadow: 0 16px 50px rgba(93,202,165,0.5), inset 0 -3px 0 rgba(0,0,0,0.15); }
+.btn.ghost { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--line2); }
+.btn.ghost:hover { background: rgba(255,255,255,0.08); }
+.btn .os { font-weight: 600; opacity: .7; font-size: 15px; }
+.btn svg { width: 20px; height: 20px; }
+.trust { margin-top: 26px; display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 14px; font-weight: 600; }
+.trust span { display: inline-flex; align-items: center; gap: 7px; }
+.trust span::before { content: ""; width: 6px; height: 6px; background: var(--teal); border-radius: 1px; box-shadow: 0 0 10px var(--teal); }
+
+/* the desktop mock with the bar on top */
+.stage { position: relative; aspect-ratio: 16 / 11.2; border-radius: 22px; overflow: hidden; border: 1px solid var(--line2);
+  background: radial-gradient(circle at 25% 20%, #3b2f6b, transparent 55%), radial-gradient(circle at 80% 85%, #10594a, transparent 55%), linear-gradient(135deg, #1b1f3a, #0f2a2a);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6); transform: perspective(1400px) rotateY(-6deg) rotateX(3deg); transition: transform .6s; }
+.stage:hover { transform: perspective(1400px) rotateY(-2deg) rotateX(1deg); }
+@media (max-width: 980px) { .stage, .stage:hover { transform: none; } }
+.stage .menubar { height: 26px; background: rgba(0,0,0,0.35); display: flex; align-items: center; gap: 16px; padding: 0 14px; font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 600; }
+.stage .menubar .r { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+.stage .menubar canvas { width: 15px; height: 14px; image-rendering: pixelated; }
+.win { position: absolute; border-radius: 12px; background: rgba(245,246,250,0.9); box-shadow: 0 20px 50px rgba(0,0,0,0.35); overflow: hidden; }
+.win .tb { height: 24px; background: rgba(0,0,0,0.06); display: flex; gap: 6px; align-items: center; padding: 0 10px; }
+.win .tb i { width: 9px; height: 9px; border-radius: 50%; background: #ff5f56; } .win .tb i:nth-child(2) { background: #ffbd2e; } .win .tb i:nth-child(3) { background: #27c93f; }
+.win .lines { padding: 14px; } .win .lines div { height: 8px; border-radius: 4px; background: rgba(0,0,0,0.1); margin-bottom: 9px; }
+.win.a { left: 6%; top: 15%; width: 50%; height: 56%; } .win.b { right: 5%; top: 33%; width: 40%; height: 54%; background: rgba(28,32,46,0.92); }
+.win.b .lines div { background: rgba(255,255,255,0.1); } .win.b .tb { background: rgba(255,255,255,0.05); }
+.stage .dim { position: absolute; inset: 26px 0 0; background: rgba(5,6,12,0.45); opacity: 0; transition: opacity .35s; }
+.stage.active .dim { opacity: 1; }
+.bar { position: absolute; left: 50%; top: 17%; width: 82%; transform: translate(-50%, 8px) scale(.96); opacity: 0; transition: opacity .3s, transform .35s cubic-bezier(.2,.9,.3,1.2);
+  background: rgba(24,28,40,0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; box-shadow: 0 30px 80px rgba(0,0,0,0.55); }
+.stage.active .bar { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.bar .input { display: flex; align-items: center; gap: 12px; padding: 14px 16px; font-size: clamp(14px, 1.6vw, 18px); }
+.bar .input canvas { width: 22px; height: 20px; image-rendering: pixelated; flex: none; }
+.bar .typed { flex: 1; min-height: 1.5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph { color: #5d6680; }
+.caret { display: inline-block; width: 2px; height: 1.1em; background: var(--teal); vertical-align: -0.18em; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.bar .model { font-size: 11px; color: var(--muted); background: rgba(255,255,255,0.06); padding: 3px 9px; border-radius: 7px; font-weight: 700; }
+.bar .answer { border-top: 1px solid rgba(255,255,255,0.07); padding: 12px 16px 16px; font-size: clamp(13px, 1.4vw, 15.5px); line-height: 1.55; color: #dfe4ef; display: none; }
+.bar .answer.show { display: block; }
+.bar .answer .q { color: var(--dim); font-size: .85em; font-weight: 700; margin-bottom: 4px; }
+.keys-float { position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; color: rgba(255,255,255,0.7); font-weight: 700; }
+kbd { display: inline-block; min-width: 42px; padding: 7px 12px; border-radius: 11px; text-align: center; background: linear-gradient(#262c40, #1b2030);
+  border: 1px solid #39405a; border-bottom-width: 4px; font: 800 16px Manrope, sans-serif; color: var(--text); transition: transform .08s, border-bottom-width .08s, color .1s, border-color .1s; }
+kbd.down { transform: translateY(3px); border-bottom-width: 1px; border-color: var(--teal); color: var(--teal); }
+.demo-note { text-align: center; color: var(--dim); font-size: 13px; margin-top: 16px; }
+
+/* ---------- sections */
+section { padding: 110px 0; scroll-margin-top: 30px; position: relative; }
+.kicker { display: inline-flex; align-items: center; gap: 8px; color: var(--teal); font: 800 13px Manrope; letter-spacing: .14em; text-transform: uppercase; }
+.kicker::before { content: ""; width: 8px; height: 8px; background: var(--teal); box-shadow: 0 0 12px var(--teal); }
+section h2 { font-size: clamp(32px, 4.8vw, 54px); margin-top: 14px; max-width: 900px; }
+section .sub { color: var(--muted); max-width: 640px; margin-top: 18px; font-size: 18px; }
+.center { text-align: center; } .center .sub, .center h2 { margin-left: auto; margin-right: auto; }
+
+/* race: the usual way vs Lumi */
+.race { margin-top: 50px; display: grid; gap: 16px; }
+.lane { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; display: grid; grid-template-columns: 180px 1fr; gap: 18px; align-items: center; }
+@media (max-width: 760px) { .lane { grid-template-columns: 1fr; } }
+.lane .who { font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 10px; }
+.lane .who small { display: block; font-weight: 600; color: var(--dim); font-size: 13px; }
+.lane.lumi { border-color: rgba(93,202,165,0.45); background: linear-gradient(90deg, rgba(93,202,165,0.08), var(--card) 60%); }
+.steps { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.step { padding: 9px 14px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line2); font-weight: 700; font-size: 14.5px; color: var(--dim); transition: all .35s; }
+.step.on { color: var(--text); background: #20263a; }
+.lumi .step.on { color: #05271c; background: var(--teal); border-color: var(--teal); }
+.arrow { color: var(--dim); font-weight: 800; }
+.done { margin-left: 6px; font-weight: 800; color: var(--teal); opacity: 0; transform: scale(.6); transition: all .35s cubic-bezier(.2,.9,.3,1.4); }
+.done.show { opacity: 1; transform: none; }
+.lane:not(.lumi) .done { color: var(--muted); }
+
+/* bento */
+.bento { margin-top: 54px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+.tile { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; overflow: hidden; transition: border-color .3s, transform .3s; }
+.tile:hover { border-color: var(--line2); transform: translateY(-3px); }
+.tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 0%), rgba(93,202,165,0.10), transparent 45%); }
+.tile:hover::after { opacity: 1; }
+.tile h3 { font-size: 21px; } .tile p { color: var(--muted); margin: 10px 0 0; font-size: 16px; max-width: 460px; }
+.t-answer { grid-column: span 4; } .t-apps, .t-models, .t-lang, .t-key { grid-column: span 2; }
+@media (max-width: 980px) { .bento { grid-template-columns: 1fr 1fr; } .t-answer { grid-column: span 2; } .t-apps, .t-models, .t-lang, .t-key { grid-column: span 1; } }
+@media (max-width: 640px) { .bento { grid-template-columns: 1fr; } .tile { grid-column: span 1 !important; } }
+.mini { margin-top: 22px; background: #0d1018; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; font-size: 15px; }
+.mini .row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: var(--muted); font-weight: 600; transition: background .25s, color .25s; }
+.mini .row.sel { background: #2f6fdb; color: #fff; }
+.mini .row .ic { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-weight: 800; font-size: 12px; color: #fff; }
+.stream { min-height: 6.2em; color: #dfe4ef; }
+.stream .who { color: var(--dim); font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line2); font-weight: 700; font-size: 14px; color: var(--muted); transition: all .3s; }
+.chip.on { background: var(--text); color: var(--bg); border-color: var(--text); transform: translateY(-2px); }
+.hello { margin-top: 22px; font: 700 clamp(28px, 3.2vw, 38px) Unbounded, sans-serif; height: 1.35em; overflow: hidden; position: relative; }
+.hello span { position: absolute; left: 0; top: 0; transition: transform .5s cubic-bezier(.2,.9,.3,1), opacity .4s; }
+.keyshow { margin-top: 24px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--dim); font-weight: 800; }
+.keyshow kbd { font-size: 17px; padding: 10px 14px; min-width: 52px; }
+
+/* offline */
+.offline-box { margin-top: 54px; display: grid; grid-template-columns: 1fr 1.25fr; gap: 22px; align-items: stretch; }
+@media (max-width: 900px) { .offline-box { grid-template-columns: 1fr; } }
+.memory { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 30px; }
+.memory h3 { font-size: 20px; }
+.memory .val { font: 800 64px Unbounded, sans-serif; margin-top: 18px; color: var(--teal-hi); }
+.memory .val small { font-size: 22px; color: var(--muted); margin-left: 6px; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--teal) var(--p, 33%), #262c3e var(--p, 33%)); outline: none; margin-top: 18px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 8px; background: var(--text); border: 4px solid var(--teal); cursor: grab; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 8px; background: var(--text); border: 4px solid var(--teal); cursor: grab; }
+.ticks { display: flex; justify-content: space-between; color: var(--dim); font: 700 13px "JetBrains Mono", monospace; margin-top: 10px; }
+.memory .hint { color: var(--muted); font-size: 15px; margin-top: 18px; }
+.tiers { display: grid; gap: 14px; }
+.tier { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px 24px; display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: center; transition: all .35s; }
+.tier:not(.pick) { opacity: .55; }
+.tier.pick { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal), 0 20px 60px rgba(93,202,165,0.15); background: linear-gradient(90deg, rgba(93,202,165,0.08), var(--card) 70%); }
+.tier h3 { font-size: 21px; display: flex; align-items: center; gap: 10px; }
+.tier h3 .tag { font: 800 11px Manrope; padding: 3px 9px; border-radius: 999px; background: var(--teal); color: #05271c; opacity: 0; transition: opacity .3s; }
+.tier.pick h3 .tag { opacity: 1; }
+.tier .size { font: 700 15px "JetBrains Mono", monospace; color: var(--teal-hi); }
+.tier p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 15px; }
+.path { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; color: var(--dim); font-weight: 800; }
+.path span.s { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 10px 16px; color: var(--text); font-weight: 700; font-size: 15px; }
+.privacy { margin-top: 22px; display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 15px; }
+.privacy svg { flex: none; width: 22px; height: 22px; color: var(--teal); }
+
+/* platforms */
+.platforms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 54px; }
+@media (max-width: 900px) { .platforms { grid-template-columns: 1fr; } }
+.plat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; display: flex; flex-direction: column; position: relative; transition: border-color .3s; }
+.plat.mine { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal), 0 24px 70px rgba(93,202,165,0.14); }
+.plat .yours { position: absolute; top: -12px; right: 22px; background: var(--teal); color: #05271c; font: 800 12px Manrope; padding: 4px 10px; border-radius: 999px; display: none; }
+.plat.mine .yours { display: block; }
+.plat h3 { font-size: 24px; }
+.plat .hk { margin-top: 14px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.plat .hk kbd { font-size: 13px; min-width: 0; padding: 4px 10px; border-bottom-width: 3px; }
+.plat ol { color: var(--muted); padding-left: 20px; margin: 18px 0 24px; font-size: 15px; }
+.plat ol li { margin-bottom: 6px; }
+.plat .btn { margin-top: auto; justify-content: center; padding: 14px 20px; font-size: 16px; }
+.plat:not(.mine) .btn.primary { background: rgba(255,255,255,0.06); color: var(--text); box-shadow: none; border: 1px solid var(--line2); }
+code { font: 500 13.5px "JetBrains Mono", monospace; background: #0b0e15; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; color: #cfe9df; }
+
+/* faq */
+.faq { max-width: 840px; margin: 40px auto 0; }
+details { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px; margin-top: 12px; transition: border-color .2s; }
+details[open] { border-color: var(--line2); }
+details summary { cursor: pointer; font-weight: 800; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: ""; flex: none; width: 10px; height: 10px; border-right: 2.5px solid var(--teal); border-bottom: 2.5px solid var(--teal); transform: rotate(45deg) translateY(-3px); transition: transform .25s; }
+details[open] summary::after { transform: rotate(-135deg) translateY(-3px); }
+details p { color: var(--muted); margin: 12px 0 0; }
+
+/* final call */
+.final { text-align: center; padding: 100px 0 120px; }
+.final .card { position: relative; background: radial-gradient(600px 300px at 50% 0%, rgba(93,202,165,0.18), transparent 70%), var(--card); border: 1px solid var(--line2);
+  border-radius: 32px; padding: 70px 24px; overflow: hidden; }
+.final canvas.ghost-big { width: 112px; height: 104px; }
+.final h2 { margin: 26px auto 0; }
+.final .cta { justify-content: center; }
+
+footer { border-top: 1px solid var(--line); padding: 40px 0 60px; color: var(--muted); font-size: 15px; }
+footer .wrap { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+footer .right { margin-left: auto; display: flex; gap: 22px; flex-wrap: wrap; }
+footer a { text-decoration: none; font-weight: 700; }
+footer a:hover { color: var(--text); }
+.legal { color: var(--dim); font-size: 13px; width: 100%; margin-top: 6px; }
+
+.ghost-big { image-rendering: pixelated; filter: drop-shadow(0 0 30px rgba(93,202,165,0.6)); animation: float 3.2s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-12px); } }
+
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; } .ghost-big { animation: none; } .stage { transform: none; } #sparks, .glow-cursor { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+<canvas id="sparks"></canvas>
+<div class="glow-cursor" id="glow"></div>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#"><canvas class="ghost" width="14" height="13"></canvas>Lumi</a>
+    <div class="links">
+      <a class="hide-sm" href="#features" data-i18n="nav_features">Возможности</a>
+      <a class="hide-sm" href="#offline" data-i18n="nav_offline">Без интернета</a>
+      <a class="hide-sm" href="https://github.com/AlbertS15/Lumi">GitHub</a>
+      <button class="lang" id="lang" aria-label="Language">EN</button>
+      <a class="dl" href="#download" data-i18n="download">Скачать</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <a class="pill" href="#download"><b>2.0</b><span data-i18n="pill">Теперь и на Linux</span></a>
+      <h1 data-i18n-html="hero_title">Нейросеть<br><span class="accent">одной клавишей</span></h1>
+      <p class="lead" data-i18n="hero_lead">Нажмите клавишу в любом окне, спросите что угодно — ответ появится прямо в строке. А ещё Lumi открывает программы и файлы, как Spotlight.</p>
+      <div class="cta">
+        <a class="btn primary" id="dl-main" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          <span data-i18n="download">Скачать</span><span class="os" id="dl-os"></span></a>
+        <a class="btn ghost" href="https://github.com/AlbertS15/Lumi">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.27 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+          GitHub</a>
+      </div>
+      <div class="trust">
+        <span data-i18n="b_free">Бесплатно</span><span>Mac · Windows · Linux</span><span data-i18n="b_open">Открытый код</span><span data-i18n="b_offline">Может без интернета</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="stage" id="stage">
+        <div class="menubar"><span></span><span>File</span><span>Edit</span><span>View</span><div class="r"><canvas class="ghost" width="14" height="13"></canvas><span id="clock">9:41</span></div></div>
+        <div class="win a"><div class="tb"><i></i><i></i><i></i></div><div class="lines"><div style="width:70%"></div><div style="width:90%"></div><div style="width:55%"></div><div style="width:80%"></div><div style="width:40%"></div></div></div>
+        <div class="win b"><div class="tb"><i></i><i></i><i></i></div><div class="lines"><div style="width:60%"></div><div style="width:85%"></div><div style="width:45%"></div><div style="width:75%"></div></div></div>
+        <div class="dim"></div>
+        <div class="bar" id="bar">
+          <div class="input"><canvas class="ghost live" width="14" height="13"></canvas><div class="typed" id="typed"></div><span class="model">Lumi</span></div>
+          <div class="answer" id="answer"><div class="q" id="asked"></div><div id="answer-text"></div></div>
+        </div>
+        <div class="keys-float"><kbd id="k1">⌥</kbd><span>+</span><kbd id="k2">Ё</kbd></div>
+      </div>
+      <div class="demo-note" data-i18n="demo_note">Настоящие ответы модели Lumi, работающей на ноутбуке без интернета</div>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <div class="reveal center">
+      <div class="kicker" data-i18n="r_kicker">Зачем</div>
+      <h2 data-i18n="r_title">Вопрос за секунду, а не за минуту</h2>
+      <p class="sub" data-i18n="r_sub">Обычно, чтобы спросить нейросеть, нужно отвлечься от работы. С Lumi — нет.</p>
+    </div>
+    <div class="race">
+      <div class="lane reveal"><div class="who">🌐 <span><span data-i18n="r_usual">Как обычно</span><small data-i18n="r_usual_s">браузер и сайт</small></span></div>
+        <div class="steps" data-lane="usual"><span class="step" data-i18n="u1">Открыть браузер</span><span class="arrow">→</span><span class="step" data-i18n="u2">Найти сайт</span><span class="arrow">→</span><span class="step" data-i18n="u3">Войти</span><span class="arrow">→</span><span class="step" data-i18n="u4">Новый чат</span><span class="arrow">→</span><span class="step" data-i18n="u5">Спросить</span><span class="done">✓</span></div></div>
+      <div class="lane lumi reveal"><div class="who"><canvas class="ghost" width="14" height="13" style="width:24px;height:22px;image-rendering:pixelated"></canvas><span>Lumi<small data-i18n="r_lumi_s">из любого окна</small></span></div>
+        <div class="steps" data-lane="lumi"><span class="step" id="lane-key">Alt+Ё</span><span class="arrow">→</span><span class="step" data-i18n="u5">Спросить</span><span class="done" data-i18n="r_done">✓ готово</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="kicker" data-i18n="f_kicker">Возможности</div>
+      <h2 data-i18n="f_title">Всё в одной строке</h2>
+      <p class="sub" data-i18n="f_sub">Lumi сама понимает, что вы ищете: программу, файл или ответ.</p>
+    </div>
+    <div class="bento">
+      <div class="tile t-answer reveal">
+        <h3 data-i18n="c1_t">Ответы прямо в строке</h3>
+        <p data-i18n="c1_p">Ответ печатается сразу, как в чате. Можно уточнять — разговор продолжится.</p>
+        <div class="mini stream" id="stream"></div>
+      </div>
+      <div class="tile t-apps reveal">
+        <h3 data-i18n="c2_t">Программы и файлы</h3>
+        <p data-i18n="c2_p">Начните вводить — Enter откроет нужное.</p>
+        <div class="mini" id="apps"></div>
+      </div>
+      <div class="tile t-models reveal">
+        <h3 data-i18n="c3_t">Любая нейросеть</h3>
+        <p data-i18n="c3_p">Ваши подписки Claude, ChatGPT и Gemini — без API-ключей. Или любой сервис по ключу.</p>
+        <div class="chips" id="chips"><span class="chip">Claude</span><span class="chip">ChatGPT</span><span class="chip">Gemini</span><span class="chip">Lumi</span><span class="chip">DeepSeek</span><span class="chip">GigaChat</span><span class="chip">YandexGPT</span><span class="chip">OpenRouter</span></div>
+      </div>
+      <div class="tile t-lang reveal">
+        <h3 data-i18n="c5_t">Пять языков</h3>
+        <p data-i18n="c5_p">Интерфейс на пяти языках, а отвечает Lumi на языке вопроса.</p>
+        <div class="hello" id="hello"></div>
+      </div>
+      <div class="tile t-key reveal">
+        <h3 data-i18n="c6_t">Своя горячая клавиша</h3>
+        <p data-i18n="c6_p">Любое сочетание, какое удобно вам.</p>
+        <div class="keyshow" id="keyshow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="offline">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="kicker" data-i18n="o_kicker">Без интернета</div>
+      <h2 data-i18n="o_title">Свой ИИ прямо на компьютере</h2>
+      <p class="sub" data-i18n="o_sub">Своя модель Lumi работает без интернета, и вопросы никуда не уходят. Ставится одной кнопкой — без отдельных программ и команд.</p>
+    </div>
+    <div class="offline-box">
+      <div class="memory reveal">
+        <h3 data-i18n="mem_q">Сколько памяти у вашего компьютера?</h3>
+        <div class="val"><span id="mem-val">16</span><small data-i18n="gb">ГБ</small></div>
+        <input type="range" id="mem" min="0" max="3" step="1" value="1" aria-label="RAM">
+        <div class="ticks"><span>8</span><span>16</span><span>32</span><span>64</span></div>
+        <div class="hint" data-i18n="mem_hint">Lumi сама подберёт модель при установке — ползунок просто показывает, какую.</div>
+      </div>
+      <div>
+        <div class="tiers">
+          <div class="tier reveal" data-tier="0"><h3>Lumi Mini <span class="tag" data-i18n="fits">Подходит</span></h3><span class="size">4.6 GB</span><p data-i18n="t1">Для ноутбуков с 8 ГБ памяти. Самая лёгкая и быстрая.</p></div>
+          <div class="tier reveal" data-tier="1"><h3>Lumi <span class="tag" data-i18n="fits">Подходит</span></h3><span class="size">6.6 GB</span><p data-i18n="t2">Для компьютеров с 12–16 ГБ. Лучший баланс скорости и ума.</p></div>
+          <div class="tier reveal" data-tier="2"><h3>Lumi Pro <span class="tag" data-i18n="fits">Подходит</span></h3><span class="size">24 GB</span><p data-i18n="t3">Для мощных компьютеров от 32 ГБ. Самая умная.</p></div>
+        </div>
+        <div class="path reveal"><span class="s" data-i18n="s1">Подключить модель…</span> → <span class="s">Ollama</span> → <span class="s" data-i18n="s3">Установить Lumi</span></div>
+        <div class="privacy reveal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="privacy">У Lumi нет своих серверов: вопросы уходят только в выбранный вами сервис — или никуда.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="reveal center">
+      <div class="kicker" data-i18n="d_kicker">Скачать</div>
+      <h2 data-i18n="d_title">Для вашей системы</h2>
+    </div>
+    <div class="platforms">
+      <div class="plat reveal" data-os="mac"><span class="yours" data-i18n="yours">Ваша система</span>
+        <h3>macOS</h3>
+        <div class="hk"><kbd>⌥</kbd>+<kbd class="lk">Ё</kbd></div>
+        <ol><li data-i18n="m1">Откройте Lumi-macOS.dmg и перетащите Lumi в «Программы».</li><li data-i18n="m2">Первый запуск: правый клик → «Открыть» → «Открыть».</li></ol>
+        <a class="btn primary" data-asset="mac" href="https://github.com/AlbertS15/Lumi/releases/latest">macOS · .dmg</a>
+      </div>
+      <div class="plat reveal" data-os="win"><span class="yours" data-i18n="yours">Ваша система</span>
+        <h3>Windows</h3>
+        <div class="hk"><kbd>Alt</kbd>+<kbd class="lk">Ё</kbd></div>
+        <ol><li data-i18n="w1">Запустите установщик — права администратора не нужны.</li><li data-i18n="w2">Если SmartScreen предупредит: «Подробнее» → «Выполнить в любом случае».</li></ol>
+        <a class="btn primary" data-asset="win" href="https://github.com/AlbertS15/Lumi/releases/latest">Windows · .exe</a>
+      </div>
+      <div class="plat reveal" data-os="linux"><span class="yours" data-i18n="yours">Ваша система</span>
+        <h3>Linux</h3>
+        <div class="hk"><kbd>Ctrl</kbd>+<kbd data-i18n="space">Пробел</kbd></div>
+        <ol><li data-i18n-html="l1">Разрешите запуск: <code>chmod +x Lumi-x86_64.AppImage</code></li><li data-i18n="l2">Откройте файл. Версия новая — пишите, если что-то не так.</li></ol>
+        <a class="btn primary" data-asset="linux" href="https://github.com/AlbertS15/Lumi/releases/latest">Linux · AppImage</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="reveal center"><div class="kicker">FAQ</div><h2 data-i18n="q_title">Вопросы</h2></div>
+    <div class="faq">
+      <details class="reveal"><summary data-i18n="q1">Это правда бесплатно?</summary><p data-i18n="a1">Да. Lumi бесплатная и с открытым кодом. Платить нужно только за саму нейросеть, если вы выбираете платный сервис, — или не платить вовсе со своей моделью Lumi.</p></details>
+      <details class="reveal"><summary data-i18n="q2">Нужен ли интернет?</summary><p data-i18n="a2">Для облачных нейросетей — да. Своя модель Lumi работает полностью без интернета: интернет нужен только один раз, чтобы её скачать.</p></details>
+      <details class="reveal"><summary data-i18n="q3">Куда уходят мои вопросы?</summary><p data-i18n="a3">Только в тот сервис, который вы выбрали. Со своей моделью Lumi — никуда, всё остаётся на компьютере. У Lumi нет своих серверов.</p></details>
+      <details class="reveal"><summary data-i18n="q4">Почему система предупреждает при первом запуске?</summary><p data-i18n="a4">Lumi — независимый проект без платного сертификата Apple и Microsoft, поэтому система её «не знает». Код полностью открыт на GitHub.</p></details>
+      <details class="reveal"><summary data-i18n="q5">Lumi связана с Anthropic, OpenAI или Google?</summary><p data-i18n="a5">Нет, это независимый проект. Claude, ChatGPT и Gemini — товарные знаки их владельцев.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <div class="card reveal">
+      <canvas class="ghost ghost-big live" width="14" height="13"></canvas>
+      <h2 data-i18n="final_title">Попробуйте — это одна клавиша</h2>
+      <p class="sub" style="margin:16px auto 0" data-i18n="final_sub">Бесплатно для Mac, Windows и Linux.</p>
+      <div class="cta"><a class="btn primary" id="dl-final" href="#download"><span data-i18n="download">Скачать</span><span class="os" id="dl-os2"></span></a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#"><canvas class="ghost" width="14" height="13"></canvas>Lumi</a>
+    <div class="right">
+      <a href="https://github.com/AlbertS15/Lumi">GitHub</a>
+      <a href="https://t.me/+3IU-_WIhrTU4MjAy">Telegram</a>
+      <a href="https://github.com/AlbertS15/Lumi/releases" data-i18n="releases">Все версии</a>
+      <a href="https://github.com/AlbertS15/Lumi/issues" data-i18n="bug">Сообщить об ошибке</a>
+    </div>
+    <div class="legal" data-i18n="legal">MIT License · Независимый проект, не связан с Anthropic, OpenAI и Google.</div>
+  </div>
+</footer>
+
+<script>
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---------- the pixel ghost, from the same grid as the apps
+const GHOST = ["....BBBBBB....","..BBBBBBBBBB..",".BBBBBBBBBBBB.",".BBBBBBBBBBBB.","BBBEEBBBBEEBBB","BBBEEBBBBEEBBB",
+               "BBBBBBBBBBBBBB","BBBBBBEEBBBBBB","BBBBBBBBBBBBBB","BBBBBBBBBBBBBB"];
+const HEMS = ["BB..BBBBBB..BB", "..BBBB..BBBB.."];
+function drawGhost(canvas, step) {
+  const c = canvas.getContext("2d");
+  c.clearRect(0, 0, 14, 13);
+  const lift = step ? 0 : 1;
+  [...GHOST, HEMS[step]].forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    c.fillStyle = ch === "E" ? "#0a0c12" : "#5dcaa5";
+    c.fillRect(x, y + lift, 1, 1);
+  }));
+}
+document.querySelectorAll("canvas.ghost").forEach(g => drawGhost(g, 0));
+let gstep = 0;
+if (!reduced) setInterval(() => { gstep = 1 - gstep; document.querySelectorAll("canvas.live").forEach(g => drawGhost(g, gstep)); }, 420);
+
+// ---------- texts
+const EN = {
+  nav_features: "Features", nav_offline: "Offline", download: "Download", pill: "Now on Linux too",
+  hero_title: "AI on<br><span class=\"accent\">one key</span>",
+  hero_lead: "Press a key in any window, ask anything, and the answer appears right in the bar. Lumi also opens apps and files, like Spotlight.",
+  b_free: "Free", b_open: "Open source", b_offline: "Can work offline",
+  demo_note: "Real answers from the Lumi model running on a laptop, offline",
+  r_kicker: "Why", r_title: "A question in a second, not a minute", r_sub: "Asking an AI usually pulls you out of what you're doing. With Lumi it doesn't.",
+  r_usual: "The usual way", r_usual_s: "browser and website", u1: "Open browser", u2: "Find the site", u3: "Sign in", u4: "New chat", u5: "Ask",
+  r_lumi_s: "from any window", r_done: "✓ done",
+  f_kicker: "Features", f_title: "Everything in one bar", f_sub: "Lumi knows what you want: an app, a file or an answer.",
+  c1_t: "Answers right in the bar", c1_p: "The answer streams in like a chat. Follow up and the conversation goes on.",
+  c2_t: "Apps and files", c2_p: "Start typing, Enter opens it.",
+  c3_t: "Any AI", c3_p: "Your Claude, ChatGPT and Gemini subscriptions, no API keys. Or any service with a key.",
+  c5_t: "Five languages", c5_p: "The interface speaks five languages, and Lumi answers in the language you ask in.",
+  c6_t: "Your own hotkey", c6_p: "Any shortcut that suits you.",
+  o_kicker: "Offline", o_title: "Your own AI, on your computer",
+  o_sub: "Lumi's own model works with no internet, so your questions never leave your computer. One button installs it, no extra programs or commands.",
+  mem_q: "How much memory does your computer have?", gb: "GB", mem_hint: "Lumi picks the model itself when it installs; the slider just shows which one.",
+  fits: "Fits", t1: "For laptops with 8 GB of memory. The lightest and fastest.", t2: "For computers with 12–16 GB. The best balance of speed and smarts.", t3: "For powerful computers with 32 GB or more. The smartest.",
+  s1: "Add model…", s3: "Install Lumi", privacy: "Lumi has no servers of its own: questions go only to the service you pick, or nowhere at all.",
+  d_kicker: "Download", d_title: "For your system", yours: "Your system",
+  m1: "Open Lumi-macOS.dmg and drag Lumi to Applications.", m2: "First launch: right-click → Open → Open.",
+  w1: "Run the installer; no admin rights needed.", w2: "If SmartScreen warns you: “More info” → “Run anyway”.",
+  l1: "Allow it to run: <code>chmod +x Lumi-x86_64.AppImage</code>", l2: "Open the file. It's brand new, so tell us if anything's off.", space: "Space",
+  q_title: "Questions",
+  q1: "Is it really free?", a1: "Yes. Lumi is free and open source. You only pay for the AI itself if you choose a paid service, or nothing at all with Lumi's own model.",
+  q2: "Does it need the internet?", a2: "Cloud AIs do. Lumi's own model works fully offline; you only need the internet once to download it.",
+  q3: "Where do my questions go?", a3: "Only to the service you picked. With Lumi's own model, nowhere: everything stays on your computer. Lumi has no servers of its own.",
+  q4: "Why does my system warn me on first launch?", a4: "Lumi is an independent project without a paid Apple or Microsoft certificate, so the system doesn't know it yet. The code is fully open on GitHub.",
+  q5: "Is Lumi made by Anthropic, OpenAI or Google?", a5: "No, it's an independent project. Claude, ChatGPT and Gemini are trademarks of their owners.",
+  final_title: "Try it: it's one key", final_sub: "Free for Mac, Windows and Linux.",
+  releases: "All versions", bug: "Report a bug",
+  legal: "MIT License · An independent project, not affiliated with Anthropic, OpenAI or Google.",
+};
+const RU = {};
+document.querySelectorAll("[data-i18n]").forEach(e => RU[e.dataset.i18n] = e.textContent);
+document.querySelectorAll("[data-i18n-html]").forEach(e => RU[e.dataset.i18nHtml] = e.innerHTML);
+
+// Real answers from the lumi model (Gemma 4 E4B), 10 Oct 2026, lightly shortened.
+const DEMO = {
+  ru: [
+    ["переведи на английский: где получить багаж?", "Where can I pick up my luggage?"],
+    ["ответь вежливо начальнику: пришлю отчёт к 12, надо проверить цифры", "Добрый день! Отчёт пришлю к 12:00, нужно ещё сверить некоторые цифры."],
+    ["как выйти из vim?", "Сначала нажмите Esc, затем введите :q и Enter. Чтобы сохранить изменения перед выходом — :wq. Чтобы выйти, не сохраняя, — :q!"],
+  ],
+  en: [
+    ["translate to Spanish: where do I pick up my luggage?", "¿Dónde recojo mi equipaje?"],
+    ["write my manager that I'm sick today", "Hi, I won't be in today because I am sick. I will keep you updated on my return."],
+    ["how do I exit vim?", "Press Esc to make sure you're in normal mode. Type :q and Enter to quit, :q! to quit without saving, or :wq to save and quit."],
+  ],
+};
+const STREAM = {
+  ru: ["объясни как пятилетнему: что такое инфляция", "Представь, что у тебя есть 10 монет, и на них можно купить 5 конфет. Если завтра эти же 10 монет купят только 4 конфеты, это и есть инфляция."],
+  en: ["what's the difference between weather and climate?", "Weather describes the atmosphere over a short period in one place. Climate is the long-term average of weather patterns for a region."],
+};
+const APPS = [["Te", "#2f6fdb", "Telegram"], ["Fi", "#d9653b", "Figma"], ["No", "#5b6275", "Notes"], ["Sp", "#1db954", "Spotify"]];
+const HELLO = ["Привет!", "Hello!", "Hallo!", "¡Hola!", "Bonjour !"];
+
+let lang = "ru";
+try { lang = localStorage.getItem("lang") || ((navigator.language || "ru").startsWith("ru") ? "ru" : "en"); } catch (e) {}
+if (lang !== "ru") lang = "en";
+
+const ua = navigator.userAgent;
+const os = /Mac/.test(ua) && !/iPhone|iPad/.test(ua) ? "mac" : /Win/.test(ua) ? "win" : /Linux|X11/.test(ua) && !/Android/.test(ua) ? "linux" : null;
+const assets = {};
+
+function hotkey() {
+  if (os === "linux") return ["Ctrl", lang === "ru" ? "Пробел" : "Space"];
+  return [os === "win" ? "Alt" : "⌥", lang === "ru" ? "Ё" : "`"];
+}
+
+function applyLang() {
+  const dict = lang === "ru" ? RU : EN;
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(e => { if (dict[e.dataset.i18n] != null) e.textContent = dict[e.dataset.i18n]; });
+  document.querySelectorAll("[data-i18n-html]").forEach(e => { if (dict[e.dataset.i18nHtml] != null) e.innerHTML = dict[e.dataset.i18nHtml]; });
+  document.getElementById("lang").textContent = lang === "ru" ? "EN" : "RU";
+  document.title = lang === "ru" ? "Lumi — нейросеть одной клавишей" : "Lumi — AI on one key";
+  document.querySelectorAll(".lk").forEach(k => k.textContent = lang === "ru" ? "Ё" : "`");
+  const [a, b] = hotkey();
+  document.getElementById("k1").textContent = a; document.getElementById("k2").textContent = b;
+  document.getElementById("lane-key").textContent = a + "+" + b;
+  const space = lang === "ru" ? "Пробел" : "Space";
+  document.getElementById("keyshow").innerHTML = `<kbd>${a}</kbd>+<kbd>${b}</kbd>→<kbd>Ctrl</kbd>+<kbd>${space}</kbd>`;
+  setOs();
+}
+
+function setOs() {
+  const label = { mac: "macOS", win: "Windows", linux: "Linux" }[os];
+  const text = label ? (lang === "ru" ? "для " : "for ") + label : "";
+  document.getElementById("dl-os").textContent = text;
+  document.getElementById("dl-os2").textContent = text;
+  for (const id of ["dl-main", "dl-final"]) document.getElementById(id).href = (os && assets[os]) || "#download";
+  document.querySelectorAll("[data-asset]").forEach(a => { if (assets[a.dataset.asset]) a.href = assets[a.dataset.asset]; });
+  document.querySelectorAll(".plat").forEach(p => p.classList.toggle("mine", p.dataset.os === os));
+}
+
+document.getElementById("lang").onclick = () => {
+  lang = lang === "ru" ? "en" : "ru";
+  try { localStorage.setItem("lang", lang); } catch (e) {}
+  applyLang();
+  restart();
+};
+
+fetch("https://api.github.com/repos/AlbertS15/Lumi/releases/latest")
+  .then(r => r.ok ? r.json() : null)
+  .then(release => {
+    if (!release) return;
+    for (const a of release.assets || []) {
+      if (a.name.endsWith(".dmg")) assets.mac = a.browser_download_url;
+      else if (a.name.startsWith("Lumi-Setup") && a.name.endsWith(".exe")) assets.win = a.browser_download_url;
+      else if (a.name.endsWith(".AppImage")) assets.linux = a.browser_download_url;
+    }
+    setOs();
+  })
+  .catch(() => {});
+
+// ---------- animations; each restart (a language switch) stops the old runs where they are
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let run = 0;
+const loop = fn => { const id = run; const wait = async ms => { await sleep(ms); if (id !== run) throw 0; }; fn(wait).catch(() => {}); };
+
+async function heroDemo(wait) {
+  const stage = document.getElementById("stage"), typed = document.getElementById("typed");
+  const answer = document.getElementById("answer"), asked = document.getElementById("asked"), out = document.getElementById("answer-text");
+  const k1 = document.getElementById("k1"), k2 = document.getElementById("k2");
+  for (let i = 0; ; i = (i + 1) % DEMO[lang].length) {
+    const [q, a] = DEMO[lang][i];
+    stage.classList.remove("active"); answer.classList.remove("show"); k1.classList.remove("down"); k2.classList.remove("down");
+    typed.innerHTML = '<span class="ph">' + (lang === "ru" ? "Поиск или вопрос" : "Search or ask") + "</span>";
+    await wait(900);
+    k1.classList.add("down"); await wait(110); k2.classList.add("down"); await wait(240);
+    k1.classList.remove("down"); k2.classList.remove("down");
+    stage.classList.add("active"); await wait(450);
+    for (let n = 1; n <= q.length; n++) { typed.innerHTML = q.slice(0, n).replace(/</g, "&lt;") + '<span class="caret"></span>'; await wait(36); }
+    await wait(380);
+    asked.textContent = q; out.textContent = "";
+    typed.innerHTML = '<span class="ph">' + (lang === "ru" ? "Уточните вопрос…" : "Ask a follow-up…") + "</span>";
+    answer.classList.add("show");
+    for (let n = 2; n <= a.length + 1; n += 2) { out.textContent = a.slice(0, n); await wait(16); }
+    await wait(3600);
+  }
+}
+
+async function raceDemo(wait) {
+  const usual = [...document.querySelectorAll('[data-lane="usual"] .step')], lumi = [...document.querySelectorAll('[data-lane="lumi"] .step')];
+  const doneU = document.querySelector('[data-lane="usual"] .done'), doneL = document.querySelector('[data-lane="lumi"] .done');
+  while (true) {
+    [...usual, ...lumi].forEach(s => s.classList.remove("on")); doneU.classList.remove("show"); doneL.classList.remove("show");
+    await wait(900);
+    for (let i = 0; i < usual.length; i++) {
+      usual[i].classList.add("on");
+      if (i < lumi.length) lumi[i].classList.add("on");
+      if (i === lumi.length - 1) doneL.classList.add("show");
+      await wait(850);
+    }
+    doneU.classList.add("show");
+    await wait(3200);
+  }
+}
+
+async function streamDemo(wait) {
+  const box = document.getElementById("stream");
+  while (true) {
+    const [q, a] = STREAM[lang];
+    box.innerHTML = '<div class="who"></div><div class="txt"></div>';
+    box.querySelector(".who").textContent = q;
+    const txt = box.querySelector(".txt");
+    await wait(700);
+    for (let n = 2; n <= a.length + 1; n += 2) { txt.textContent = a.slice(0, n); await wait(22); }
+    await wait(4200);
+  }
+}
+
+async function appsDemo(wait) {
+  const box = document.getElementById("apps");
+  box.innerHTML = APPS.map(([ic, col, name]) => `<div class="row"><span class="ic" style="background:${col}">${ic}</span>${name}</div>`).join("");
+  const rows = [...box.children];
+  for (let i = 0; ; i = (i + 1) % rows.length) { rows.forEach((r, j) => r.classList.toggle("sel", i === j)); await wait(1300); }
+}
+
+async function chipsDemo(wait) {
+  const chips = [...document.querySelectorAll("#chips .chip")];
+  for (let i = 0; ; i = (i + 1) % chips.length) { chips.forEach((c, j) => c.classList.toggle("on", i === j)); await wait(1100); }
+}
+
+async function helloDemo(wait) {
+  const box = document.getElementById("hello");
+  box.innerHTML = HELLO.map(h => `<span>${h}</span>`).join("");
+  const spans = [...box.children];
+  for (let i = 0; ; i = (i + 1) % spans.length) {
+    spans.forEach((s, j) => { s.style.transform = `translateY(${(j - i) * 110}%)`; s.style.opacity = j === i ? 1 : 0; });
+    await wait(1500);
+  }
+}
+
+function restart() {
+  run++;
+  if (reduced) return;
+  [heroDemo, raceDemo, streamDemo, appsDemo, chipsDemo, helloDemo].forEach(loop);
+}
+
+// ---------- the memory slider picks a tier
+const memSizes = [8, 16, 32, 64];
+const mem = document.getElementById("mem");
+function updateMem() {
+  const gb = memSizes[+mem.value];
+  document.getElementById("mem-val").textContent = gb;
+  mem.style.setProperty("--p", (+mem.value / 3 * 100) + "%");
+  const tier = gb >= 32 ? 2 : gb >= 12 ? 1 : 0;
+  document.querySelectorAll(".tier").forEach(t => t.classList.toggle("pick", +t.dataset.tier === tier));
+}
+mem.addEventListener("input", updateMem);
+updateMem();
+
+// ---------- the tile spotlight follows the pointer, a soft glow follows the cursor
+document.querySelectorAll(".tile").forEach(t => t.addEventListener("pointermove", e => {
+  const r = t.getBoundingClientRect();
+  t.style.setProperty("--mx", (e.clientX - r.left) + "px"); t.style.setProperty("--my", (e.clientY - r.top) + "px");
+}));
+const glow = document.getElementById("glow");
+addEventListener("pointermove", e => { glow.style.left = e.clientX + "px"; glow.style.top = e.clientY + "px"; });
+
+// ---------- pixel sparks drifting up
+const cv = document.getElementById("sparks"), cx = cv.getContext("2d");
+let sparks = [];
+function sizeSparks() {
+  cv.width = innerWidth; cv.height = innerHeight;
+  sparks = Array.from({ length: Math.round(innerWidth / 38) }, () => ({ x: Math.random() * innerWidth, y: Math.random() * innerHeight, s: 1 + Math.random() * 2.2, v: .15 + Math.random() * .45, p: Math.random() * 6.28 }));
+}
+function drawSparks(t) {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  for (const p of sparks) {
+    p.y -= p.v; if (p.y < -10) { p.y = cv.height + 10; p.x = Math.random() * cv.width; }
+    const a = .25 + .35 * Math.sin(t / 700 + p.p);
+    cx.fillStyle = `rgba(127,227,192,${Math.max(0, a)})`;
+    cx.fillRect(Math.round(p.x), Math.round(p.y), Math.round(p.s * 2), Math.round(p.s * 2));
+  }
+  requestAnimationFrame(drawSparks);
+}
+if (!reduced) { sizeSparks(); addEventListener("resize", sizeSparks); requestAnimationFrame(drawSparks); }
+
+// ---------- the clock in the mock menu bar
+const clock = () => { const d = new Date(); document.getElementById("clock").textContent = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0"); };
+clock(); setInterval(clock, 30000);
+
+// ---------- reveal sections as they scroll in
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
+document.querySelectorAll(".reveal").forEach((e, i) => { e.style.transitionDelay = (i % 3) * 90 + "ms"; io.observe(e); });
+
+applyLang();
+restart();
+</script>
+</body>
+</html>
