@@ -94,8 +94,9 @@ public sealed class LauncherWindow : Window
             MaxHeight = 420,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             IsVisible = false,
-            Padding = new Thickness(8),
         };
+        // A margin rather than the ScrollViewer's padding, which the window's height doesn't count.
+        _results.Margin = new Thickness(8);
 
         _asked = Look.Label("", 13, null, FontWeight.SemiBold);
         _asked.TextWrapping = TextWrapping.Wrap;
