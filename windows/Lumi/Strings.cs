@@ -130,6 +130,14 @@ public static class S
         ["ollama_ready"] = new[] { "Ollama is running · models: {0}", "Ollama работает · моделей: {0}", "Ollama läuft · Modelle: {0}", "Ollama funciona · modelos: {0}", "Ollama fonctionne · modèles : {0}" },
         ["check_again"] = new[] { "Check again", "Проверить снова", "Erneut prüfen", "Comprobar de nuevo", "Vérifier à nouveau" },
         ["ollama_pick"] = new[] { "Pick an installed model:", "Выберите установленную модель:", "Installiertes Modell wählen:", "Elige un modelo instalado:", "Choisissez un modèle installé :" },
+        ["lumi_own"] = new[] { "Lumi's own model: works offline, tuned for this bar.", "Своя модель Lumi: работает без интернета, настроена для этой строки.", "Lumis eigenes Modell: läuft offline, gemacht für diese Leiste.", "El modelo propio de Lumi: funciona sin internet, hecho para esta barra.", "Le modèle de Lumi : fonctionne hors ligne, conçu pour cette barre." },
+        ["lumi_fit"] = new[] { "{0} wants about {1} GB of memory; this computer has {2} GB.", "{0} нужно около {1} ГБ памяти, у этого компьютера {2} ГБ.", "{0} braucht etwa {1} GB Arbeitsspeicher, dieser Computer hat {2} GB.", "{0} necesita unos {1} GB de memoria; este ordenador tiene {2} GB.", "{0} demande environ {1} Go de mémoire ; cet ordinateur en a {2} Go." },
+        ["lumi_slow"] = new[] { "It may be slow on this computer.", "На этом компьютере может работать медленно.", "Auf diesem Computer kann es langsam sein.", "Puede ir lento en este ordenador.", "Il peut être lent sur cet ordinateur." },
+        ["lumi_install"] = new[] { "Install {0} · {1} GB", "Установить {0} · {1} ГБ", "{0} installieren · {1} GB", "Instalar {0} · {1} GB", "Installer {0} · {1} Go" },
+        ["lumi_use"] = new[] { "Use {0}", "Выбрать {0}", "{0} verwenden", "Usar {0}", "Utiliser {0}" },
+        ["lumi_downloading"] = new[] { "Downloading {0}… {1}%", "Скачиваю {0}… {1}%", "Lade {0}… {1} %", "Descargando {0}… {1} %", "Téléchargement de {0}… {1} %" },
+        ["lumi_building"] = new[] { "Setting up {0}…", "Настраиваю {0}…", "Richte {0} ein…", "Preparando {0}…", "Configuration de {0}…" },
+        ["lumi_failed"] = new[] { "The download stopped: {0}. Press the button again to continue where it left off.", "Загрузка прервалась: {0}. Нажмите кнопку ещё раз, и я продолжу с того же места.", "Der Download wurde unterbrochen: {0}. Drücke die Taste erneut, um dort weiterzumachen.", "La descarga se detuvo: {0}. Pulsa el botón otra vez para seguir donde se quedó.", "Le téléchargement s'est arrêté : {0}. Appuyez de nouveau pour reprendre où il s'est arrêté." },
         ["err_ollama_model"] = new[] { "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}", "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}", "Ollama hat kein Modell „{0}“. Installiert: {1}. Wählen Sie eines davon in der Verbindung oder laden Sie es: ollama pull {0}", "Ollama no tiene el modelo «{0}». Instalados: {1}. Elige uno de ellos en la conexión o descárgalo: ollama pull {0}", "Ollama n'a pas le modèle « {0} ». Installés : {1}. Choisissez-en un dans la connexion ou téléchargez-le : ollama pull {0}" },
     };
 
@@ -235,5 +243,13 @@ public static class S
     public static string OllamaReady(string a0) => F("ollama_ready", a0);
     public static string CheckAgain => F("check_again");
     public static string OllamaPick => F("ollama_pick");
+    public static string LumiOwn => F("lumi_own");
+    public static string LumiFit(string a0, string a1, string a2) => F("lumi_fit", a0, a1, a2);
+    public static string LumiSlow => F("lumi_slow");
+    public static string LumiInstall(string a0, string a1) => F("lumi_install", a0, a1);
+    public static string LumiUse(string a0) => F("lumi_use", a0);
+    public static string LumiDownloading(string a0, string a1) => F("lumi_downloading", a0, a1);
+    public static string LumiBuilding(string a0) => F("lumi_building", a0);
+    public static string LumiFailed(string a0) => F("lumi_failed", a0);
     public static string ErrOllamaModel(string a0, string a1) => F("err_ollama_model", a0, a1);
 }

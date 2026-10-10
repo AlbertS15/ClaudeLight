@@ -687,6 +687,62 @@
       "Elige un modelo instalado:",
       "Choisissez un modèle installé :"
     ],
+    "lumi_own": [
+      "Lumi's own model: works offline, tuned for this bar.",
+      "Своя модель Lumi: работает без интернета, настроена для этой строки.",
+      "Lumis eigenes Modell: läuft offline, gemacht für diese Leiste.",
+      "El modelo propio de Lumi: funciona sin internet, hecho para esta barra.",
+      "Le modèle de Lumi : fonctionne hors ligne, conçu pour cette barre."
+    ],
+    "lumi_fit": [
+      "{0} wants about {1} GB of memory; this computer has {2} GB.",
+      "{0} нужно около {1} ГБ памяти, у этого компьютера {2} ГБ.",
+      "{0} braucht etwa {1} GB Arbeitsspeicher, dieser Computer hat {2} GB.",
+      "{0} necesita unos {1} GB de memoria; este ordenador tiene {2} GB.",
+      "{0} demande environ {1} Go de mémoire ; cet ordinateur en a {2} Go."
+    ],
+    "lumi_slow": [
+      "It may be slow on this computer.",
+      "На этом компьютере может работать медленно.",
+      "Auf diesem Computer kann es langsam sein.",
+      "Puede ir lento en este ordenador.",
+      "Il peut être lent sur cet ordinateur."
+    ],
+    "lumi_install": [
+      "Install {0} · {1} GB",
+      "Установить {0} · {1} ГБ",
+      "{0} installieren · {1} GB",
+      "Instalar {0} · {1} GB",
+      "Installer {0} · {1} Go"
+    ],
+    "lumi_use": [
+      "Use {0}",
+      "Выбрать {0}",
+      "{0} verwenden",
+      "Usar {0}",
+      "Utiliser {0}"
+    ],
+    "lumi_downloading": [
+      "Downloading {0}… {1}%",
+      "Скачиваю {0}… {1}%",
+      "Lade {0}… {1} %",
+      "Descargando {0}… {1} %",
+      "Téléchargement de {0}… {1} %"
+    ],
+    "lumi_building": [
+      "Setting up {0}…",
+      "Настраиваю {0}…",
+      "Richte {0} ein…",
+      "Preparando {0}…",
+      "Configuration de {0}…"
+    ],
+    "lumi_failed": [
+      "The download stopped: {0}. Press the button again to continue where it left off.",
+      "Загрузка прервалась: {0}. Нажмите кнопку ещё раз, и я продолжу с того же места.",
+      "Der Download wurde unterbrochen: {0}. Drücke die Taste erneut, um dort weiterzumachen.",
+      "La descarga se detuvo: {0}. Pulsa el botón otra vez para seguir donde se quedó.",
+      "Le téléchargement s'est arrêté : {0}. Appuyez de nouveau pour reprendre où il s'est arrêté."
+    ],
     "err_ollama_model": [
       "Ollama has no model “{0}”. Installed: {1}. Pick one of these in the connection, or download it: ollama pull {0}",
       "В Ollama нет модели «{0}». Установлены: {1}. Выберите одну из них в подключении или скачайте: ollama pull {0}",

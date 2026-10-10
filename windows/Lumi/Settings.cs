@@ -274,4 +274,67 @@ public static class Ollama
             return null;
         }
     }
+
+    private static System.Net.Http.StringContent Json(System.Text.Json.Nodes.JsonObject body) =>
+        new(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
+
+    /// Downloads a model, reporting progress from 0 to 1. Ollama keeps the finished parts, so a retry resumes.
+    public static async System.Threading.Tasks.Task PullAsync(string model, Action<double> progress, System.Threading.CancellationToken cancel)
+    {
+        using var http = new System.Net.Http.HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, "http://127.0.0.1:11434/api/pull")
+        {
+            Content = Json(new() { ["model"] = model, ["stream"] = true }),
+        };
+        using var response = await http.SendAsync(request, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancel);
+        using var reader = new System.IO.StreamReader(await response.Content.ReadAsStreamAsync(cancel));
+        var layers = new Dictionary<string, (double Total, double Done)>();
+        while (true)
+        {
+            // A minute without a word means the download stalled: fail, and the next press resumes it.
+            using var stall = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            stall.CancelAfter(TimeSpan.FromSeconds(60));
+            var line = await reader.ReadLineAsync(stall.Token);
+            if (line == null) throw new Exception("Ollama");
+            if (line.Trim().Length == 0) continue;
+            using var json = System.Text.Json.JsonDocument.Parse(line);
+            var root = json.RootElement;
+            if (root.TryGetProperty("error", out var error)) throw new Exception(error.GetString());
+            if (root.TryGetProperty("digest", out var digest) && root.TryGetProperty("total", out var total) && total.GetDouble() > 0)
+            {
+                layers[digest.GetString() ?? ""] = (total.GetDouble(), root.TryGetProperty("completed", out var done) ? done.GetDouble() : 0);
+                progress(layers.Values.Sum(l => l.Done) / layers.Values.Sum(l => l.Total));
+            }
+            if (root.TryGetProperty("status", out var status) && status.GetString() == "success") return;
+        }
+    }
+
+    /// Builds one of Lumi's models on top of its downloaded base: the prompt, settings and sample dialogs.
+    public static async System.Threading.Tasks.Task CreateAsync(LumiRecipe recipe, System.Threading.CancellationToken cancel)
+    {
+        var messages = new System.Text.Json.Nodes.JsonArray();
+        foreach (var (question, answer) in LumiModels.Examples)
+        {
+            messages.Add(new System.Text.Json.Nodes.JsonObject { ["role"] = "user", ["content"] = question });
+            messages.Add(new System.Text.Json.Nodes.JsonObject { ["role"] = "assistant", ["content"] = answer });
+        }
+        using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        using var response = await http.PostAsync("http://127.0.0.1:11434/api/create", Json(new()
+        {
+            ["model"] = recipe.Name, ["from"] = recipe.Base, ["system"] = LumiModels.System, ["messages"] = messages,
+            ["parameters"] = new System.Text.Json.Nodes.JsonObject { ["temperature"] = recipe.Temperature, ["num_ctx"] = 8192 },
+            ["stream"] = false,
+        }), cancel);
+        using var json = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancel));
+        if (json.RootElement.TryGetProperty("error", out var error)) throw new Exception(error.GetString());
+    }
+
+    /// This computer's memory, in whole gigabytes.
+    public static int MemoryGB => (int)Math.Round(GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1073741824.0);
+
+    /// The largest of Lumi's models that fits this computer.
+    public static LumiRecipe Recommended => LumiModels.All.LastOrDefault(r => r.MemoryGB <= MemoryGB) ?? LumiModels.All[0];
+
+    public static bool IsInstalled(LumiRecipe recipe, List<string> models) =>
+        models.Contains(recipe.Name) || models.Contains(recipe.Name + ":latest");
 }

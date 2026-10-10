@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -368,7 +369,13 @@ public sealed class ConnectionDialog : Window
     }
 
     private const string OllamaDownload = "https://ollama.com/download";
-    private const string PullCommand = "ollama pull llama3.2";
+    private readonly StackPanel _lumiPanel = new() { Margin = new Thickness(0, 6, 0, 6) };
+    private LumiRecipe _recipe = Ollama.Recommended;
+    private System.Threading.CancellationTokenSource? _install;
+    private double _installed = -1;
+    private bool _building;
+    private string? _installError;
+    private List<string> _models = new();
 
     /// Under the Ollama preset: whether it's installed, with a download link and the first command if not.
     private async void CheckOllama()
@@ -396,18 +403,15 @@ public sealed class ConnectionDialog : Window
             buttons.Children.Add(download);
             buttons.Children.Add(again);
             _ollamaHelp.Children.Add(buttons);
-            _ollamaHelp.Children.Add(Note(S.OllamaPull(PullCommand), Theme.Secondary));
-        }
-        else if (models.Count == 0)
-        {
-            _ollamaHelp.Children.Add(Note(S.OllamaNoModels(PullCommand)));
-            var again = new Button { Content = S.CheckAgain, Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
-            again.Click += (_, _) => CheckOllama();
-            _ollamaHelp.Children.Add(again);
         }
         else
         {
+            _models = models;
             _ollamaHelp.Children.Add(Note("✓ " + S.OllamaReady(models.Count.ToString()), Theme.Accent));
+            _ollamaHelp.Children.Remove(_lumiPanel);
+            _ollamaHelp.Children.Add(_lumiPanel);
+            RenderLumi();
+            if (models.Count == 0) return;
             if (_model.Text.Trim().Length == 0) _model.Text = models[0];
             // The exact installed names, so the model field can't hold a name Ollama doesn't have.
             _ollamaHelp.Children.Add(Note(S.OllamaPick, Theme.Secondary));
@@ -420,6 +424,92 @@ public sealed class ConnectionDialog : Window
             }
             _ollamaHelp.Children.Add(list);
         }
+    }
+
+    /// Lumi's own models: pick a size, then download and set it up in one press.
+    private void RenderLumi()
+    {
+        _lumiPanel.Children.Clear();
+        TextBlock Note(string s, Brush? color = null)
+        {
+            var label = Theme.Label(s, 12, color ?? Theme.Text);
+            label.TextWrapping = TextWrapping.Wrap;
+            label.Margin = new Thickness(0, 2, 0, 2);
+            return label;
+        }
+        var busy = _install != null;
+        _lumiPanel.Children.Add(Note(S.LumiOwn));
+        var sizes = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 2) };
+        foreach (var r in LumiModels.All)
+        {
+            var option = new RadioButton { Content = r.Title, IsChecked = r == _recipe, IsEnabled = !busy, Margin = new Thickness(0, 0, 14, 0), Foreground = Theme.Text };
+            option.Checked += (_, _) => { _recipe = r; _installError = null; RenderLumi(); };
+            sizes.Children.Add(option);
+        }
+        _lumiPanel.Children.Add(sizes);
+        var fit = S.LumiFit(_recipe.Title, _recipe.MemoryGB.ToString(), Ollama.MemoryGB.ToString());
+        if (_recipe.MemoryGB > Ollama.MemoryGB) fit += " " + S.LumiSlow;
+        _lumiPanel.Children.Add(Note(fit, Theme.Secondary));
+
+        if (busy)
+        {
+            _lumiPanel.Children.Add(Note(_building ? S.LumiBuilding(_recipe.Title) : S.LumiDownloading(_recipe.Title, ((int)(Math.Max(0, _installed) * 100)).ToString())));
+            _lumiPanel.Children.Add(new ProgressBar { Height = 6, Maximum = 1, Value = Math.Max(0, _installed), IsIndeterminate = _building, Foreground = Theme.Accent, Margin = new Thickness(0, 2, 0, 0) });
+            return;
+        }
+        if (_installError != null) _lumiPanel.Children.Add(Note(S.LumiFailed(_installError), Theme.Error));
+        if (Ollama.IsInstalled(_recipe, _models))
+        {
+            var use = new Button { Content = S.LumiUse(_recipe.Title), Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
+            use.Click += (_, _) => _model.Text = _recipe.Name;
+            _lumiPanel.Children.Add(use);
+        }
+        else
+        {
+            var size = _recipe.SizeGB.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture);
+            var install = new Button { Content = S.LumiInstall(_recipe.Title, size), Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(0, 4, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, Foreground = Brushes.White, Background = Theme.Accent, BorderThickness = new Thickness(0) };
+            install.Click += (_, _) => InstallLumi();
+            _lumiPanel.Children.Add(install);
+        }
+    }
+
+    /// Downloads the chosen model's base, builds the Lumi model on it and fills it in.
+    private async void InstallLumi()
+    {
+        var recipe = _recipe;
+        _install = new System.Threading.CancellationTokenSource();
+        _installed = 0;
+        _building = false;
+        _installError = null;
+        RenderLumi();
+        try
+        {
+            var last = -1;
+            await Ollama.PullAsync(recipe.Base, part => Dispatcher.InvokeAsync(() =>
+            {
+                _installed = part;
+                // Redraw on whole percents only, not on every chunk.
+                var percent = (int)(part * 100);
+                if (percent != last) { last = percent; RenderLumi(); }
+            }), _install.Token);
+            _building = true;
+            RenderLumi();
+            await Ollama.CreateAsync(recipe, _install.Token);
+            _model.Text = recipe.Name;
+            _install = null;
+            CheckOllama();
+        }
+        catch (Exception e)
+        {
+            _install = null;
+            if (IsVisible) { _installError = e is OperationCanceledException ? "timeout" : e.Message; RenderLumi(); }
+        }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _install?.Cancel();
+        base.OnClosed(e);
     }
 
     private void Validate()

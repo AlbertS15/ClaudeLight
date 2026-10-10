@@ -1620,8 +1620,6 @@ enum OllamaStatus: Equatable {
     case checking, missing, ready([String])
 
     static let downloadPage = URL(string: "https://ollama.com/download")!
-    static let starterModel = "llama3.2"
-    static let pullCommand = "ollama pull \(starterModel)"
 
     /// Whether an address points at Ollama on this computer.
     static func isOllama(_ address: String) -> Bool {
@@ -1645,6 +1643,74 @@ enum OllamaStatus: Equatable {
             await MainActor.run { done(found.map { .ready($0) } ?? .missing) }
         }
     }
+
+    struct Failure: LocalizedError {
+        let errorDescription: String?
+    }
+
+    private static func post(_ path: String, _ body: [String: Any]) -> URLRequest {
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:11434" + path)!)
+        request.httpMethod = "POST"
+        // For a stream this is the longest pause between chunks, so a stalled download fails instead of hanging.
+        request.timeoutInterval = 60
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        return request
+    }
+
+    /// Downloads a model, reporting progress from 0 to 1. Ollama keeps the finished parts, so a retry resumes.
+    static func pull(_ model: String, progress: @escaping @MainActor (Double) -> Void) async throws {
+        let (bytes, _) = try await URLSession.shared.bytes(for: post("/api/pull", ["model": model, "stream": true]))
+        var layers: [String: (total: Double, done: Double)] = [:]
+        for try await line in bytes.lines {
+            guard let json = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else { continue }
+            if let error = json["error"] as? String { throw Failure(errorDescription: error) }
+            if let digest = json["digest"] as? String, let total = json["total"] as? Double, total > 0 {
+                layers[digest] = (total, json["completed"] as? Double ?? 0)
+                let total = layers.values.reduce(0) { $0 + $1.total }
+                let done = layers.values.reduce(0) { $0 + $1.done }
+                await progress(done / total)
+            }
+            if json["status"] as? String == "success" { return }
+        }
+        throw Failure(errorDescription: "Ollama")
+    }
+
+    /// Builds one of Lumi's models on top of its downloaded base: the prompt, settings and sample dialogs.
+    static func create(_ recipe: LumiRecipe) async throws {
+        let messages = LumiModels.examples.flatMap {
+            [["role": "user", "content": $0.question], ["role": "assistant", "content": $0.answer]]
+        }
+        var request = post("/api/create", [
+            "model": recipe.name, "from": recipe.base, "system": LumiModels.system, "messages": messages,
+            "parameters": ["temperature": recipe.temperature, "num_ctx": 8192], "stream": false,
+        ])
+        request.timeoutInterval = 300
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        if let error = json?["error"] as? String { throw Failure(errorDescription: error) }
+    }
+}
+
+extension LumiRecipe {
+    /// This computer's memory, in whole gigabytes.
+    static let memoryGB = Int((Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824).rounded())
+
+    /// The largest model that fits this computer.
+    static var recommended: LumiRecipe {
+        LumiModels.all.last { $0.memoryGB <= memoryGB } ?? LumiModels.all[0]
+    }
+
+    var size: String { String(format: "%.1f", sizeGB) }
+
+    func isInstalled(in models: [String]) -> Bool {
+        models.contains(name) || models.contains(name + ":latest")
+    }
+}
+
+/// Where the download and setup of one of Lumi's models stands.
+enum LumiInstall: Equatable {
+    case idle, downloading(Double), building, failed(String)
 }
 
 final class ConnectionForm: ObservableObject {
@@ -1656,6 +1722,30 @@ final class ConnectionForm: ObservableObject {
         }
     }
     @Published var ollama: OllamaStatus = .checking
+    @Published var lumiRecipe = LumiRecipe.recommended
+    @Published var lumiInstall = LumiInstall.idle
+    private var installTask: Task<Void, Never>?
+
+    /// Downloads the chosen model's base, builds the Lumi model on it and fills it in.
+    func installLumi() {
+        let recipe = lumiRecipe
+        installTask?.cancel()
+        lumiInstall = .downloading(0)
+        installTask = Task { @MainActor in
+            do {
+                try await OllamaStatus.pull(recipe.base) { [weak self] in self?.lumiInstall = .downloading($0) }
+                lumiInstall = .building
+                try await OllamaStatus.create(recipe)
+                lumiInstall = .idle
+                model = recipe.name
+                checkOllama()
+            } catch {
+                lumiInstall = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    func useLumi() { model = lumiRecipe.name }
 
     func checkOllama() {
         ollama = .checking
@@ -1678,6 +1768,8 @@ final class ConnectionForm: ObservableObject {
     }
 
     func reset() {
+        installTask?.cancel()
+        lumiInstall = .idle
         preset = .openRouter
         name = preset.title
         model = ""
@@ -1735,21 +1827,52 @@ struct ConnectionFormView: View {
                         .buttonStyle(.borderedProminent).tint(.lumi).controlSize(.small)
                     Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
                 }
-                Text(S.ollamaPull(OllamaStatus.pullCommand)).foregroundStyle(.secondary).textSelection(.enabled)
-            case let .ready(models) where models.isEmpty:
-                Text(S.ollamaNoModels(OllamaStatus.pullCommand)).textSelection(.enabled)
-                Button(S.checkAgain, action: form.checkOllama).controlSize(.small)
             case let .ready(models):
                 Label(S.ollamaReady(String(models.count)), systemImage: "checkmark.circle.fill").foregroundStyle(Color.lumi)
-                Text(S.ollamaPick).foregroundStyle(.secondary)
-                // The exact installed names, so the model field can't hold a name Ollama doesn't have.
-                FlowButtons(items: models, selected: form.model) { form.model = $0 }
+                lumiSetup(models)
+                if !models.isEmpty {
+                    Divider().padding(.vertical, 2)
+                    Text(S.ollamaPick).foregroundStyle(.secondary)
+                    // The exact installed names, so the model field can't hold a name Ollama doesn't have.
+                    FlowButtons(items: models, selected: form.model) { form.model = $0 }
+                }
             }
         }
         .font(.system(size: 12))
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.05)))
+    }
+
+    /// Lumi's own models: pick a size, then download and set it up in one press.
+    @ViewBuilder private func lumiSetup(_ models: [String]) -> some View {
+        let recipe = form.lumiRecipe
+        let busy = form.lumiInstall != .idle && { if case .failed = form.lumiInstall { false } else { true } }()
+        Text(S.lumiOwn).fixedSize(horizontal: false, vertical: true)
+        Picker("", selection: $form.lumiRecipe) {
+            ForEach(LumiModels.all, id: \.self) { Text($0.title).tag($0) }
+        }
+        .pickerStyle(.segmented).labelsHidden().disabled(busy)
+        Text(S.lumiFit(recipe.title, String(recipe.memoryGB), String(LumiRecipe.memoryGB))
+             + (recipe.memoryGB > LumiRecipe.memoryGB ? " " + S.lumiSlow : ""))
+            .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        switch form.lumiInstall {
+        case let .downloading(part):
+            ProgressView(value: part) { Text(S.lumiDownloading(recipe.title, String(Int(part * 100)))) }
+                .tint(.lumi)
+        case .building:
+            HStack(spacing: 6) { ProgressView().controlSize(.mini); Text(S.lumiBuilding(recipe.title)) }
+        case .idle, .failed:
+            if case let .failed(reason) = form.lumiInstall {
+                Text(S.lumiFailed(reason)).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+            }
+            if recipe.isInstalled(in: models) {
+                Button(S.lumiUse(recipe.title), action: form.useLumi).controlSize(.small)
+            } else {
+                Button(S.lumiInstall(recipe.title, recipe.size), action: form.installLumi)
+                    .buttonStyle(.borderedProminent).tint(.lumi).controlSize(.small)
+            }
+        }
     }
 }
 
