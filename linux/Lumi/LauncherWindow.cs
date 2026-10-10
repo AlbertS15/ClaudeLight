@@ -137,6 +137,9 @@ public sealed class LauncherWindow : Window
         Content = _frame;
 
         Deactivated += (_, _) => HideBar();
+        Opened += (_, _) => FitFrame();
+        // SizeToContent doesn't follow the content once the window is open on X11, so the height is set by hand.
+        LayoutUpdated += (_, _) => Fit();
         Settings.Shared.Changed += () => Dispatcher.UIThread.Post(() =>
         {
             Refresh();
@@ -165,6 +168,27 @@ public sealed class LauncherWindow : Window
     }
 
     // MARK: showing and hiding
+
+    /// Without a compositor the window can't be see-through: drop the shadow's margin and the rounded corners.
+    private void FitFrame()
+    {
+        if (ActualTransparencyLevel != WindowTransparencyLevel.None) return;
+        _frame.Margin = new Thickness(0);
+        _frame.CornerRadius = new CornerRadius(0);
+        _frame.BoxShadow = default;
+    }
+
+    private void Fit()
+    {
+        // DesiredSize includes the frame's margin, which is the window's own size.
+        _frame.Measure(new Size(Width, double.PositiveInfinity));
+        var height = Math.Ceiling(_frame.DesiredSize.Height);
+        if (height > 0 && (double.IsNaN(Height) || Math.Abs(Height - height) > 0.5))
+        {
+            SizeToContent = SizeToContent.Manual;
+            Height = height;
+        }
+    }
 
     public void Toggle()
     {

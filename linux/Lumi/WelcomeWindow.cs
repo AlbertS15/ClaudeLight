@@ -33,11 +33,14 @@ public sealed class WelcomeWindow : Window
         Icon = new WindowIcon(Mascot.Icon());
 
         Settings.Shared.Changed += () => Dispatcher.UIThread.Post(Build);
-        Activated += async (_, _) =>
+        // Checked again on every visit: signing in happens in a terminal while the window waits.
+        async void CheckAuth()
         {
             _auth = await ClaudeAuth.CheckAsync();
             Build();
-        };
+        }
+        Activated += (_, _) => CheckAuth();
+        Opened += (_, _) => CheckAuth();
         AddHandler(KeyDownEvent, OnRecordKey, RoutingStrategies.Tunnel);
         Build();
     }
